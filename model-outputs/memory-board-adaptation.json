@@ -1,0 +1,534 @@
+{
+  "schemaVersion": 1,
+  "clip": "media/memory-board-adaptation.mp4",
+  "source": {
+    "runName": "20260926T060742-403523Z-astra-all-0-3",
+    "sceneId": "vlmvla-00-slanted_board-medium-seed000050",
+    "model": "openai/gpt-6-astra",
+    "trajectory": "20260926T060742-403523Z-astra-all-0-3/evaluation/vlmvla-00-slanted_board-medium-seed000050/evals/vlmvla-00-slanted_board-medium-seed000050/trajectory.json",
+    "trajectorySha256": "1618d9bd86c7675a28825e2faee2bfa0d39fdc2b858f1eced7ca96c9d6dd68e8",
+    "sourceVideoSha256": "6e1dc65f0fb0805c84a755752ef93b0efefe012b9e29e1089e32714030c5d185",
+    "publishedVideoSha256": "6e1dc65f0fb0805c84a755752ef93b0efefe012b9e29e1089e32714030c5d185",
+    "sourceMaxSteps": 450,
+    "clipStepLimit": null,
+    "finalControlStep": 170,
+    "trimmed": false,
+    "totalTurnCount": 34,
+    "omittedTurnCount": 0,
+    "timeAlignment": "verified",
+    "fps": 30.0,
+    "timeMapping": "observationStep / fps; reset frame is step 0; model latency is not included"
+  },
+  "turns": [
+    {
+      "turn": 1,
+      "observationStep": 0,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_WuQJgb9JPmDAyvfz9JlJ6ylt",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dx\":-0.06},\"note\":\"The blue board protrudes from the gray slot, with the open gripper still offset from it. I will move toward the board while keeping clearance above the fixture.\"}"
+        }
+      ],
+      "timeSeconds": 0.0,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 2,
+      "observationStep": 5,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_0vGhwWxk2NhFTiMCBnly7h9v",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dx\":0.06,\"dy\":0.06},\"note\":\"The first displacement moved the gripper farther to the right of the board in the external view. I am correcting laterally and checking how the base axes map to the slot.\"}"
+        }
+      ],
+      "timeSeconds": 0.16666666666666666,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 3,
+      "observationStep": 10,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_dWLWDzLBIP4XK0vxzP1bYdBh",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dx\":0.06,\"dy\":0.06},\"note\":\"The lateral correction brought the fixture into the bottom of the wrist view. I will continue toward it at the current safe height.\"}"
+        }
+      ],
+      "timeSeconds": 0.3333333333333333,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 4,
+      "observationStep": 15,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_iehBzaylaGnJxTI0yKIawOq1",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dx\":0.04,\"dy\":0.06,\"dz\":-0.03},\"note\":\"The protruding blue end is now visible beside the right finger. I will bring the open gripper closer laterally and lower it slightly toward the exposed section.\"}"
+        }
+      ],
+      "timeSeconds": 0.5,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 5,
+      "observationStep": 20,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_YiQugcc3HQYnmWFOJl8knq1P",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dy\":0.06,\"dz\":0.015,\"gripper\":0},\"note\":\"The board is still outside the right side of the finger gap, and one finger has deflected near it. I will explicitly reopen and shift across the board with a little extra vertical clearance.\"}"
+        }
+      ],
+      "timeSeconds": 0.6666666666666666,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 6,
+      "observationStep": 25,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_vLmTQrsLd6FE7JgYYnm8CneM",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dz\":0.06,\"gripper\":0},\"note\":\"The right finger appears crowded against the board rather than straddling it. I will lift clear before refining the approach so the fingers can open without contact.\"}"
+        }
+      ],
+      "timeSeconds": 0.8333333333333334,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 7,
+      "observationStep": 30,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_QkOUGiEWzlnxDcV1skWrk9GL",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dx\":-0.04,\"dy\":0.03,\"gripper\":0},\"note\":\"With the gripper lifted, both fingers are open and the exposed blue end is clearly visible. I will center the gap over that free end rather than over the gray fixture.\"}"
+        }
+      ],
+      "timeSeconds": 1.0,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 8,
+      "observationStep": 35,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_OBSCofHWuukW3fjipeUDLQHr",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dx\":-0.025,\"dy\":0.012,\"dz\":-0.035,\"gripper\":0},\"note\":\"The free end is now between the fingers in the wrist view, but still slightly forward and right of the grasp center. I will make a small centering correction while lowering toward contact height.\"}"
+        }
+      ],
+      "timeSeconds": 1.1666666666666667,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 9,
+      "observationStep": 40,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_E6UwFDog7feM1xkTin6wAaFq",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dy\":0.008,\"dz\":-0.012,\"gripper\":0},\"note\":\"The blue end is within the open finger span, with the tips close to its upper edge. I will lower a little more and center the board before closing.\"}"
+        }
+      ],
+      "timeSeconds": 1.3333333333333333,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 10,
+      "observationStep": 45,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_K4531j78VZQmUs9ECcHanPkA",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"gripper\":0.81},\"note\":\"The exposed blue end is centered between the fingers, and the tips extend past its edge without touching the gray housing. I will close the gripper here, then test whether the board follows.\"}"
+        }
+      ],
+      "timeSeconds": 1.5,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 11,
+      "observationStep": 50,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_3IEOPaD1Z4k1dE2jBQSjC6Z4",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dx\":-0.02,\"dz\":0.02,\"gripper\":0.81},\"note\":\"The fingers have begun closing against the board's sides. I will make a short upward-and-outward pull along its visible lean and check for actual board motion.\"}"
+        }
+      ],
+      "timeSeconds": 1.6666666666666667,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 12,
+      "observationStep": 55,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_z6QqfU00FC4VbLuBkE8Nblpo",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dx\":-0.035,\"dz\":0.035,\"gripper\":0.81},\"note\":\"The blue end stayed fixed between the fingers while moving outward relative to the housing, indicating a grasp. I will continue the same diagonal pull to extract more of the board.\"}"
+        }
+      ],
+      "timeSeconds": 1.8333333333333333,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 13,
+      "observationStep": 60,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_fxTkR2tmx9FNXky2DQnwAux6",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dx\":-0.045,\"dz\":0.045,\"gripper\":0.81},\"note\":\"More blue board is exposed beyond the slot, and it continues to travel with the gripper. I will extend the diagonal extraction while maintaining the grasp.\"}"
+        }
+      ],
+      "timeSeconds": 2.0,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 14,
+      "observationStep": 65,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_nEwUgRhrnQvcVA2dqWfBOjtR",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dz\":-0.03,\"gripper\":0},\"note\":\"The fingers closed fully and the board is now below them, so it appears to have slipped during the steep pull. I will reopen and lower onto the exposed end for a deeper grasp, then pull on a shallower path.\"}"
+        }
+      ],
+      "timeSeconds": 2.1666666666666665,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 15,
+      "observationStep": 70,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_j66WrnbBPgxOxQwaaeFqX4h8",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dz\":-0.022,\"dy\":-0.005,\"gripper\":0},\"note\":\"The gripper is open above the partially extracted end. I will move the fingers farther down its sides to increase contact before regrasping.\"}"
+        }
+      ],
+      "timeSeconds": 2.3333333333333335,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 16,
+      "observationStep": 75,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_Ool0NUSO3EIMvc28la8qx8e5",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"gripper\":0.81},\"note\":\"The fingers now extend along the exposed board end, with the gray slot well clear of the grasp region. I will close again at this deeper contact height.\"}"
+        }
+      ],
+      "timeSeconds": 2.5,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 17,
+      "observationStep": 80,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_43rzzpFnU0ry7SJy4ggbYp69",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dx\":0.025,\"gripper\":0},\"note\":\"The gripper reached almost full closure, so this regrasp did not securely catch the board. I will reopen and shift slightly toward the slot so the fingers overlap more of the board's length.\"}"
+        }
+      ],
+      "timeSeconds": 2.6666666666666665,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 18,
+      "observationStep": 85,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_viW2MeRd07KJRap3ECox8Lsy",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"gripper\":0.81},\"note\":\"The blue end now reaches well into the finger contact region rather than sitting beyond it. I will close at this corrected lengthwise alignment.\"}"
+        }
+      ],
+      "timeSeconds": 2.8333333333333335,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 19,
+      "observationStep": 90,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_LUGjFAqgW4s5KGVDED7QV4vj",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dx\":0,\"gripper\":0.81},\"note\":\"The closing motion is still asymmetric around the board and the measured gripper has not settled. I will hold the pose and allow the fingers to establish contact before pulling.\"}"
+        }
+      ],
+      "timeSeconds": 3.0,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 20,
+      "observationStep": 95,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_VijqbLdm1kwhscexcwwfJCVh",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dx\":-0.025,\"dz\":0.009,\"gripper\":0.81},\"note\":\"The fingers are held apart by contact with the board. I will test a shallower outward pull, with less lift than before, to follow the slot's direction more closely.\"}"
+        }
+      ],
+      "timeSeconds": 3.1666666666666665,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 21,
+      "observationStep": 100,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_hdjGOwJsuepW7ZR5VGJo0lNR",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dx\":0.035,\"dy\":0.015,\"dz\":-0.008,\"gripper\":0},\"note\":\"That test also slipped; the board was off-center toward one finger. I will reopen, move farther onto the board, and correct the lateral centering before trying again.\"}"
+        }
+      ],
+      "timeSeconds": 3.3333333333333335,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 22,
+      "observationStep": 105,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_69RA8he1uzo6hV3PKaN2VBc2",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dy\":-0.007,\"gripper\":0},\"note\":\"The board is now within the fingers' lengthwise reach but slightly left of the opening in the wrist view. I will make a small lateral correction to center it.\"}"
+        }
+      ],
+      "timeSeconds": 3.5,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 23,
+      "observationStep": 110,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_Y3G7rh1OLJLw7mMSYIXstHjl",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"gripper\":0.81},\"note\":\"The board lies between the open fingers with substantial overlap. I will close here and check whether this centered grasp holds during a small pull.\"}"
+        }
+      ],
+      "timeSeconds": 3.6666666666666665,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 24,
+      "observationStep": 115,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_5vnnO0lWx0Qk5SO9bWsdsOo1",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dx\":-0.012,\"dz\":0.004,\"gripper\":0.81},\"note\":\"Both fingers now visibly contact opposite sides of the board, and closure is stopped at an intermediate angle. I will test the grasp with a short outward motion.\"}"
+        }
+      ],
+      "timeSeconds": 3.8333333333333335,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 25,
+      "observationStep": 120,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_ThT6ChpU3pnjfPFvCBcY8cs7",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dx\":-0.012,\"dz\":0.009,\"gripper\":0.81},\"note\":\"The finger spacing remains stable, although the board shifted slightly within the grasp. I will pull another short increment with a little more lift to match the upward-slanted slot.\"}"
+        }
+      ],
+      "timeSeconds": 4.0,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 26,
+      "observationStep": 125,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_mn4qhl0JMEQH3utzbFGVrEN9",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dx\":0.025,\"dz\":-0.025,\"gripper\":0},\"note\":\"The board again slipped out rather than following, so the contacts were too shallow. I will reopen and seat the fingers lower and farther along the exposed board.\"}"
+        }
+      ],
+      "timeSeconds": 4.166666666666667,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 27,
+      "observationStep": 130,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_AU0HEXMHLhqzZvrb2q2KXm9H",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dz\":-0.015,\"gripper\":0},\"note\":\"The board remains centered between the open fingers. I will lower a little farther to place the pads around the board's sides instead of catching only its upper edge.\"}"
+        }
+      ],
+      "timeSeconds": 4.333333333333333,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 28,
+      "observationStep": 135,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_Gnl5uxZ4mvddoG8FrVYZA39Z",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"gripper\":0.81},\"note\":\"The fingertips now extend visibly below the board in the external view. I will close on its side edges at this lower contact height.\"}"
+        }
+      ],
+      "timeSeconds": 4.5,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 29,
+      "observationStep": 140,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_lNTf6V88GU5HVlujss4QKE3e",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dx\":-0.018,\"dz\":0.005,\"gripper\":0.81},\"note\":\"The lower grasp has stopped at side contact. I will test a short, mostly horizontal withdrawal and watch whether the board moves with the fingers.\"}"
+        }
+      ],
+      "timeSeconds": 4.666666666666667,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 30,
+      "observationStep": 145,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_XKxWlc97Op9NpgKrjCQnNedz",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dx\":-0.018,\"dz\":0.012,\"gripper\":0.81},\"note\":\"The fingers still hold the board, but it is sliding within the pads rather than clearly leaving the slot. I will increase the upward component while maintaining the deeper grasp.\"}"
+        }
+      ],
+      "timeSeconds": 4.833333333333333,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 31,
+      "observationStep": 150,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_4WvS4dk78vOlFhDYRKRWrZnT",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dx\":-0.025,\"dz\":0.017,\"gripper\":0.81},\"note\":\"The board's exposed end now appears farther out of the holder, and the fingers remain spread around it. I will continue the same slanted withdrawal in a measured increment.\"}"
+        }
+      ],
+      "timeSeconds": 5.0,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 32,
+      "observationStep": 155,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_CQHEDyEhfNnQybnAMX4NY0dJ",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dx\":-0.035,\"dz\":0.023,\"gripper\":0.81},\"note\":\"The board now stays almost fixed relative to the fingers while its exposed length increases, confirming that it is following the grasp. I will continue pulling along this same direction.\"}"
+        }
+      ],
+      "timeSeconds": 5.166666666666667,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 33,
+      "observationStep": 160,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_dc5q8lRP5iPc9CAvR6tURCEP",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dx\":-0.04,\"dz\":0.027,\"gripper\":0.81},\"note\":\"The board continues sliding outward with the gripper, but its far end is still inside the slot. I will maintain the same pull direction and grip.\"}"
+        }
+      ],
+      "timeSeconds": 5.333333333333333,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 34,
+      "observationStep": 165,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_tI8ctFIw9ek0cafNocUkSp2y",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dx\":-0.04,\"dz\":0.027,\"gripper\":0.81},\"note\":\"More of the board is exposed, and the wrist view confirms a steady grasp. I will continue withdrawing until there is a visible gap between the board and holder.\"}"
+        }
+      ],
+      "timeSeconds": 5.5,
+      "outcome": "plan",
+      "attempt": 1
+    }
+  ]
+}

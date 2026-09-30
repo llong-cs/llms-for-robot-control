@@ -1,0 +1,669 @@
+{
+  "schemaVersion": 1,
+  "groups": [
+    {
+      "chartTableId": "molmoact2-results",
+      "variant": "task0-easy",
+      "title": "MolmoAct2 · Task 0 · Easy",
+      "context": "Constrained extraction · Easy",
+      "source": "20260929T144029-175363Z-molmoact2-all",
+      "clips": [
+        {
+          "id": "molmoact2-sample-task0-easy-0",
+          "success": false,
+          "label": "Failure sample",
+          "seed": 53,
+          "progress": 4.3191766962991096e-07,
+          "finalProgress": 0.0,
+          "steps": 450,
+          "mp4": "media/molmoact2-sample-task0-easy-0.mp4",
+          "webm": "media/molmoact2-sample-task0-easy-0.webm",
+          "poster": "media/molmoact2-sample-task0-easy-0.jpg",
+          "durationSeconds": 15.033333,
+          "sourceFile": "evaluation/vlmvla-00-slanted_board-easy-seed000053/videos/vlmvla-00-slanted_board-easy-seed000053-e0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "molmoact2-results",
+      "variant": "task0-medium",
+      "title": "MolmoAct2 · Task 0 · Medium",
+      "context": "Constrained extraction · Medium",
+      "source": "20260929T144029-175363Z-molmoact2-all",
+      "clips": [
+        {
+          "id": "molmoact2-sample-task0-medium-0",
+          "success": false,
+          "label": "Failure sample",
+          "seed": 42,
+          "progress": 0.0,
+          "finalProgress": 0.0,
+          "steps": 450,
+          "mp4": "media/molmoact2-sample-task0-medium-0.mp4",
+          "webm": "media/molmoact2-sample-task0-medium-0.webm",
+          "poster": "media/molmoact2-sample-task0-medium-0.jpg",
+          "durationSeconds": 15.033333,
+          "sourceFile": "evaluation/vlmvla-00-slanted_board-medium-seed000042/videos/vlmvla-00-slanted_board-medium-seed000042-e0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "molmoact2-results",
+      "variant": "task0-hard",
+      "title": "MolmoAct2 · Task 0 · Hard",
+      "context": "Constrained extraction · Hard",
+      "source": "20260929T144029-175363Z-molmoact2-all",
+      "clips": [
+        {
+          "id": "molmoact2-sample-task0-hard-0",
+          "success": false,
+          "label": "Failure sample",
+          "seed": 42,
+          "progress": 0.0,
+          "finalProgress": 0.0,
+          "steps": 450,
+          "mp4": "media/molmoact2-sample-task0-hard-0.mp4",
+          "webm": "media/molmoact2-sample-task0-hard-0.webm",
+          "poster": "media/molmoact2-sample-task0-hard-0.jpg",
+          "durationSeconds": 15.033333,
+          "sourceFile": "evaluation/vlmvla-00-slanted_board-hard-seed000042/videos/vlmvla-00-slanted_board-hard-seed000042-e0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "molmoact2-results",
+      "variant": "task0-xhard",
+      "title": "MolmoAct2 · Task 0 · Extra hard",
+      "context": "Constrained extraction · Extra hard",
+      "source": "20260929T144029-175363Z-molmoact2-all",
+      "clips": [
+        {
+          "id": "molmoact2-sample-task0-xhard-0",
+          "success": false,
+          "label": "Failure sample",
+          "seed": 42,
+          "progress": 0.0,
+          "finalProgress": 0.0,
+          "steps": 450,
+          "mp4": "media/molmoact2-sample-task0-xhard-0.mp4",
+          "webm": "media/molmoact2-sample-task0-xhard-0.webm",
+          "poster": "media/molmoact2-sample-task0-xhard-0.jpg",
+          "durationSeconds": 15.033333,
+          "sourceFile": "evaluation/vlmvla-00-slanted_board-xhard-seed000042/videos/vlmvla-00-slanted_board-xhard-seed000042-e0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "molmoact2-results",
+      "variant": "task1-easy",
+      "title": "MolmoAct2 · Task 1 · Easy",
+      "context": "Odd-object grasping · Easy",
+      "source": "20260929T144029-175363Z-molmoact2-all",
+      "clips": [
+        {
+          "id": "molmoact2-sample-task1-easy-1",
+          "success": true,
+          "label": "Success sample",
+          "seed": 43,
+          "progress": 1.0,
+          "finalProgress": 0.5395932793617249,
+          "steps": 358,
+          "mp4": "media/molmoact2-sample-task1-easy-1.mp4",
+          "webm": "media/molmoact2-sample-task1-easy-1.webm",
+          "poster": "media/molmoact2-sample-task1-easy-1.jpg",
+          "durationSeconds": 11.966667,
+          "sourceFile": "evaluation/vlmvla-01-odd_geometry-easy-seed000043/videos/vlmvla-01-odd_geometry-easy-seed000043-e0.mp4"
+        },
+        {
+          "id": "molmoact2-sample-task1-easy-0",
+          "success": false,
+          "label": "Failure sample",
+          "seed": 42,
+          "progress": 1.0,
+          "finalProgress": 0.0,
+          "steps": 403,
+          "mp4": "media/molmoact2-sample-task1-easy-0.mp4",
+          "webm": "media/molmoact2-sample-task1-easy-0.webm",
+          "poster": "media/molmoact2-sample-task1-easy-0.jpg",
+          "durationSeconds": 13.466667,
+          "sourceFile": "evaluation/vlmvla-01-odd_geometry-easy-seed000042/videos/vlmvla-01-odd_geometry-easy-seed000042-e0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "molmoact2-results",
+      "variant": "task1-medium",
+      "title": "MolmoAct2 · Task 1 · Medium",
+      "context": "Odd-object grasping · Medium",
+      "source": "20260929T144029-175363Z-molmoact2-all",
+      "clips": [
+        {
+          "id": "molmoact2-sample-task1-medium-1",
+          "success": true,
+          "label": "Success sample",
+          "seed": 43,
+          "progress": 1.0,
+          "finalProgress": 0.6270744800567627,
+          "steps": 241,
+          "mp4": "media/molmoact2-sample-task1-medium-1.mp4",
+          "webm": "media/molmoact2-sample-task1-medium-1.webm",
+          "poster": "media/molmoact2-sample-task1-medium-1.jpg",
+          "durationSeconds": 8.066667,
+          "sourceFile": "evaluation/vlmvla-01-odd_geometry-medium-seed000043/videos/vlmvla-01-odd_geometry-medium-seed000043-e0.mp4"
+        },
+        {
+          "id": "molmoact2-sample-task1-medium-0",
+          "success": false,
+          "label": "Failure sample",
+          "seed": 42,
+          "progress": 1.0,
+          "finalProgress": 0.0,
+          "steps": 450,
+          "mp4": "media/molmoact2-sample-task1-medium-0.mp4",
+          "webm": "media/molmoact2-sample-task1-medium-0.webm",
+          "poster": "media/molmoact2-sample-task1-medium-0.jpg",
+          "durationSeconds": 15.033333,
+          "sourceFile": "evaluation/vlmvla-01-odd_geometry-medium-seed000042/videos/vlmvla-01-odd_geometry-medium-seed000042-e0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "molmoact2-results",
+      "variant": "task1-hard",
+      "title": "MolmoAct2 · Task 1 · Hard",
+      "context": "Odd-object grasping · Hard",
+      "source": "20260929T144029-175363Z-molmoact2-all",
+      "clips": [
+        {
+          "id": "molmoact2-sample-task1-hard-1",
+          "success": true,
+          "label": "Success sample",
+          "seed": 42,
+          "progress": 1.0,
+          "finalProgress": 0.10262124240398407,
+          "steps": 206,
+          "mp4": "media/molmoact2-sample-task1-hard-1.mp4",
+          "webm": "media/molmoact2-sample-task1-hard-1.webm",
+          "poster": "media/molmoact2-sample-task1-hard-1.jpg",
+          "durationSeconds": 6.9,
+          "sourceFile": "evaluation/vlmvla-01-odd_geometry-hard-seed000042/videos/vlmvla-01-odd_geometry-hard-seed000042-e0.mp4"
+        },
+        {
+          "id": "molmoact2-sample-task1-hard-0",
+          "success": false,
+          "label": "Failure sample",
+          "seed": 51,
+          "progress": 0.02122124470770359,
+          "finalProgress": 0.0,
+          "steps": 450,
+          "mp4": "media/molmoact2-sample-task1-hard-0.mp4",
+          "webm": "media/molmoact2-sample-task1-hard-0.webm",
+          "poster": "media/molmoact2-sample-task1-hard-0.jpg",
+          "durationSeconds": 15.033333,
+          "sourceFile": "evaluation/vlmvla-01-odd_geometry-hard-seed000051/videos/vlmvla-01-odd_geometry-hard-seed000051-e0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "molmoact2-results",
+      "variant": "task1-xhard",
+      "title": "MolmoAct2 · Task 1 · Extra hard",
+      "context": "Odd-object grasping · Extra hard",
+      "source": "20260929T144029-175363Z-molmoact2-all",
+      "clips": [
+        {
+          "id": "molmoact2-sample-task1-xhard-1",
+          "success": true,
+          "label": "Success sample",
+          "seed": 53,
+          "progress": 1.0,
+          "finalProgress": 0.5965131521224976,
+          "steps": 423,
+          "mp4": "media/molmoact2-sample-task1-xhard-1.mp4",
+          "webm": "media/molmoact2-sample-task1-xhard-1.webm",
+          "poster": "media/molmoact2-sample-task1-xhard-1.jpg",
+          "durationSeconds": 14.133333,
+          "sourceFile": "evaluation/vlmvla-01-odd_geometry-xhard-seed000053/videos/vlmvla-01-odd_geometry-xhard-seed000053-e0.mp4"
+        },
+        {
+          "id": "molmoact2-sample-task1-xhard-0",
+          "success": false,
+          "label": "Failure sample",
+          "seed": 42,
+          "progress": 0.0,
+          "finalProgress": 0.0,
+          "steps": 450,
+          "mp4": "media/molmoact2-sample-task1-xhard-0.mp4",
+          "webm": "media/molmoact2-sample-task1-xhard-0.webm",
+          "poster": "media/molmoact2-sample-task1-xhard-0.jpg",
+          "durationSeconds": 15.033333,
+          "sourceFile": "evaluation/vlmvla-01-odd_geometry-xhard-seed000042/videos/vlmvla-01-odd_geometry-xhard-seed000042-e0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "molmoact2-results",
+      "variant": "task2-easy",
+      "title": "MolmoAct2 · Task 2 · Easy",
+      "context": "Precision insertion · Easy",
+      "source": "20260929T144029-175363Z-molmoact2-all",
+      "clips": [
+        {
+          "id": "molmoact2-sample-task2-easy-1",
+          "success": true,
+          "label": "Success sample",
+          "seed": 43,
+          "progress": 1.0,
+          "finalProgress": 1.0,
+          "steps": 195,
+          "mp4": "media/molmoact2-sample-task2-easy-1.mp4",
+          "webm": "media/molmoact2-sample-task2-easy-1.webm",
+          "poster": "media/molmoact2-sample-task2-easy-1.jpg",
+          "durationSeconds": 6.533333,
+          "sourceFile": "evaluation/vlmvla-02-precision_insert-easy-seed000043/videos/vlmvla-02-precision_insert-easy-seed000043-e0.mp4"
+        },
+        {
+          "id": "molmoact2-sample-task2-easy-0",
+          "success": false,
+          "label": "Failure sample",
+          "seed": 61,
+          "progress": 0.03849606588482857,
+          "finalProgress": 0.0,
+          "steps": 450,
+          "mp4": "media/molmoact2-sample-task2-easy-0.mp4",
+          "webm": "media/molmoact2-sample-task2-easy-0.webm",
+          "poster": "media/molmoact2-sample-task2-easy-0.jpg",
+          "durationSeconds": 15.033333,
+          "sourceFile": "evaluation/vlmvla-02-precision_insert-easy-seed000061/videos/vlmvla-02-precision_insert-easy-seed000061-e0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "molmoact2-results",
+      "variant": "task2-medium",
+      "title": "MolmoAct2 · Task 2 · Medium",
+      "context": "Precision insertion · Medium",
+      "source": "20260929T144029-175363Z-molmoact2-all",
+      "clips": [
+        {
+          "id": "molmoact2-sample-task2-medium-1",
+          "success": true,
+          "label": "Success sample",
+          "seed": 47,
+          "progress": 1.0,
+          "finalProgress": 0.9999933838844299,
+          "steps": 379,
+          "mp4": "media/molmoact2-sample-task2-medium-1.mp4",
+          "webm": "media/molmoact2-sample-task2-medium-1.webm",
+          "poster": "media/molmoact2-sample-task2-medium-1.jpg",
+          "durationSeconds": 12.666667,
+          "sourceFile": "evaluation/vlmvla-02-precision_insert-medium-seed000047/videos/vlmvla-02-precision_insert-medium-seed000047-e0.mp4"
+        },
+        {
+          "id": "molmoact2-sample-task2-medium-0",
+          "success": false,
+          "label": "Failure sample",
+          "seed": 44,
+          "progress": 0.2803911566734314,
+          "finalProgress": 0.0,
+          "steps": 450,
+          "mp4": "media/molmoact2-sample-task2-medium-0.mp4",
+          "webm": "media/molmoact2-sample-task2-medium-0.webm",
+          "poster": "media/molmoact2-sample-task2-medium-0.jpg",
+          "durationSeconds": 15.033333,
+          "sourceFile": "evaluation/vlmvla-02-precision_insert-medium-seed000044/videos/vlmvla-02-precision_insert-medium-seed000044-e0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "molmoact2-results",
+      "variant": "task2-hard",
+      "title": "MolmoAct2 · Task 2 · Hard",
+      "context": "Precision insertion · Hard",
+      "source": "20260929T144029-175363Z-molmoact2-all",
+      "clips": [
+        {
+          "id": "molmoact2-sample-task2-hard-0",
+          "success": false,
+          "label": "Failure sample",
+          "seed": 42,
+          "progress": 9.787353337742388e-05,
+          "finalProgress": 0.0,
+          "steps": 450,
+          "mp4": "media/molmoact2-sample-task2-hard-0.mp4",
+          "webm": "media/molmoact2-sample-task2-hard-0.webm",
+          "poster": "media/molmoact2-sample-task2-hard-0.jpg",
+          "durationSeconds": 15.033333,
+          "sourceFile": "evaluation/vlmvla-02-precision_insert-hard-seed000042/videos/vlmvla-02-precision_insert-hard-seed000042-e0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "molmoact2-results",
+      "variant": "task2-xhard",
+      "title": "MolmoAct2 · Task 2 · Extra hard",
+      "context": "Precision insertion · Extra hard",
+      "source": "20260929T144029-175363Z-molmoact2-all",
+      "clips": [
+        {
+          "id": "molmoact2-sample-task2-xhard-0",
+          "success": false,
+          "label": "Failure sample",
+          "seed": 43,
+          "progress": 0.0007153234910219908,
+          "finalProgress": 0.0,
+          "steps": 450,
+          "mp4": "media/molmoact2-sample-task2-xhard-0.mp4",
+          "webm": "media/molmoact2-sample-task2-xhard-0.webm",
+          "poster": "media/molmoact2-sample-task2-xhard-0.jpg",
+          "durationSeconds": 15.033333,
+          "sourceFile": "evaluation/vlmvla-02-precision_insert-xhard-seed000043/videos/vlmvla-02-precision_insert-xhard-seed000043-e0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "molmoact2-results",
+      "variant": "task3-easy",
+      "title": "MolmoAct2 · Task 3 · Easy",
+      "context": "Standing stability · Easy",
+      "source": "20260929T144029-175363Z-molmoact2-all",
+      "clips": [
+        {
+          "id": "molmoact2-sample-task3-easy-0",
+          "success": false,
+          "label": "Failure sample",
+          "seed": 42,
+          "progress": 0.019442494958639145,
+          "finalProgress": 0.0,
+          "steps": 450,
+          "mp4": "media/molmoact2-sample-task3-easy-0.mp4",
+          "webm": "media/molmoact2-sample-task3-easy-0.webm",
+          "poster": "media/molmoact2-sample-task3-easy-0.jpg",
+          "durationSeconds": 15.033333,
+          "sourceFile": "evaluation/vlmvla-03-stand_object-easy-seed000042/videos/vlmvla-03-stand_object-easy-seed000042-e0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "molmoact2-results",
+      "variant": "task3-medium",
+      "title": "MolmoAct2 · Task 3 · Medium",
+      "context": "Standing stability · Medium",
+      "source": "20260929T144029-175363Z-molmoact2-all",
+      "clips": [
+        {
+          "id": "molmoact2-sample-task3-medium-0",
+          "success": false,
+          "label": "Failure sample",
+          "seed": 42,
+          "progress": 0.043593768030405045,
+          "finalProgress": 7.824367639841512e-05,
+          "steps": 450,
+          "mp4": "media/molmoact2-sample-task3-medium-0.mp4",
+          "webm": "media/molmoact2-sample-task3-medium-0.webm",
+          "poster": "media/molmoact2-sample-task3-medium-0.jpg",
+          "durationSeconds": 15.033333,
+          "sourceFile": "evaluation/vlmvla-03-stand_object-medium-seed000042/videos/vlmvla-03-stand_object-medium-seed000042-e0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "molmoact2-results",
+      "variant": "task3-hard",
+      "title": "MolmoAct2 · Task 3 · Hard",
+      "context": "Standing stability · Hard",
+      "source": "20260929T144029-175363Z-molmoact2-all",
+      "clips": [
+        {
+          "id": "molmoact2-sample-task3-hard-0",
+          "success": false,
+          "label": "Failure sample",
+          "seed": 49,
+          "progress": 0.029050232842564583,
+          "finalProgress": 0.022633615881204605,
+          "steps": 450,
+          "mp4": "media/molmoact2-sample-task3-hard-0.mp4",
+          "webm": "media/molmoact2-sample-task3-hard-0.webm",
+          "poster": "media/molmoact2-sample-task3-hard-0.jpg",
+          "durationSeconds": 15.033333,
+          "sourceFile": "evaluation/vlmvla-03-stand_object-hard-seed000049/videos/vlmvla-03-stand_object-hard-seed000049-e0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "molmoact2-results",
+      "variant": "task3-xhard",
+      "title": "MolmoAct2 · Task 3 · Extra hard",
+      "context": "Standing stability · Extra hard",
+      "source": "20260929T144029-175363Z-molmoact2-all",
+      "clips": [
+        {
+          "id": "molmoact2-sample-task3-xhard-0",
+          "success": false,
+          "label": "Failure sample",
+          "seed": 56,
+          "progress": 0.010356309823691845,
+          "finalProgress": 0.0,
+          "steps": 450,
+          "mp4": "media/molmoact2-sample-task3-xhard-0.mp4",
+          "webm": "media/molmoact2-sample-task3-xhard-0.webm",
+          "poster": "media/molmoact2-sample-task3-xhard-0.jpg",
+          "durationSeconds": 15.033333,
+          "sourceFile": "evaluation/vlmvla-03-stand_object-xhard-seed000056/videos/vlmvla-03-stand_object-xhard-seed000056-e0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "molmoact2-results",
+      "variant": "task4-easy",
+      "title": "MolmoAct2 · Task 4 · Easy",
+      "context": "Tool-assisted drawer · Easy",
+      "source": "20260929T144029-175363Z-molmoact2-all",
+      "clips": [
+        {
+          "id": "molmoact2-sample-task4-easy-0",
+          "success": false,
+          "label": "Failure sample",
+          "seed": 42,
+          "progress": 0.0,
+          "finalProgress": 0.0,
+          "steps": 207,
+          "mp4": "media/molmoact2-sample-task4-easy-0.mp4",
+          "webm": "media/molmoact2-sample-task4-easy-0.webm",
+          "poster": "media/molmoact2-sample-task4-easy-0.jpg",
+          "durationSeconds": 6.933333,
+          "sourceFile": "evaluation/vlmvla-04-tool_drawer-easy-seed000042/videos/vlmvla-04-tool_drawer-easy-seed000042-e0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "molmoact2-results",
+      "variant": "task4-medium",
+      "title": "MolmoAct2 · Task 4 · Medium",
+      "context": "Tool-assisted drawer · Medium",
+      "source": "20260929T144029-175363Z-molmoact2-all",
+      "clips": [
+        {
+          "id": "molmoact2-sample-task4-medium-0",
+          "success": false,
+          "label": "Failure sample",
+          "seed": 42,
+          "progress": 0.0,
+          "finalProgress": 0.0,
+          "steps": 192,
+          "mp4": "media/molmoact2-sample-task4-medium-0.mp4",
+          "webm": "media/molmoact2-sample-task4-medium-0.webm",
+          "poster": "media/molmoact2-sample-task4-medium-0.jpg",
+          "durationSeconds": 6.433333,
+          "sourceFile": "evaluation/vlmvla-04-tool_drawer-medium-seed000042/videos/vlmvla-04-tool_drawer-medium-seed000042-e0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "molmoact2-results",
+      "variant": "task4-hard",
+      "title": "MolmoAct2 · Task 4 · Hard",
+      "context": "Tool-assisted drawer · Hard",
+      "source": "20260929T144029-175363Z-molmoact2-all",
+      "clips": [
+        {
+          "id": "molmoact2-sample-task4-hard-0",
+          "success": false,
+          "label": "Failure sample",
+          "seed": 42,
+          "progress": 0.0,
+          "finalProgress": 0.0,
+          "steps": 93,
+          "mp4": "media/molmoact2-sample-task4-hard-0.mp4",
+          "webm": "media/molmoact2-sample-task4-hard-0.webm",
+          "poster": "media/molmoact2-sample-task4-hard-0.jpg",
+          "durationSeconds": 3.133333,
+          "sourceFile": "evaluation/vlmvla-04-tool_drawer-hard-seed000042/videos/vlmvla-04-tool_drawer-hard-seed000042-e0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "molmoact2-results",
+      "variant": "task4-xhard",
+      "title": "MolmoAct2 · Task 4 · Extra hard",
+      "context": "Tool-assisted drawer · Extra hard",
+      "source": "20260929T144029-175363Z-molmoact2-all",
+      "clips": [
+        {
+          "id": "molmoact2-sample-task4-xhard-0",
+          "success": false,
+          "label": "Failure sample",
+          "seed": 42,
+          "progress": 0.0,
+          "finalProgress": 0.0,
+          "steps": 450,
+          "mp4": "media/molmoact2-sample-task4-xhard-0.mp4",
+          "webm": "media/molmoact2-sample-task4-xhard-0.webm",
+          "poster": "media/molmoact2-sample-task4-xhard-0.jpg",
+          "durationSeconds": 15.033333,
+          "sourceFile": "evaluation/vlmvla-04-tool_drawer-xhard-seed000042/videos/vlmvla-04-tool_drawer-xhard-seed000042-e0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "molmoact2-results",
+      "variant": "task5-easy",
+      "title": "MolmoAct2 · Task 5 · Easy",
+      "context": "Ring release · Easy",
+      "source": "20260929T144029-175363Z-molmoact2-all",
+      "clips": [
+        {
+          "id": "molmoact2-sample-task5-easy-1",
+          "success": true,
+          "label": "Success sample",
+          "seed": 53,
+          "progress": 0.9006649851799011,
+          "finalProgress": 0.505975067615509,
+          "steps": 440,
+          "mp4": "media/molmoact2-sample-task5-easy-1.mp4",
+          "webm": "media/molmoact2-sample-task5-easy-1.webm",
+          "poster": "media/molmoact2-sample-task5-easy-1.jpg",
+          "durationSeconds": 14.7,
+          "sourceFile": "evaluation/vlmvla-05-unlock_ring-easy-seed000053/videos/vlmvla-05-unlock_ring-easy-seed000053-e0.mp4"
+        },
+        {
+          "id": "molmoact2-sample-task5-easy-0",
+          "success": false,
+          "label": "Failure sample",
+          "seed": 44,
+          "progress": 0.5182474255561829,
+          "finalProgress": 0.49859684705734253,
+          "steps": 450,
+          "mp4": "media/molmoact2-sample-task5-easy-0.mp4",
+          "webm": "media/molmoact2-sample-task5-easy-0.webm",
+          "poster": "media/molmoact2-sample-task5-easy-0.jpg",
+          "durationSeconds": 15.033333,
+          "sourceFile": "evaluation/vlmvla-05-unlock_ring-easy-seed000044/videos/vlmvla-05-unlock_ring-easy-seed000044-e0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "molmoact2-results",
+      "variant": "task5-medium",
+      "title": "MolmoAct2 · Task 5 · Medium",
+      "context": "Ring release · Medium",
+      "source": "20260929T144029-175363Z-molmoact2-all",
+      "clips": [
+        {
+          "id": "molmoact2-sample-task5-medium-1",
+          "success": true,
+          "label": "Success sample",
+          "seed": 51,
+          "progress": 0.9420152902603149,
+          "finalProgress": 0.23689039051532745,
+          "steps": 408,
+          "mp4": "media/molmoact2-sample-task5-medium-1.mp4",
+          "webm": "media/molmoact2-sample-task5-medium-1.webm",
+          "poster": "media/molmoact2-sample-task5-medium-1.jpg",
+          "durationSeconds": 13.633333,
+          "sourceFile": "evaluation/vlmvla-05-unlock_ring-medium-seed000051/videos/vlmvla-05-unlock_ring-medium-seed000051-e0.mp4"
+        },
+        {
+          "id": "molmoact2-sample-task5-medium-0",
+          "success": false,
+          "label": "Failure sample",
+          "seed": 44,
+          "progress": 0.2899859845638275,
+          "finalProgress": 0.0,
+          "steps": 450,
+          "mp4": "media/molmoact2-sample-task5-medium-0.mp4",
+          "webm": "media/molmoact2-sample-task5-medium-0.webm",
+          "poster": "media/molmoact2-sample-task5-medium-0.jpg",
+          "durationSeconds": 15.033333,
+          "sourceFile": "evaluation/vlmvla-05-unlock_ring-medium-seed000044/videos/vlmvla-05-unlock_ring-medium-seed000044-e0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "molmoact2-results",
+      "variant": "task5-hard",
+      "title": "MolmoAct2 · Task 5 · Hard",
+      "context": "Ring release · Hard",
+      "source": "20260929T144029-175363Z-molmoact2-all",
+      "clips": [
+        {
+          "id": "molmoact2-sample-task5-hard-0",
+          "success": false,
+          "label": "Failure sample",
+          "seed": 57,
+          "progress": 0.45918846130371094,
+          "finalProgress": 0.4503195583820343,
+          "steps": 450,
+          "mp4": "media/molmoact2-sample-task5-hard-0.mp4",
+          "webm": "media/molmoact2-sample-task5-hard-0.webm",
+          "poster": "media/molmoact2-sample-task5-hard-0.jpg",
+          "durationSeconds": 15.033333,
+          "sourceFile": "evaluation/vlmvla-05-unlock_ring-hard-seed000057/videos/vlmvla-05-unlock_ring-hard-seed000057-e0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "molmoact2-results",
+      "variant": "task5-xhard",
+      "title": "MolmoAct2 · Task 5 · Extra hard",
+      "context": "Ring release · Extra hard",
+      "source": "20260929T144029-175363Z-molmoact2-all",
+      "clips": [
+        {
+          "id": "molmoact2-sample-task5-xhard-0",
+          "success": false,
+          "label": "Failure sample",
+          "seed": 58,
+          "progress": 0.5515419840812683,
+          "finalProgress": 0.5488132834434509,
+          "steps": 450,
+          "mp4": "media/molmoact2-sample-task5-xhard-0.mp4",
+          "webm": "media/molmoact2-sample-task5-xhard-0.webm",
+          "poster": "media/molmoact2-sample-task5-xhard-0.jpg",
+          "durationSeconds": 15.033333,
+          "sourceFile": "evaluation/vlmvla-05-unlock_ring-xhard-seed000058/videos/vlmvla-05-unlock_ring-xhard-seed000058-e0.mp4"
+        }
+      ]
+    }
+  ]
+}

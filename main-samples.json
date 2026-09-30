@@ -1,0 +1,636 @@
+{
+  "schemaVersion": 1,
+  "groups": [
+    {
+      "chartTableId": "main-results",
+      "variant": "task0-easy",
+      "title": "Task 0 · Easy",
+      "context": "Constrained extraction · Easy",
+      "source": "media/main",
+      "clips": [
+        {
+          "id": "main-task0-easy-1",
+          "success": true,
+          "label": "Success sample",
+          "mp4": "media/main/task0-easy-1.mp4",
+          "webm": "media/main-sample-task0-easy-1.webm",
+          "poster": "media/main-sample-task0-easy-1.jpg",
+          "durationSeconds": 3.6,
+          "sourceFile": "task0-easy-1.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "main-results",
+      "variant": "task0-medium",
+      "title": "Task 0 · Medium",
+      "context": "Constrained extraction · Medium",
+      "source": "media/main",
+      "clips": [
+        {
+          "id": "main-task0-medium-1",
+          "success": true,
+          "label": "Success sample",
+          "mp4": "media/main/task0-medium-1.mp4",
+          "webm": "media/main-sample-task0-medium-1.webm",
+          "poster": "media/main-sample-task0-medium-1.jpg",
+          "durationSeconds": 3.433333333333333,
+          "sourceFile": "task0-medium-1.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "main-results",
+      "variant": "task0-hard",
+      "title": "Task 0 · Hard",
+      "context": "Constrained extraction · Hard",
+      "source": "media/main",
+      "clips": [
+        {
+          "id": "main-task0-hard-1",
+          "success": true,
+          "label": "Success sample",
+          "mp4": "media/main/task0-hard-1.mp4",
+          "webm": "media/main-sample-task0-hard-1.webm",
+          "poster": "media/main-sample-task0-hard-1.jpg",
+          "durationSeconds": 9.6,
+          "sourceFile": "task0-hard-1.mp4"
+        },
+        {
+          "id": "main-task0-hard-0",
+          "success": false,
+          "label": "Failure sample",
+          "mp4": "media/main/task0-hard-0.mp4",
+          "webm": "media/main-sample-task0-hard-0.webm",
+          "poster": "media/main-sample-task0-hard-0.jpg",
+          "durationSeconds": 14.933333333333334,
+          "sourceFile": "task0-hard-0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "main-results",
+      "variant": "task0-xhard",
+      "title": "Task 0 · Extra hard",
+      "context": "Constrained extraction · Extra hard",
+      "source": "media/main",
+      "clips": [
+        {
+          "id": "main-task0-xhard-1",
+          "success": true,
+          "label": "Success sample",
+          "mp4": "media/main/task0-xhard-1.mp4",
+          "webm": "media/main-sample-task0-xhard-1.webm",
+          "poster": "media/main-sample-task0-xhard-1.jpg",
+          "durationSeconds": 12.333333333333334,
+          "sourceFile": "task0-xhard-1.mp4"
+        },
+        {
+          "id": "main-task0-xhard-0",
+          "success": false,
+          "label": "Failure sample",
+          "mp4": "media/main/task0-xhard-0.mp4",
+          "webm": "media/main-sample-task0-xhard-0.webm",
+          "poster": "media/main-sample-task0-xhard-0.jpg",
+          "durationSeconds": 14.933333333333334,
+          "sourceFile": "task0-xhard-0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "main-results",
+      "variant": "task1-easy",
+      "title": "Task 1 · Easy",
+      "context": "Odd-object grasping · Easy",
+      "source": "media/main",
+      "clips": [
+        {
+          "id": "main-task1-easy-1",
+          "success": true,
+          "label": "Success sample",
+          "mp4": "media/main/task1-easy-1.mp4",
+          "webm": "media/main-sample-task1-easy-1.webm",
+          "poster": "media/main-sample-task1-easy-1.jpg",
+          "durationSeconds": 7.9,
+          "sourceFile": "task1-easy-1.mp4"
+        },
+        {
+          "id": "main-task1-easy-0",
+          "success": false,
+          "label": "Failure sample",
+          "mp4": "media/main/taks1-easy-0.mp4",
+          "webm": "media/main-sample-task1-easy-0.webm",
+          "poster": "media/main-sample-task1-easy-0.jpg",
+          "durationSeconds": 13.233333333333333,
+          "sourceFile": "taks1-easy-0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "main-results",
+      "variant": "task1-medium",
+      "title": "Task 1 · Medium",
+      "context": "Odd-object grasping · Medium",
+      "source": "media/main",
+      "clips": [
+        {
+          "id": "main-task1-medium-1",
+          "success": true,
+          "label": "Success sample",
+          "mp4": "media/main/task1-medium-1.mp4",
+          "webm": "media/main-sample-task1-medium-1.webm",
+          "poster": "media/main-sample-task1-medium-1.jpg",
+          "durationSeconds": 11.6,
+          "sourceFile": "task1-medium-1.mp4"
+        },
+        {
+          "id": "main-task1-medium-0",
+          "success": false,
+          "label": "Failure sample",
+          "mp4": "media/main/task1-medium-0.mp4",
+          "webm": "media/main-sample-task1-medium-0.webm",
+          "poster": "media/main-sample-task1-medium-0.jpg",
+          "durationSeconds": 14.866666666666667,
+          "sourceFile": "task1-medium-0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "main-results",
+      "variant": "task1-hard",
+      "title": "Task 1 · Hard",
+      "context": "Odd-object grasping · Hard",
+      "source": "media/main",
+      "clips": [
+        {
+          "id": "main-task1-hard-1",
+          "success": true,
+          "label": "Success sample",
+          "mp4": "media/main/task1-hard-1.mp4",
+          "webm": "media/main-sample-task1-hard-1.webm",
+          "poster": "media/main-sample-task1-hard-1.jpg",
+          "durationSeconds": 7.0,
+          "sourceFile": "task1-hard-1.mp4"
+        },
+        {
+          "id": "main-task1-hard-0",
+          "success": false,
+          "label": "Failure sample",
+          "mp4": "media/main/task1-hard-0.mp4",
+          "webm": "media/main-sample-task1-hard-0.webm",
+          "poster": "media/main-sample-task1-hard-0.jpg",
+          "durationSeconds": 14.633333333333333,
+          "sourceFile": "task1-hard-0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "main-results",
+      "variant": "task1-xhard",
+      "title": "Task 1 · Extra hard",
+      "context": "Odd-object grasping · Extra hard",
+      "source": "media/main",
+      "clips": [
+        {
+          "id": "main-task1-xhard-0",
+          "success": false,
+          "label": "Failure sample",
+          "mp4": "media/main/task1-xhard-0.mp4",
+          "webm": "media/main-sample-task1-xhard-0.webm",
+          "poster": "media/main-sample-task1-xhard-0.jpg",
+          "durationSeconds": 14.6,
+          "sourceFile": "task1-xhard-0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "main-results",
+      "variant": "task2-easy",
+      "title": "Task 2 · Easy",
+      "context": "Precision insertion · Easy",
+      "source": "media/main",
+      "clips": [
+        {
+          "id": "main-task2-easy-1",
+          "success": true,
+          "label": "Success sample",
+          "mp4": "media/main/task2-easy-1.mp4",
+          "webm": "media/main-sample-task2-easy-1.webm",
+          "poster": "media/main-sample-task2-easy-1.jpg",
+          "durationSeconds": 5.333333333333333,
+          "sourceFile": "task2-easy-1.mp4"
+        },
+        {
+          "id": "main-task2-easy-0",
+          "success": false,
+          "label": "Failure sample",
+          "mp4": "media/main/task2-easy-0.mp4",
+          "webm": "media/main-sample-task2-easy-0.webm",
+          "poster": "media/main-sample-task2-easy-0.jpg",
+          "durationSeconds": 14.4,
+          "sourceFile": "task2-easy-0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "main-results",
+      "variant": "task2-medium",
+      "title": "Task 2 · Medium",
+      "context": "Precision insertion · Medium",
+      "source": "media/main",
+      "clips": [
+        {
+          "id": "main-task2-medium-1",
+          "success": true,
+          "label": "Success sample",
+          "mp4": "media/main/task2-medium-1.mp4",
+          "webm": "media/main-sample-task2-medium-1.webm",
+          "poster": "media/main-sample-task2-medium-1.jpg",
+          "durationSeconds": 5.033333333333333,
+          "sourceFile": "task2-medium-1.mp4"
+        },
+        {
+          "id": "main-task2-medium-0",
+          "success": false,
+          "label": "Failure sample",
+          "mp4": "media/main/task2-medium-0.mp4",
+          "webm": "media/main-sample-task2-medium-0.webm",
+          "poster": "media/main-sample-task2-medium-0.jpg",
+          "durationSeconds": 14.933333333333334,
+          "sourceFile": "task2-medium-0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "main-results",
+      "variant": "task2-hard",
+      "title": "Task 2 · Hard",
+      "context": "Precision insertion · Hard",
+      "source": "media/main",
+      "clips": [
+        {
+          "id": "main-task2-hard-1",
+          "success": true,
+          "label": "Success sample",
+          "mp4": "media/main/task2-hard-1.mp4",
+          "webm": "media/main-sample-task2-hard-1.webm",
+          "poster": "media/main-sample-task2-hard-1.jpg",
+          "durationSeconds": 9.733333333333333,
+          "sourceFile": "task2-hard-1.mp4"
+        },
+        {
+          "id": "main-task2-hard-0",
+          "success": false,
+          "label": "Failure sample",
+          "mp4": "media/main/task2-hard-0.mp4",
+          "webm": "media/main-sample-task2-hard-0.webm",
+          "poster": "media/main-sample-task2-hard-0.jpg",
+          "durationSeconds": 14.966666666666667,
+          "sourceFile": "task2-hard-0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "main-results",
+      "variant": "task2-xhard",
+      "title": "Task 2 · Extra hard",
+      "context": "Precision insertion · Extra hard",
+      "source": "media/main",
+      "clips": [
+        {
+          "id": "main-task2-xhard-1",
+          "success": true,
+          "label": "Success sample",
+          "mp4": "media/main/task2-xhard-1.mp4",
+          "webm": "media/main-sample-task2-xhard-1.webm",
+          "poster": "media/main-sample-task2-xhard-1.jpg",
+          "durationSeconds": 15.3,
+          "sourceFile": "task2-xhard-1.mp4"
+        },
+        {
+          "id": "main-task2-xhard-0",
+          "success": false,
+          "label": "Failure sample",
+          "mp4": "media/main/task2-xhard-0.mp4",
+          "webm": "media/main-sample-task2-xhard-0.webm",
+          "poster": "media/main-sample-task2-xhard-0.jpg",
+          "durationSeconds": 14.966666666666667,
+          "sourceFile": "task2-xhard-0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "main-results",
+      "variant": "task3-easy",
+      "title": "Task 3 · Easy",
+      "context": "Standing stability · Easy",
+      "source": "media/main",
+      "clips": [
+        {
+          "id": "astra-sample-sec-task3-easy-1",
+          "success": true,
+          "label": "Success sample",
+          "seed": 61,
+          "progress": 0.9999877214431763,
+          "finalProgress": 0.9999877214431763,
+          "steps": 369,
+          "mp4": "media/astra-sample-sec-task3-easy-1.mp4",
+          "webm": "media/astra-sample-sec-task3-easy-1.webm",
+          "poster": "media/astra-sample-sec-task3-easy-1.jpg",
+          "durationSeconds": 12.333333,
+          "source": "20260929T153432-173317Z-astra-all-sec",
+          "sourceFile": "evaluation/vlmvla-03-stand_object-easy-seed000061/videos/vlmvla-03-stand_object-easy-seed000061-e0.mp4"
+        },
+        {
+          "id": "main-task3-easy-0",
+          "success": false,
+          "label": "Failure sample",
+          "mp4": "media/main/task3-easy-0.mp4",
+          "webm": "media/main-sample-task3-easy-0.webm",
+          "poster": "media/main-sample-task3-easy-0.jpg",
+          "durationSeconds": 14.9,
+          "sourceFile": "task3-easy-0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "main-results",
+      "variant": "task3-medium",
+      "title": "Task 3 · Medium",
+      "context": "Standing stability · Medium",
+      "source": "media/main",
+      "clips": [
+        {
+          "id": "astra-sample-sec-task3-medium-1",
+          "success": true,
+          "label": "Success sample",
+          "seed": 56,
+          "progress": 0.9999804496765137,
+          "finalProgress": 0.9999804496765137,
+          "steps": 398,
+          "mp4": "media/astra-sample-sec-task3-medium-1.mp4",
+          "webm": "media/astra-sample-sec-task3-medium-1.webm",
+          "poster": "media/astra-sample-sec-task3-medium-1.jpg",
+          "durationSeconds": 13.3,
+          "source": "20260929T153432-173317Z-astra-all-sec",
+          "sourceFile": "evaluation/vlmvla-03-stand_object-medium-seed000056/videos/vlmvla-03-stand_object-medium-seed000056-e0.mp4"
+        },
+        {
+          "id": "main-task3-medium-0",
+          "success": false,
+          "label": "Failure sample",
+          "mp4": "media/main/task3-medium-0.mp4",
+          "webm": "media/main-sample-task3-medium-0.webm",
+          "poster": "media/main-sample-task3-medium-0.jpg",
+          "durationSeconds": 14.433333333333334,
+          "sourceFile": "task3-medium-0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "main-results",
+      "variant": "task3-hard",
+      "title": "Task 3 · Hard",
+      "context": "Standing stability · Hard",
+      "source": "media/main",
+      "clips": [
+        {
+          "id": "main-task3-hard-0",
+          "success": false,
+          "label": "Failure sample",
+          "mp4": "media/main/task3-hard-0.mp4",
+          "webm": "media/main-sample-task3-hard-0.webm",
+          "poster": "media/main-sample-task3-hard-0.jpg",
+          "durationSeconds": 13.933333333333334,
+          "sourceFile": "task3-hard-0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "main-results",
+      "variant": "task3-xhard",
+      "title": "Task 3 · Extra hard",
+      "context": "Standing stability · Extra hard",
+      "source": "media/main",
+      "clips": [
+        {
+          "id": "main-task3-xhard-0",
+          "success": false,
+          "label": "Failure sample",
+          "mp4": "media/main/task3-xhard-0.mp4",
+          "webm": "media/main-sample-task3-xhard-0.webm",
+          "poster": "media/main-sample-task3-xhard-0.jpg",
+          "durationSeconds": 14.9,
+          "sourceFile": "task3-xhard-0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "main-results",
+      "variant": "task4-easy",
+      "title": "Task 4 · Easy",
+      "context": "Tool-assisted drawer · Easy",
+      "source": "media/main",
+      "clips": [
+        {
+          "id": "main-task4-easy-1",
+          "success": true,
+          "label": "Success sample",
+          "mp4": "media/main/task4-easy-1.mp4",
+          "webm": "media/main-sample-task4-easy-1.webm",
+          "poster": "media/main-sample-task4-easy-1.jpg",
+          "durationSeconds": 13.9,
+          "sourceFile": "task4-easy-1.mp4"
+        },
+        {
+          "id": "main-task4-easy-0",
+          "success": false,
+          "label": "Failure sample",
+          "mp4": "media/main/task4-easy-0.mp4",
+          "webm": "media/main-sample-task4-easy-0.webm",
+          "poster": "media/main-sample-task4-easy-0.jpg",
+          "durationSeconds": 14.1,
+          "sourceFile": "task4-easy-0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "main-results",
+      "variant": "task4-medium",
+      "title": "Task 4 · Medium",
+      "context": "Tool-assisted drawer · Medium",
+      "source": "media/main",
+      "clips": [
+        {
+          "id": "astra-sample-sec-task4-medium-1",
+          "success": true,
+          "label": "Success sample",
+          "seed": 52,
+          "progress": 0.953732967376709,
+          "finalProgress": 0.9536998271942139,
+          "steps": 265,
+          "mp4": "media/astra-sample-sec-task4-medium-1.mp4",
+          "webm": "media/astra-sample-sec-task4-medium-1.webm",
+          "poster": "media/astra-sample-sec-task4-medium-1.jpg",
+          "durationSeconds": 8.866667,
+          "source": "20260929T153432-173317Z-astra-all-sec",
+          "sourceFile": "evaluation/vlmvla-04-tool_drawer-medium-seed000052/videos/vlmvla-04-tool_drawer-medium-seed000052-e0.mp4"
+        },
+        {
+          "id": "main-task4-medium-0",
+          "success": false,
+          "label": "Failure sample",
+          "mp4": "media/main/task4-medium-0.mp4",
+          "webm": "media/main-sample-task4-medium-0.webm",
+          "poster": "media/main-sample-task4-medium-0.jpg",
+          "durationSeconds": 14.566666666666666,
+          "sourceFile": "task4-medium-0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "main-results",
+      "variant": "task4-hard",
+      "title": "Task 4 · Hard",
+      "context": "Tool-assisted drawer · Hard",
+      "source": "media/main",
+      "clips": [
+        {
+          "id": "main-task4-hard-0",
+          "success": false,
+          "label": "Failure sample",
+          "mp4": "media/main/task4-hard-0.mp4",
+          "webm": "media/main-sample-task4-hard-0.webm",
+          "poster": "media/main-sample-task4-hard-0.jpg",
+          "durationSeconds": 14.9,
+          "sourceFile": "task4-hard-0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "main-results",
+      "variant": "task4-xhard",
+      "title": "Task 4 · Extra hard",
+      "context": "Tool-assisted drawer · Extra hard",
+      "source": "media/main",
+      "clips": [
+        {
+          "id": "main-task4-xhard-0",
+          "success": false,
+          "label": "Failure sample",
+          "mp4": "media/main/task4-xhard-0.mp4",
+          "webm": "media/main-sample-task4-xhard-0.webm",
+          "poster": "media/main-sample-task4-xhard-0.jpg",
+          "durationSeconds": 14.066666666666666,
+          "sourceFile": "task4-xhard-0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "main-results",
+      "variant": "task5-easy",
+      "title": "Task 5 · Easy",
+      "context": "Ring release · Easy",
+      "source": "media/main",
+      "clips": [
+        {
+          "id": "main-task5-easy-1",
+          "success": true,
+          "label": "Success sample",
+          "mp4": "media/main/task5-easy-1.mp4",
+          "webm": "media/main-sample-task5-easy-1.webm",
+          "poster": "media/main-sample-task5-easy-1.jpg",
+          "durationSeconds": 3.5,
+          "sourceFile": "task5-easy-1.mp4"
+        },
+        {
+          "id": "main-task5-easy-0",
+          "success": false,
+          "label": "Failure sample",
+          "mp4": "media/main/task5-easy-0.mp4",
+          "webm": "media/main-sample-task5-easy-0.webm",
+          "poster": "media/main-sample-task5-easy-0.jpg",
+          "durationSeconds": 14.966666666666667,
+          "sourceFile": "task5-easy-0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "main-results",
+      "variant": "task5-medium",
+      "title": "Task 5 · Medium",
+      "context": "Ring release · Medium",
+      "source": "media/main",
+      "clips": [
+        {
+          "id": "main-task5-medium-1",
+          "success": true,
+          "label": "Success sample",
+          "mp4": "media/main/task5-medium-1.mp4",
+          "webm": "media/main-sample-task5-medium-1.webm",
+          "poster": "media/main-sample-task5-medium-1.jpg",
+          "durationSeconds": 10.5,
+          "sourceFile": "task5-medium-1.mp4"
+        },
+        {
+          "id": "main-task5-medium-0",
+          "success": false,
+          "label": "Failure sample",
+          "mp4": "media/main/task5-medium-0.mp4",
+          "webm": "media/main-sample-task5-medium-0.webm",
+          "poster": "media/main-sample-task5-medium-0.jpg",
+          "durationSeconds": 14.933333333333334,
+          "sourceFile": "task5-medium-0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "main-results",
+      "variant": "task5-hard",
+      "title": "Task 5 · Hard",
+      "context": "Ring release · Hard",
+      "source": "media/main",
+      "clips": [
+        {
+          "id": "main-task5-hard-0",
+          "success": false,
+          "label": "Failure sample",
+          "mp4": "media/main/task5-hard-0.mp4",
+          "webm": "media/main-sample-task5-hard-0.webm",
+          "poster": "media/main-sample-task5-hard-0.jpg",
+          "durationSeconds": 14.933333333333334,
+          "sourceFile": "task5-hard-0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "main-results",
+      "variant": "task5-xhard",
+      "title": "Task 5 · Extra hard",
+      "context": "Ring release · Extra hard",
+      "source": "media/main",
+      "clips": [
+        {
+          "id": "main-task5-xhard-1",
+          "success": true,
+          "label": "Success sample",
+          "mp4": "media/main/task5-xhard-1.mp4",
+          "webm": "media/main-sample-task5-xhard-1.webm",
+          "poster": "media/main-sample-task5-xhard-1.jpg",
+          "durationSeconds": 14.9,
+          "sourceFile": "task5-xhard-1.mp4"
+        },
+        {
+          "id": "main-task5-xhard-0",
+          "success": false,
+          "label": "Failure sample",
+          "mp4": "media/main/task5-xhard-0.mp4",
+          "webm": "media/main-sample-task5-xhard-0.webm",
+          "poster": "media/main-sample-task5-xhard-0.jpg",
+          "durationSeconds": 14.9,
+          "sourceFile": "task5-xhard-0.mp4"
+        }
+      ]
+    }
+  ]
+}

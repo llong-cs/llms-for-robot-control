@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "groups": [
+    {
+      "chartTableId": "failure-behaviors",
+      "variant": "grasp-strategy",
+      "title": "Repeating the same grasp",
+      "context": "Task 1 · Odd-object grasping · Medium · Seed 44",
+      "description": "This failure case illustrates difficulty choosing and revising a grasping strategy after the object repeatedly slips.",
+      "clips": [
+        {
+          "id": "main-task1-medium-0",
+          "success": false,
+          "label": "Repeating the same grasp",
+          "mp4": "media/main/task1-medium-0.mp4",
+          "webm": "media/main-sample-task1-medium-0.webm",
+          "poster": "media/main-sample-task1-medium-0.jpg",
+          "durationSeconds": 14.866666666666667,
+          "sourceFile": "task1-medium-0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "failure-behaviors",
+      "variant": "occluded-slot",
+      "title": "When the slot disappears",
+      "context": "Task 02 · Precision insertion · Hard · Seed 42",
+      "description": "The object falls and covers the slot, and Astra struggles to recover the alignment needed to continue.",
+      "clips": [
+        {
+          "id": "occluded-slot",
+          "label": "When the slot disappears",
+          "mp4": "media/occluded-slot.mp4",
+          "webm": "media/occluded-slot.webm",
+          "poster": "media/occluded-slot.jpg"
+        }
+      ]
+    },
+    {
+      "chartTableId": "failure-behaviors",
+      "variant": "kinematics",
+      "title": "Kinematic difficulties",
+      "context": "Task 03 · Standing stability · Easy",
+      "description": "These two attempts show the arm entering awkward configurations that make the intended movement difficult to execute.",
+      "clips": [
+        {
+          "id": "kinematics-attempt-1",
+          "label": "An awkward arm configuration",
+          "mp4": "media/kinematics-attempt-1.mp4",
+          "webm": "media/kinematics-attempt-1.webm",
+          "poster": "media/kinematics-attempt-1.jpg"
+        },
+        {
+          "id": "kinematics-attempt-2",
+          "label": "Another kinematic difficulty",
+          "mp4": "media/kinematics-attempt-2.mp4",
+          "webm": "media/kinematics-attempt-2.webm",
+          "poster": "media/kinematics-attempt-2.jpg"
+        }
+      ]
+    }
+  ]
+}

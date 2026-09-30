@@ -1,0 +1,133 @@
+{
+  "schemaVersion": 1,
+  "groups": [
+    {
+      "chartTableId": "promising-behaviors",
+      "variant": "force-direction",
+      "title": "Direction and angle of force",
+      "context": "Task 00 · Slanted board · Hard · Seed 44",
+      "description": "Astra directs its pulls at different angles as it works to extract the board from the slot, illustrating how the direction of applied force matters.",
+      "clips": [
+        {
+          "id": "force-direction",
+          "label": "Direction and angle of force",
+          "mp4": "media/force-direction.mp4",
+          "webm": "media/force-direction.webm",
+          "poster": "media/force-direction.jpg"
+        }
+      ]
+    },
+    {
+      "chartTableId": "promising-behaviors",
+      "variant": "online-adaptation",
+      "title": "Online adaptation",
+      "context": "Task 00 · Slanted board · Hard · Seed 42",
+      "description": "Astra changes how it grasps the board after its initial approach fails to work.",
+      "clips": [
+        {
+          "id": "online-adaptation",
+          "label": "Online adaptation",
+          "mp4": "media/online-adaptation.mp4",
+          "webm": "media/online-adaptation.webm",
+          "poster": "media/online-adaptation.jpg"
+        }
+      ]
+    },
+    {
+      "chartTableId": "promising-behaviors",
+      "variant": "fine-adjustments",
+      "title": "Coordinated fine adjustments",
+      "context": "Task 02 · Precision insertion · Hard · Seed 43",
+      "description": "Astra combines very small adjustments to the object's position with repeated downward pressure, continuing this coordinated motion until the object is successfully inserted.",
+      "clips": [
+        {
+          "id": "fine-adjustments",
+          "label": "Coordinated fine adjustments",
+          "mp4": "media/fine-adjustments.mp4",
+          "webm": "media/fine-adjustments.webm",
+          "poster": "media/fine-adjustments.jpg"
+        }
+      ]
+    },
+    {
+      "chartTableId": "promising-behaviors",
+      "variant": "incremental-progress",
+      "title": "Incremental progress",
+      "context": "Task 05 · Ring release · Medium · Seed 42",
+      "description": "It works the ring free from the bridge bit by bit, making progress through a series of small pulls.",
+      "clips": [
+        {
+          "id": "incremental-progress",
+          "label": "Incremental progress",
+          "mp4": "media/incremental-progress.mp4",
+          "webm": "media/incremental-progress.webm",
+          "poster": "media/incremental-progress.jpg"
+        }
+      ]
+    },
+    {
+      "chartTableId": "promising-behaviors",
+      "variant": "spatial-reasoning",
+      "title": "Spatial reasoning",
+      "context": "Task 05 · Ring release · Extra hard · Seed 44",
+      "description": "It combines rotation with repeated pulling attempts to maneuver the ring off the bridge.",
+      "clips": [
+        {
+          "id": "spatial-reasoning",
+          "label": "Spatial reasoning",
+          "mp4": "media/spatial-reasoning.mp4",
+          "webm": "media/spatial-reasoning.webm",
+          "poster": "media/spatial-reasoning.jpg"
+        }
+      ]
+    },
+    {
+      "chartTableId": "promising-behaviors",
+      "variant": "tool-use",
+      "title": "Basic tool use",
+      "context": "Task 04 · Tool-assisted drawer · Easy · Seed 43",
+      "description": "It manages to use a stick to open the drawer.",
+      "clips": [
+        {
+          "id": "tool-use",
+          "label": "Basic tool use",
+          "mp4": "media/tool-use.mp4",
+          "webm": "media/tool-use.webm",
+          "poster": "media/tool-use.jpg"
+        }
+      ]
+    },
+    {
+      "chartTableId": "promising-behaviors",
+      "variant": "physical-understanding",
+      "title": "Physical or world understanding",
+      "context": "Task 01 · Odd-object grasping · Easy · Seed 50",
+      "description": "It moves to stop a rolling ball and then grasps it, suggesting some ability to handle a changing physical scene.",
+      "clips": [
+        {
+          "id": "physical-understanding",
+          "label": "Physical or world understanding",
+          "mp4": "media/physical-understanding.mp4",
+          "webm": "media/physical-understanding.webm",
+          "poster": "media/physical-understanding.jpg"
+        }
+      ]
+    },
+    {
+      "chartTableId": "promising-behaviors",
+      "variant": "seating-check",
+      "title": "A surprisingly human-like check",
+      "context": "Task 02 · Precision insertion · Easy · Seed 42",
+      "description": "After inserting an object, it gives it an extra downward press to check that it is fully seated.",
+      "clips": [
+        {
+          "id": "seating-check",
+          "label": "A surprisingly human-like check",
+          "mp4": "media/seating-check.mp4",
+          "webm": "media/seating-check.webm",
+          "poster": "media/seating-check.jpg"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,468 @@
+{
+  "schemaVersion": 1,
+  "clips": {
+    "media/force-direction.mp4": {
+      "status": "available",
+      "trace": "model-outputs/force-direction.json",
+      "turnCount": 25,
+      "timeAlignment": "verified"
+    },
+    "media/online-adaptation.mp4": {
+      "status": "available",
+      "trace": "model-outputs/online-adaptation.json",
+      "turnCount": 76,
+      "timeAlignment": "verified"
+    },
+    "media/fine-adjustments.mp4": {
+      "status": "available",
+      "trace": "model-outputs/fine-adjustments.json",
+      "turnCount": 55,
+      "timeAlignment": "verified",
+      "message": "The final model turn was recorded at control step 270. The remaining video frames contain no additional model turns."
+    },
+    "media/incremental-progress.mp4": {
+      "status": "available",
+      "trace": "model-outputs/incremental-progress.json",
+      "turnCount": 65,
+      "timeAlignment": "verified"
+    },
+    "media/spatial-reasoning.mp4": {
+      "status": "available",
+      "trace": "model-outputs/spatial-reasoning.json",
+      "turnCount": 90,
+      "timeAlignment": "verified"
+    },
+    "media/tool-use.mp4": {
+      "status": "available",
+      "trace": "model-outputs/tool-use.json",
+      "turnCount": 83,
+      "timeAlignment": "verified",
+      "message": "The final model turn was recorded at control step 408. The remaining video frames contain no additional model turns."
+    },
+    "media/physical-understanding.mp4": {
+      "status": "available",
+      "trace": "model-outputs/physical-understanding.json",
+      "turnCount": 62,
+      "timeAlignment": "verified",
+      "message": "The final model turn was recorded at control step 301. The remaining video frames contain no additional model turns."
+    },
+    "media/seating-check.mp4": {
+      "status": "available",
+      "trace": "model-outputs/seating-check.json",
+      "turnCount": 28,
+      "timeAlignment": "verified",
+      "message": "The final model turn was recorded at control step 131. The remaining video frames contain no additional model turns."
+    },
+    "media/chart-rollout-control-move-by-5-seed-50.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-control-move-by-5-seed-50.json",
+      "turnCount": 54,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-control-move-by-5-seed-42.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-control-move-by-5-seed-42.json",
+      "turnCount": 90,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-control-move-by-5-seed-47.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-control-move-by-5-seed-47.json",
+      "turnCount": 90,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-control-move-by-5-seed-51.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-control-move-by-5-seed-51.json",
+      "turnCount": 90,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-control-move-by-chunk-5-seed-49.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-control-move-by-chunk-5-seed-49.json",
+      "turnCount": 90,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-control-move-by-chunk-5-seed-51.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-control-move-by-chunk-5-seed-51.json",
+      "turnCount": 90,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-control-move-by-chunk-5-seed-45.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-control-move-by-chunk-5-seed-45.json",
+      "turnCount": 90,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-control-move-by-chunk-5-seed-42.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-control-move-by-chunk-5-seed-42.json",
+      "turnCount": 90,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-control-move-by-10-seed-51.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-control-move-by-10-seed-51.json",
+      "turnCount": 46,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-control-move-by-10-seed-49.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-control-move-by-10-seed-49.json",
+      "turnCount": 46,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-control-move-by-10-seed-45.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-control-move-by-10-seed-45.json",
+      "turnCount": 46,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-control-move-by-10-seed-42.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-control-move-by-10-seed-42.json",
+      "turnCount": 46,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-control-move-by-chunk-10-seed-47.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-control-move-by-chunk-10-seed-47.json",
+      "turnCount": 46,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-control-move-by-chunk-10-seed-44.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-control-move-by-chunk-10-seed-44.json",
+      "turnCount": 45,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-control-move-by-chunk-10-seed-50.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-control-move-by-chunk-10-seed-50.json",
+      "turnCount": 47,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-control-move-by-chunk-10-seed-42.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-control-move-by-chunk-10-seed-42.json",
+      "turnCount": 45,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-control-move-by-chunk-10-2xslow-seed-42.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-control-move-by-chunk-10-2xslow-seed-42.json",
+      "turnCount": 46,
+      "timeAlignment": "verified",
+      "message": "This video shows the first 900 control steps. All recorded model turns starting before the clip boundary are included; complete tool calls are preserved even when their execution crosses that boundary. Later turns are omitted."
+    },
+    "media/chart-rollout-control-move-by-chunk-10-2xslow-seed-50.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-control-move-by-chunk-10-2xslow-seed-50.json",
+      "turnCount": 45,
+      "timeAlignment": "verified",
+      "message": "This video shows the first 900 control steps. All recorded model turns starting before the clip boundary are included; complete tool calls are preserved even when their execution crosses that boundary. Later turns are omitted."
+    },
+    "media/chart-rollout-control-move-by-chunk-10-2xslow-seed-49.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-control-move-by-chunk-10-2xslow-seed-49.json",
+      "turnCount": 45,
+      "timeAlignment": "verified",
+      "message": "This video shows the first 900 control steps. All recorded model turns starting before the clip boundary are included; complete tool calls are preserved even when their execution crosses that boundary. Later turns are omitted."
+    },
+    "media/chart-rollout-control-move-by-chunk-10-2xslow-seed-43.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-control-move-by-chunk-10-2xslow-seed-43.json",
+      "turnCount": 45,
+      "timeAlignment": "verified",
+      "message": "This video shows the first 900 control steps. All recorded model turns starting before the clip boundary are included; complete tool calls are preserved even when their execution crosses that boundary. Later turns are omitted."
+    },
+    "media/chart-rollout-control-move-by-chunk-5-2xslow-seed-46.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-control-move-by-chunk-5-2xslow-seed-46.json",
+      "turnCount": 43,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-control-move-by-chunk-5-2xslow-seed-44.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-control-move-by-chunk-5-2xslow-seed-44.json",
+      "turnCount": 90,
+      "timeAlignment": "verified",
+      "message": "This video shows the first 900 control steps. All recorded model turns starting before the clip boundary are included; complete tool calls are preserved even when their execution crosses that boundary. Later turns are omitted."
+    },
+    "media/chart-rollout-control-move-by-chunk-5-2xslow-seed-43.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-control-move-by-chunk-5-2xslow-seed-43.json",
+      "turnCount": 91,
+      "timeAlignment": "verified",
+      "message": "This video shows the first 900 control steps. All recorded model turns starting before the clip boundary are included; complete tool calls are preserved even when their execution crosses that boundary. Later turns are omitted."
+    },
+    "media/chart-rollout-control-move-by-chunk-5-2xslow-seed-45.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-control-move-by-chunk-5-2xslow-seed-45.json",
+      "turnCount": 90,
+      "timeAlignment": "verified",
+      "message": "This video shows the first 900 control steps. All recorded model turns starting before the clip boundary are included; complete tool calls are preserved even when their execution crosses that boundary. Later turns are omitted."
+    },
+    "media/chart-rollout-memory-mem-0-seed-61.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-memory-mem-0-seed-61.json",
+      "turnCount": 180,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-memory-mem-0-seed-55.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-memory-mem-0-seed-55.json",
+      "turnCount": 180,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-memory-mem-0-seed-48.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-memory-mem-0-seed-48.json",
+      "turnCount": 180,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-memory-mem-0-seed-42.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-memory-mem-0-seed-42.json",
+      "turnCount": 180,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-memory-mem-10-seed-42.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-memory-mem-10-seed-42.json",
+      "turnCount": 119,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-memory-mem-10-seed-48.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-memory-mem-10-seed-48.json",
+      "turnCount": 182,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-memory-mem-10-seed-47.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-memory-mem-10-seed-47.json",
+      "turnCount": 185,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-memory-mem-10-seed-49.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-memory-mem-10-seed-49.json",
+      "turnCount": 127,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-memory-mem-2-seed-57.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-memory-mem-2-seed-57.json",
+      "turnCount": 183,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-memory-mem-2-seed-43.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-memory-mem-2-seed-43.json",
+      "turnCount": 185,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-memory-mem-2-seed-52.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-memory-mem-2-seed-52.json",
+      "turnCount": 190,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-memory-mem-2-seed-42.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-memory-mem-2-seed-42.json",
+      "turnCount": 183,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-memory-mem-5-seed-42.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-memory-mem-5-seed-42.json",
+      "turnCount": 79,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-memory-mem-5-seed-49.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-memory-mem-5-seed-49.json",
+      "turnCount": 181,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-memory-mem-5-seed-43.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-memory-mem-5-seed-43.json",
+      "turnCount": 186,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-memory-mem-5-seed-54.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-memory-mem-5-seed-54.json",
+      "turnCount": 185,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-effort-xhigh-seed-42.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-effort-xhigh-seed-42.json",
+      "turnCount": 160,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-effort-xhigh-seed-56.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-effort-xhigh-seed-56.json",
+      "turnCount": 183,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-effort-xhigh-seed-55.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-effort-xhigh-seed-55.json",
+      "turnCount": 183,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-effort-xhigh-seed-60.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-effort-xhigh-seed-60.json",
+      "turnCount": 182,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-effort-medium-seed-42.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-effort-medium-seed-42.json",
+      "turnCount": 162,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-effort-medium-seed-55.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-effort-medium-seed-55.json",
+      "turnCount": 181,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-effort-medium-seed-46.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-effort-medium-seed-46.json",
+      "turnCount": 184,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-effort-medium-seed-53.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-effort-medium-seed-53.json",
+      "turnCount": 181,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-effort-high-seed-43.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-effort-high-seed-43.json",
+      "turnCount": 65,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-effort-high-seed-46.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-effort-high-seed-46.json",
+      "turnCount": 184,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-effort-high-seed-51.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-effort-high-seed-51.json",
+      "turnCount": 184,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-effort-high-seed-45.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-effort-high-seed-45.json",
+      "turnCount": 181,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-effort-low-seed-42.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-effort-low-seed-42.json",
+      "turnCount": 113,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-effort-low-seed-58.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-effort-low-seed-58.json",
+      "turnCount": 183,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-effort-low-seed-54.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-effort-low-seed-54.json",
+      "turnCount": 182,
+      "timeAlignment": "verified"
+    },
+    "media/chart-rollout-effort-low-seed-48.mp4": {
+      "status": "available",
+      "trace": "model-outputs/chart-rollout-effort-low-seed-48.json",
+      "turnCount": 179,
+      "timeAlignment": "verified"
+    },
+    "media/main/task1-medium-0.mp4": {
+      "status": "available",
+      "trace": "model-outputs/task1-medium-0.json",
+      "turnCount": 93,
+      "timeAlignment": "verified"
+    },
+    "media/occluded-slot.mp4": {
+      "status": "available",
+      "trace": "model-outputs/occluded-slot.json",
+      "turnCount": 92,
+      "timeAlignment": "verified"
+    },
+    "media/kinematics-attempt-1.mp4": {
+      "status": "available",
+      "trace": "model-outputs/kinematics-attempt-1.json",
+      "turnCount": 90,
+      "timeAlignment": "verified"
+    },
+    "media/kinematics-attempt-2.mp4": {
+      "status": "available",
+      "trace": "model-outputs/kinematics-attempt-2.json",
+      "turnCount": 90,
+      "timeAlignment": "verified"
+    },
+    "media/memory-board-adaptation.mp4": {
+      "status": "available",
+      "trace": "model-outputs/memory-board-adaptation.json",
+      "turnCount": 34,
+      "timeAlignment": "verified"
+    },
+    "media/memory-ring-adaptation.mp4": {
+      "status": "available",
+      "trace": "model-outputs/memory-ring-adaptation.json",
+      "turnCount": 46,
+      "timeAlignment": "verified"
+    },
+    "media/standard.mp4": {
+      "status": "available",
+      "trace": "model-outputs/standard.json",
+      "turnCount": 28,
+      "timeAlignment": "verified"
+    },
+    "media/idstudent.mp4": {
+      "status": "available",
+      "trace": "model-outputs/idstudent.json",
+      "turnCount": 12,
+      "timeAlignment": "verified"
+    },
+    "media/dropteacher.mp4": {
+      "status": "available",
+      "trace": "model-outputs/dropteacher.json",
+      "turnCount": 36,
+      "timeAlignment": "verified"
+    },
+    "media/oodstudent.mp4": {
+      "status": "available",
+      "trace": "model-outputs/oodstudent.json",
+      "turnCount": 100,
+      "timeAlignment": "verified",
+      "message": "The final model turn was recorded at control step 495. The remaining video frames contain no additional model turns."
+    },
+    "media/memory-no-demo.mp4": {
+      "status": "available",
+      "trace": "model-outputs/memory-no-demo.json",
+      "turnCount": 100,
+      "timeAlignment": "verified",
+      "message": "The final model turn was recorded at control step 495. The remaining video frames contain no additional model turns."
+    }
+  }
+}
