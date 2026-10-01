@@ -4,20 +4,22 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#ffffff">
-  <meta name="description" content="Exploring how language models understand motion and control through six robot manipulation tasks, video observations, action representation, and memory experiments.">
+  <meta name="description" content="Exploring how language models understand motion and control on Ditto-Bench, a six-task robot manipulation benchmark, through video observations, action representation, and memory experiments.">
   <title>From scenes to motion</title>
-  <link rel="stylesheet" href="styles.css?v=memory-one-shot-1">
+  <link rel="stylesheet" href="styles.css?v=results-hierarchy-1">
   <script src="model-outputs.js?v=control-time-details-1" defer></script>
-  <script src="rollout-panel.js?v=control-time-details-1" defer></script>
-  <script src="concept-notes.js?v=control-time-details-1" defer></script>
-  <script src="article-navigation.js?v=control-time-details-1" defer></script>
-  <script src="script.js?v=memory-one-shot-1" defer></script>
+  <script src="rollout-panel.js?v=compact-plot-demos-1" defer></script>
+  <script src="concept-notes.js?v=notes-no-scroll-1" defer></script>
+  <script src="article-navigation.js?v=context-and-control-1" defer></script>
+  <script src="script.js?v=collaboration-costs-1" defer></script>
+  <script src="media-viewer.js?v=media-viewer-1" defer></script>
 </head>
 <body>
   <main id="article">
     <header>
       <h1 id="blog-title">From understanding scenes to controlling motion</h1>
       <p class="subtitle">Exploring motion, contact, and control with Astra.</p>
+      <p class="project-links"><a href="https://github.com/llong-cs/llms-for-robot-control/tree/main" target="_blank" rel="noopener">Codebase ↗</a></p>
     </header>
     <nav id="article-nav" class="article-nav" aria-label="Article navigation">
       <details id="article-contents" class="article-contents">
@@ -25,14 +27,24 @@
         <div class="contents-menu">
           <ol class="contents-list">
             <li><a href="#introduction">Introduction</a></li>
-            <li><a href="#task-suite">Task suite</a></li>
-            <li><a href="#performance">Main performance</a></li>
-            <li class="contents-subsection"><a href="#main-performance-results">Astra results</a></li>
-            <li class="contents-subsection"><a href="#control-failures-title">Where control still breaks down</a></li>
-            <li class="contents-subsection"><a href="#molmoact2-title">MolmoAct2</a></li>
-            <li><a href="#control-mode">Control mode</a></li>
+            <li><a href="#task-suite">Ditto-Bench</a></li>
+            <li><a href="#performance">Main performance</a>
+              <ol>
+                <li><a href="#main-performance-results">Astra results</a>
+                  <ol>
+                    <li><a href="#control-failures-title">Where control still breaks down</a></li>
+                  </ol>
+                </li>
+                <li><a href="#molmoact2-results-title">MolmoAct2 results</a></li>
+              </ol>
+            </li>
+            <li><a href="#control-mode">Control interface</a></li>
             <li><a href="#memory">Memory</a></li>
-            <li><a href="#reasoning-effort">Reasoning effort</a></li>
+            <li><a href="#reasoning-effort">Reasoning</a></li>
+            <li><a href="#trajectory-distributions">Behavioral pattern analysis</a></li>
+            <li><a href="#llm-vla-collaboration">Exploring LLM-VLA collaboration</a></li>
+            <li><a href="#conclusion">Conclusion</a></li>
+            <li><a href="#references">References</a></li>
           </ol>
         </div>
       </details>
@@ -42,16 +54,31 @@
     <article>
       <section id="introduction" aria-labelledby="intro-title">
         <h2 id="intro-title">Introduction</h2>
-        <p>We have recently seen many demos of Astra controlling robots. The idea of using language models for embodied tasks itself is actually not new, but Astra takes the “LLM part” further into lower-level control: it can now observe a scene, reason about what to do, directly generate actions, and repeat the process in response to changes in the environment. This allows the model to handle aspects of physical interaction that are difficult to capture through sparse, discrete, and sometimes ambiguous high-level plans alone.</p>
+        <p>We have recently seen many demos of OpenAI’s <a href="https://openai.com/zh-Hans-CN/index/gpt-6-astra/" target="_blank" rel="noopener">GPT-6 Astra</a> (which we call Astra throughout this post) controlling robots (<a href="#ref-chooi">Chooi</a>; <a href="#ref-duan">Duan</a>; <a href="#ref-embodied-policy">Su et al.</a>). The idea of using language models for embodied tasks itself is actually not new (<a href="#ref-physical-agency">Pigey</a>; <a href="#ref-gemini-robotics-15">Gemini Robotics 1.5</a>; <a href="#ref-gemini-robotics-2">Gemini Robotics 2</a>; <a href="#ref-show-harness">Show-Harness</a>), but Astra takes the “LLM part” further into lower-level control: it can now observe a scene, reason about what to do, directly generate actions, and repeat the process in response to changes in the environment. This allows the model to handle aspects of physical interaction that are difficult to capture through sparse, discrete, and sometimes ambiguous high-level plans alone.</p>
 <p>Beyond Astra’s extraordinary semantic understanding of largely static scenes—recognizing objects, interpreting instructions, and reasoning about spatial relationships, which are already familiar and largely expected—what excites me more is its seemingly solid grasp of control logic and motion dynamics. This makes me curious about just how well Astra actually understands these concepts.</p>
 <p>Can it anticipate how its commands will move the robot and affect the objects around it? Can it account for contact and geometric constraints, and adjust when the resulting motion differs from what it expected? In this blog, we investigate these questions through a series of experiments.</p>
+        <aside class="section-takeaway findings-summary" aria-labelledby="findings-title">
+          <h3 id="findings-title">What we did</h3>
+          <ul>
+            <li>We build <a href="#task-suite">Ditto-Bench</a>, a new six-task benchmark, to evaluate Astra’s understanding of motion and control, focusing on physical interactions that involve contact, geometric constraints, precise manipulation, and more inventive ways of interacting with objects.</li>
+            <li>We find that <a href="#performance">Astra shows useful manipulation behaviors and promising embodied understanding</a>, but its performance is still inconsistent and limited in precision and efficiency. Complementary improvements may be needed to realize its full potential.</li>
+            <li>We ablate key design choices in an agentic framework for robot control with models like Astra, identifying the <a href="#control-mode">action interface</a>, <a href="#memory">memory</a>, and <a href="#reasoning-effort">reasoning effort</a> as three critical factors. They shape how effectively the agent plans and executes actions, and learns from feedback.</li>
+            <li>We compare <a href="#trajectory-distributions">the behavioral patterns of LLM agents and VLAs</a> and explore <a href="#llm-vla-collaboration">how they can collaborate</a>, using a failed MolmoAct2 trajectory as context for a new attempt by Astra.</li>
+          </ul>
+        </aside>
       </section>
       <section id="task-suite" aria-labelledby="tasks-title">
-        <h2 id="tasks-title">Task suite</h2>
-        <p>Let’s first define the kinds of tasks we want to study. To investigate how well Astra understands motion and control, we need tasks that require demanding physical interactions with the environment. However, many existing benchmarks (more or less) emphasize semantic challenges, for example, whether a policy can recognize number-shaped objects, compare their numerical values, and place them into the corresponding slots. There is less emphasis on tasks that are easy to understand but difficult to complete because of complex physical constraints. With this in mind, we designed a new task suite as follows.</p>
+        <h2 id="tasks-title">Ditto-Bench</h2>
+        <p>To investigate how well Astra understands motion and control, we need tasks that require demanding physical interactions with the environment. However, many existing benchmarks (more or less) emphasize semantic challenges, for example, whether a policy can recognize number-shaped objects, compare their numerical values, and place them into the corresponding slots. There is less emphasis on tasks that are easy to understand but difficult to complete because of complex physical constraints. With this in mind, we designed <strong>Ditto-Bench</strong>, a benchmark comprising the six tasks below.</p>
+        <details id="task-implementation" class="article-details">
+          <summary>Implementation details</summary>
+          <div class="article-details-content">
+            <p>We implement Ditto-Bench in ManiSkill 3 / SAPIEN, building on MolmoAct2’s DROID simulation setup. We reuse its Franka FR3 arm with a Robotiq 2F-85 gripper, native controllers, and external and wrist cameras. The shared simulation settings follow its evaluation setup: 150 Hz physics and 30 Hz control. Our six tasks add their own objects, fixtures, and success conditions. The policy receives camera images and robot proprioception; object poses and task diagnostics are reserved for evaluation.</p>
+          </div>
+        </details>
         <p class="table-note" id="task-table-hint">Scroll left or right to view all columns, including difficulty design and progress scoring. Select a thumbnail to open the full-size image.</p>
         <div class="table-scroll" role="region" aria-labelledby="tasks-title" aria-describedby="task-table-hint" tabindex="0">
-          <table class="task-table" aria-label="Task suite overview" aria-describedby="task-illustration-note progress-scoring-note">
+          <table class="task-table" aria-label="Ditto-Bench overview" aria-describedby="task-illustration-note progress-scoring-note">
             <colgroup>
               <col class="id-column"><col class="name-column"><col class="instruction-column"><col class="illustration-column"><col class="purpose-column"><col class="levels-column"><col class="score-column">
             </colgroup>
@@ -63,7 +90,7 @@
                 <th scope="row">0</th>
                 <td>Constrained extraction</td>
                 <td>Pull the blue board completely out of the slot.</td>
-                <td><a href="media/task-0-slanted_board.jpg" target="_blank" rel="noopener" aria-label="Open larger illustration for task 0: Constrained extraction"><img src="media/task-0-slanted_board.jpg" alt="A blue board protrudes from a gray inclined slot on the tabletop." width="1000" height="800" decoding="async"></a></td>
+                <td><a href="media/task-0-slanted_board-hard.jpg" aria-label="Open larger hard-difficulty illustration for task 0: Constrained extraction" data-media-viewer="image" aria-haspopup="dialog" aria-controls="media-viewer"><img src="media/task-0-slanted_board-hard.jpg" alt="A blue board protrudes from a gray slot tilted and rotated above the tabletop." width="1000" height="800" decoding="async"></a></td>
                 <td>Tests motion alignment and contact-aware control within a narrow channel.</td>
                               <td><ul class="level-designs"><li><strong>Easy:</strong> Horizontal channel with a looser fit around the board.</li><li><strong>Medium:</strong> Channel slopes upward, with the same fit around the board.</li><li><strong>Hard:</strong> Channel tilts upward and sideways, with the opening also rotated.</li><li><strong>Extra hard (xhard):</strong> Same tilted setup, but a tighter gap around the board.</li></ul></td>
                 <td>How far the board has been pulled along the channel toward fully clearing the slot.</td>
@@ -72,7 +99,7 @@
                 <th scope="row">1</th>
                 <td>Odd-object grasping</td>
                 <td>Pick up the blue object and put it in the basket.</td>
-                <td><a href="media/task-1-odd_geometry.jpg" target="_blank" rel="noopener" aria-label="Open larger illustration for task 1: Odd-object grasping"><img src="media/task-1-odd_geometry.jpg" alt="A small blue trapezoidal object sits beside an empty cream-colored basket." width="640" height="360" decoding="async"></a></td>
+                <td><a href="media/task-1-odd_geometry-hard.jpg" aria-label="Open larger hard-difficulty illustration for task 1: Odd-object grasping" data-media-viewer="image" aria-haspopup="dialog" aria-controls="media-viewer"><img src="media/task-1-odd_geometry-hard.jpg" alt="A blue elongated, pointed football-shaped object lies beside an empty cream-colored basket." width="640" height="360" decoding="async"></a></td>
                 <td>Tests grasp selection and transport across changes in object shape and contact properties.</td>
                               <td><ul class="level-designs"><li><strong>Easy:</strong> Small ball with a less slippery surface.</li><li><strong>Medium:</strong> Tapered block placed diagonally; two opposite flat faces are less slippery.</li><li><strong>Hard:</strong> Long, slippery football-shaped object that favors grasping across the middle.</li><li><strong>Extra hard (xhard):</strong> Bulky, slippery object with a small triangular protrusion.</li></ul></td>
                 <td>How high the bottom of the object has been lifted clear of the table toward clearing the basket rim.</td>
@@ -81,7 +108,7 @@
                 <th scope="row">2</th>
                 <td>Precision insertion</td>
                 <td>Insert the yellow object fully into the matching slot.</td>
-                <td><a href="media/task-2-precision_insert.jpg" target="_blank" rel="noopener" aria-label="Open larger illustration for task 2: Precision insertion"><img src="media/task-2-precision_insert.jpg" alt="A yellow cylindrical peg stands beside a matching round hole in a gray fixture." width="1000" height="800" decoding="async"></a></td>
+                <td><a href="media/task-2-precision_insert-hard.jpg" aria-label="Open larger hard-difficulty illustration for task 2: Precision insertion" data-media-viewer="image" aria-haspopup="dialog" aria-controls="media-viewer"><img src="media/task-2-precision_insert-hard.jpg" alt="A yellow rectangular peg stands beside a matching rectangular hole in a gray fixture." width="1000" height="800" decoding="async"></a></td>
                 <td>Tests shape matching and precise pose control under tight insertion clearances.</td>
                               <td><ul class="level-designs"><li><strong>Easy:</strong> Round peg and a roomy matching hole.</li><li><strong>Medium:</strong> Same round peg, but a tighter fit.</li><li><strong>Hard:</strong> Rectangular peg with a tight fit; its orientation must match the slot.</li><li><strong>Extra hard (xhard):</strong> L-shaped peg and slot; the asymmetric shape needs careful alignment.</li></ul></td>
                 <td>How deeply the object has entered the slot while fitting its shape. Deeper valid insertion earns more progress.</td>
@@ -90,7 +117,7 @@
                 <th scope="row">3</th>
                 <td>Standing stability</td>
                 <td>Keep the orange object upright with its gray base down, without the robot arm or gripper touching it.</td>
-                <td><a href="media/task-3-stand_object.jpg" target="_blank" rel="noopener" aria-label="Open larger illustration for task 3: Standing stability"><img src="media/task-3-stand_object.jpg" alt="An orange object lies on its side with a narrow gray circular base." width="1000" height="800" decoding="async"></a></td>
+                <td><a href="media/task-3-stand_object-hard.jpg" aria-label="Open larger hard-difficulty illustration for task 3: Standing stability" data-media-viewer="image" aria-haspopup="dialog" aria-controls="media-viewer"><img src="media/task-3-stand_object-hard.jpg" alt="An orange object with a wide rectangular head lies on its side with a narrow gray circular base." width="1000" height="800" decoding="async"></a></td>
                 <td>Tests reorientation, support, and controlled release to achieve stable standing.</td>
                               <td><ul class="level-designs"><li><strong>Easy:</strong> Wide base with the top centered above it.</li><li><strong>Medium:</strong> Narrower base with the same centered top.</li><li><strong>Hard:</strong> Narrow base with a wider, rectangular top that changes how it balances.</li><li><strong>Extra hard (xhard):</strong> Narrow base with the top shifted to one side, making balance uneven.</li></ul></td>
                 <td>Combines bringing the object upright, with its gray base down, and how long it stands steadily on the table after release.</td>
@@ -99,7 +126,7 @@
                 <th scope="row">4</th>
                 <td>Tool-assisted drawer</td>
                 <td>Use the blue tool to open the drawer.</td>
-                <td><a href="media/task-4-tool_drawer.jpg" target="_blank" rel="noopener" aria-label="Open larger illustration for task 4: Tool-assisted drawer"><img src="media/task-4-tool_drawer.jpg" alt="A blue rod stands in a tall holder beside a drawer with a yellow handle." width="1000" height="800" decoding="async"></a></td>
+                <td><a href="media/task-4-tool_drawer-hard.jpg" aria-label="Open larger hard-difficulty illustration for task 4: Tool-assisted drawer" data-media-viewer="image" aria-haspopup="dialog" aria-controls="media-viewer"><img src="media/task-4-tool_drawer-hard.jpg" alt="A blue rod stands upright in a tall holder beside a drawer with a yellow handle beneath a fixed overhang." width="1000" height="800" decoding="async"></a></td>
                 <td>Tests tool grasping and engagement to transmit force through contact and open a resisted drawer.</td>
                               <td><ul class="level-designs"><li><strong>Easy:</strong> Thin rod and an easier-to-pull drawer, with clear access from above.</li><li><strong>Medium:</strong> Same rod, but a heavier drawer with more resistance to pulling.</li><li><strong>Hard:</strong> Same rod and resistant drawer, with an overhang blocking a straight approach from above.</li><li><strong>Extra hard (xhard):</strong> A flat, wide board replaces the rod; the overhang and resistant drawer remain.</li></ul></td>
                 <td>How far the held tool has opened the drawer. Opening it directly with the robot’s hand adds no tool credit.</td>
@@ -108,7 +135,7 @@
                 <th scope="row">5</th>
                 <td>Ring release</td>
                 <td>Take the blue open ring off the fixed bridge.</td>
-                <td><a href="media/task-5-unlock_ring.jpg" target="_blank" rel="noopener" aria-label="Open larger illustration for task 5: Ring release"><img src="media/task-5-unlock_ring.jpg" alt="A blue square open ring surrounds the horizontal beam of a fixed gray bridge." width="1000" height="800" decoding="async"></a></td>
+                <td><a href="media/task-5-unlock_ring-hard.jpg" aria-label="Open larger hard-difficulty illustration for task 5: Ring release" data-media-viewer="image" aria-haspopup="dialog" aria-controls="media-viewer"><img src="media/task-5-unlock_ring-hard.jpg" alt="A blue square ring with a gap at the top surrounds the horizontal beam of a fixed gray bridge." width="1000" height="800" decoding="async"></a></td>
                 <td>Tests spatial reasoning and coordinated translation and rotation through a constrained opening.</td>
                               <td><ul class="level-designs"><li><strong>Easy:</strong> Square ring with a raised side opening already lined up with the bridge.</li><li><strong>Medium:</strong> Square ring with a lower side opening that needs lifting to align with the bridge.</li><li><strong>Hard:</strong> Square ring with its opening facing upward; rotate it and adjust its height.</li><li><strong>Extra hard (xhard):</strong> Larger oval ring with its opening facing upward; rotate it and adjust its height.</li></ul></td>
                 <td>How much closer the center of the ring’s opening has moved to the nearest available exit beside the bridge.</td>
@@ -116,77 +143,89 @@
             </tbody>
           </table>
         </div>
-        <p class="table-footnote" id="task-illustration-note"><sup>1</sup> All thumbnails show the <strong>medium difficulty</strong> initial scene (seed 42).</p>
+        <p class="table-footnote" id="task-illustration-note"><sup>1</sup> All thumbnails show the <strong>hard difficulty</strong> initial scene (seed 42).</p>
         <p class="table-footnote" id="progress-scoring-note"><sup>2</sup> Progress scores range from 0 to 1; higher is better.</p>
       </section>
       <section id="performance" aria-labelledby="performance-title">
         <h2 id="performance-title">Main performance</h2>
-        <aside class="section-takeaway" aria-label="Section takeaway"><p><span class="takeaway-label">Takeaway</span> Despite its impressive overall performance, Astra still has a long way to go. Robustness, precision, and latency remain major challenges, and its reasoning about physical interactions can still be unreliable.</p></aside>
-        <figure class="performance-summary" id="main-performance-results">
-          <figcaption>
-            <h3 id="main-results-title">Astra results</h3>
-            <p id="main-results-hint">Each cell shows <strong>SR / PS</strong>: success rate and mean progress score. Click a cell to watch its samples in the side panel.</p>
-          </figcaption>
-          <div class="table-scroll performance-table-scroll" role="region" aria-labelledby="main-results-title" aria-describedby="main-results-hint" tabindex="0">
-            <table class="performance-table" id="main-results" aria-labelledby="main-results-title">
-              <thead><tr><th scope="col">Task</th><th scope="col">Easy</th><th scope="col">Medium</th><th scope="col">Hard</th><th scope="col">Extra hard <span>(xhard)</span></th></tr></thead>
-              <tbody>
-                <tr>
-                  <th scope="row"><span class="performance-task-id">Task 0</span>Constrained extraction</th>
-                  <td><button class="performance-cell" type="button" data-task="0" data-difficulty="easy" data-variant="task0-easy" data-successes="20" data-total="20" data-ps="1.0000" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 0, Constrained extraction, Easy. SR 100%, PS 1.0000; 20 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">100%</strong> / <span class="performance-ps">1.0000</span></span><span class="performance-count">20/20 successes</span></button></td>
-                  <td><button class="performance-cell" type="button" data-task="0" data-difficulty="medium" data-variant="task0-medium" data-successes="20" data-total="20" data-ps="1.0000" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 0, Constrained extraction, Medium. SR 100%, PS 1.0000; 20 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">100%</strong> / <span class="performance-ps">1.0000</span></span><span class="performance-count">20/20 successes</span></button></td>
-                  <td><button class="performance-cell" type="button" data-task="0" data-difficulty="hard" data-variant="task0-hard" data-successes="9" data-total="20" data-ps="0.5293" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 0, Constrained extraction, Hard. SR 45%, PS 0.5293; 9 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">45%</strong> / <span class="performance-ps">0.5293</span></span><span class="performance-count">9/20 successes</span></button></td>
-                  <td><button class="performance-cell" type="button" data-task="0" data-difficulty="xhard" data-variant="task0-xhard" data-successes="3" data-total="20" data-ps="0.2593" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 0, Constrained extraction, Extra hard. SR 15%, PS 0.2593; 3 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">15%</strong> / <span class="performance-ps">0.2593</span></span><span class="performance-count">3/20 successes</span></button></td>
-                </tr>
-                <tr>
-                  <th scope="row"><span class="performance-task-id">Task 1</span>Odd-object grasping</th>
-                  <td><button class="performance-cell" type="button" data-task="1" data-difficulty="easy" data-variant="task1-easy" data-successes="16" data-total="20" data-ps="0.9931" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 1, Odd-object grasping, Easy. SR 80%, PS 0.9931; 16 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">80%</strong> / <span class="performance-ps">0.9931</span></span><span class="performance-count">16/20 successes</span></button></td>
-                  <td><button class="performance-cell" type="button" data-task="1" data-difficulty="medium" data-variant="task1-medium" data-successes="15" data-total="20" data-ps="0.9036" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 1, Odd-object grasping, Medium. SR 75%, PS 0.9036; 15 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">75%</strong> / <span class="performance-ps">0.9036</span></span><span class="performance-count">15/20 successes</span></button></td>
-                  <td><button class="performance-cell" type="button" data-task="1" data-difficulty="hard" data-variant="task1-hard" data-successes="7" data-total="20" data-ps="0.5765" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 1, Odd-object grasping, Hard. SR 35%, PS 0.5765; 7 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">35%</strong> / <span class="performance-ps">0.5765</span></span><span class="performance-count">7/20 successes</span></button></td>
-                  <td><button class="performance-cell" type="button" data-task="1" data-difficulty="xhard" data-variant="task1-xhard" data-successes="0" data-total="20" data-ps="0.0567" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 1, Odd-object grasping, Extra hard. SR 0%, PS 0.0567; 0 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">0%</strong> / <span class="performance-ps">0.0567</span></span><span class="performance-count">0/20 successes</span></button></td>
-                </tr>
-                <tr>
-                  <th scope="row"><span class="performance-task-id">Task 2</span>Precision insertion</th>
-                  <td><button class="performance-cell" type="button" data-task="2" data-difficulty="easy" data-variant="task2-easy" data-successes="16" data-total="20" data-ps="0.8907" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 2, Precision insertion, Easy. SR 80%, PS 0.8907; 16 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">80%</strong> / <span class="performance-ps">0.8907</span></span><span class="performance-count">16/20 successes</span></button></td>
-                  <td><button class="performance-cell" type="button" data-task="2" data-difficulty="medium" data-variant="task2-medium" data-successes="10" data-total="20" data-ps="0.6273" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 2, Precision insertion, Medium. SR 50%, PS 0.6273; 10 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">50%</strong> / <span class="performance-ps">0.6273</span></span><span class="performance-count">10/20 successes</span></button></td>
-                  <td><button class="performance-cell" type="button" data-task="2" data-difficulty="hard" data-variant="task2-hard" data-successes="3" data-total="20" data-ps="0.3731" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 2, Precision insertion, Hard. SR 15%, PS 0.3731; 3 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">15%</strong> / <span class="performance-ps">0.3731</span></span><span class="performance-count">3/20 successes</span></button></td>
-                  <td><button class="performance-cell" type="button" data-task="2" data-difficulty="xhard" data-variant="task2-xhard" data-successes="1" data-total="20" data-ps="0.1064" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 2, Precision insertion, Extra hard. SR 5%, PS 0.1064; 1 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">5%</strong> / <span class="performance-ps">0.1064</span></span><span class="performance-count">1/20 successes</span></button></td>
-                </tr>
-                <tr>
-                  <th scope="row"><span class="performance-task-id">Task 3</span>Standing stability</th>
-                  <td><button class="performance-cell" type="button" data-task="3" data-difficulty="easy" data-variant="task3-easy" data-successes="1" data-total="20" data-ps="0.3339" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 3, Standing stability, Easy. SR 5%, PS 0.3339; 1 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">5%</strong> / <span class="performance-ps">0.3339</span></span><span class="performance-count">1/20 successes</span></button></td>
-                  <td><button class="performance-cell" type="button" data-task="3" data-difficulty="medium" data-variant="task3-medium" data-successes="1" data-total="20" data-ps="0.2270" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 3, Standing stability, Medium. SR 5%, PS 0.2270; 1 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">5%</strong> / <span class="performance-ps">0.2270</span></span><span class="performance-count">1/20 successes</span></button></td>
-                  <td><button class="performance-cell" type="button" data-task="3" data-difficulty="hard" data-variant="task3-hard" data-successes="0" data-total="20" data-ps="0.1771" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 3, Standing stability, Hard. SR 0%, PS 0.1771; 0 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">0%</strong> / <span class="performance-ps">0.1771</span></span><span class="performance-count">0/20 successes</span></button></td>
-                  <td><button class="performance-cell" type="button" data-task="3" data-difficulty="xhard" data-variant="task3-xhard" data-successes="0" data-total="20" data-ps="0.1961" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 3, Standing stability, Extra hard. SR 0%, PS 0.1961; 0 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">0%</strong> / <span class="performance-ps">0.1961</span></span><span class="performance-count">0/20 successes</span></button></td>
-                </tr>
-                <tr>
-                  <th scope="row"><span class="performance-task-id">Task 4</span>Tool-assisted drawer</th>
-                  <td><button class="performance-cell" type="button" data-task="4" data-difficulty="easy" data-variant="task4-easy" data-successes="6" data-total="20" data-ps="0.4342" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 4, Tool-assisted drawer, Easy. SR 30%, PS 0.4342; 6 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">30%</strong> / <span class="performance-ps">0.4342</span></span><span class="performance-count">6/20 successes</span></button></td>
-                  <td><button class="performance-cell" type="button" data-task="4" data-difficulty="medium" data-variant="task4-medium" data-successes="1" data-total="20" data-ps="0.1125" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 4, Tool-assisted drawer, Medium. SR 5%, PS 0.1125; 1 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">5%</strong> / <span class="performance-ps">0.1125</span></span><span class="performance-count">1/20 successes</span></button></td>
-                  <td><button class="performance-cell" type="button" data-task="4" data-difficulty="hard" data-variant="task4-hard" data-successes="0" data-total="20" data-ps="0.0010" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 4, Tool-assisted drawer, Hard. SR 0%, PS 0.0010; 0 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">0%</strong> / <span class="performance-ps">0.0010</span></span><span class="performance-count">0/20 successes</span></button></td>
-                  <td><button class="performance-cell" type="button" data-task="4" data-difficulty="xhard" data-variant="task4-xhard" data-successes="0" data-total="20" data-ps="0.0003" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 4, Tool-assisted drawer, Extra hard. SR 0%, PS 0.0003; 0 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">0%</strong> / <span class="performance-ps">0.0003</span></span><span class="performance-count">0/20 successes</span></button></td>
-                </tr>
-                <tr>
-                  <th scope="row"><span class="performance-task-id">Task 5</span>Ring release</th>
-                  <td><button class="performance-cell" type="button" data-task="5" data-difficulty="easy" data-variant="task5-easy" data-successes="13" data-total="20" data-ps="0.8386" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 5, Ring release, Easy. SR 65%, PS 0.8386; 13 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">65%</strong> / <span class="performance-ps">0.8386</span></span><span class="performance-count">13/20 successes</span></button></td>
-                  <td><button class="performance-cell" type="button" data-task="5" data-difficulty="medium" data-variant="task5-medium" data-successes="6" data-total="20" data-ps="0.7732" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 5, Ring release, Medium. SR 30%, PS 0.7732; 6 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">30%</strong> / <span class="performance-ps">0.7732</span></span><span class="performance-count">6/20 successes</span></button></td>
-                  <td><button class="performance-cell" type="button" data-task="5" data-difficulty="hard" data-variant="task5-hard" data-successes="0" data-total="20" data-ps="0.5568" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 5, Ring release, Hard. SR 0%, PS 0.5568; 0 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">0%</strong> / <span class="performance-ps">0.5568</span></span><span class="performance-count">0/20 successes</span></button></td>
-                  <td><button class="performance-cell" type="button" data-task="5" data-difficulty="xhard" data-variant="task5-xhard" data-successes="1" data-total="20" data-ps="0.7119" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 5, Ring release, Extra hard. SR 5%, PS 0.7119; 1 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">5%</strong> / <span class="performance-ps">0.7119</span></span><span class="performance-count">1/20 successes</span></button></td>
-                </tr>
-              </tbody>
-            </table>
+        <aside class="section-takeaway" aria-label="Section takeaway"><p><span class="takeaway-label">Takeaway</span> Despite its impressive overall performance, Astra still has a long way to go. Stability, precision, and latency remain major challenges. And even its reasoning about physical interactions can sometimes be unreliable.</p></aside>
+        <details id="main-experiment-setup" class="article-details">
+          <summary>Experimental setup</summary>
+          <div class="article-details-content">
+            <p>For Astra’s main results on Ditto-Bench, we use <button type="button" class="concept-term" data-concept="single-target" aria-controls="concept-note-single-target" aria-expanded="false">single target mode</button> with <var>H</var>=5. Each decision specifies one end-effector target, with offsets bounded by five base motion units; the controller tracks it for up to five control steps before the model observes and replans. Each trial has a <button type="button" class="concept-term" data-concept="execution-budget" aria-controls="concept-note-execution-budget" aria-expanded="false">budget of 450 policy-controlled steps</button>, equivalent to 15 seconds of simulated execution at 30 Hz.</p>
+            <p>We use <strong>medium reasoning effort</strong>, and <strong>memory of the previous 10 interaction turns</strong>, so it can revisit earlier observations and actions. We examine the <a href="#control-mode">control interface</a>, <a href="#memory">memory</a>, and <a href="#reasoning-effort">reasoning effort</a> in detail below.</p>
+            <p>For the later cost comparisons, <strong>episode length</strong> is the number of model decision turns in a rollout, while <strong>tokens</strong> counts its total model token usage. We report their means across trials; episode length is distinct from the number of physical control steps.</p>
           </div>
-        </figure>
-        <p>Astra is far from perfect, but it often produces sensible actions and makes meaningful progress, completing or coming close to completing several tasks. It's impressive to see that Astra understands when and how to <a class="demo-link" data-demo="force-direction" href="media/force-direction.mp4" target="_blank" rel="noopener" aria-controls="rollout-panel" aria-expanded="false" aria-label="Watch Direction and angle of force demo">apply force in specific directions and at specific angles</a>, <a class="demo-link" data-demo="tool-use" href="media/tool-use.mp4" target="_blank" rel="noopener" aria-controls="rollout-panel" aria-expanded="false" aria-label="Watch Basic tool use demo">use simple tools</a>, and <a class="demo-link" data-demo="spatial-reasoning" href="media/spatial-reasoning.mp4" target="_blank" rel="noopener" aria-controls="rollout-panel" aria-expanded="false" aria-label="Watch Spatial reasoning demo">translate its spatial reasoning into effective actions</a>. And what surprised me most were some of the behaviors that emerged along the way, for example, <a class="demo-link" data-demo="online-adaptation" href="media/online-adaptation.mp4" target="_blank" rel="noopener" aria-controls="rollout-panel" aria-expanded="false" aria-label="Watch Online adaptation demo">online adaptation</a>, <a class="demo-link" data-demo="fine-adjustments" href="media/fine-adjustments.mp4" target="_blank" rel="noopener" aria-controls="rollout-panel" aria-expanded="false" aria-label="Watch Coordinated fine adjustments demo">coordinated fine adjustments</a>, <a class="demo-link" data-demo="incremental-progress" href="media/incremental-progress.mp4" target="_blank" rel="noopener" aria-controls="rollout-panel" aria-expanded="false" aria-label="Watch Incremental progress demo">incremental progress</a>, <a class="demo-link" data-demo="physical-understanding" href="media/physical-understanding.mp4" target="_blank" rel="noopener" aria-controls="rollout-panel" aria-expanded="false" aria-label="Watch Physical or world understanding demo">physical understanding</a>, and <a class="demo-link" data-demo="seating-check" href="media/seating-check.mp4" target="_blank" rel="noopener" aria-controls="rollout-panel" aria-expanded="false" aria-label="Watch A surprisingly human-like check demo">a surprisingly human-like check</a>.</p>
-        <h3 id="control-failures-title">Where control still breaks down</h3>
-        <p>At the same time, the failures show where Astra still struggles. These include tasks requiring precise control (task0@xhard, task1@hard, task2@hard&amp;xhard), sustained contact and careful adjustment (task3), and more inventive ways of interacting with objects (task1@xhard, task4, task 5).</p>
-        <p>These failures don’t surprise me too much. The relatively low decision frequency, together with the difficulty of generating precise numerical contents for LLMs like Astra, already gives us some reason to expect them. We also haven’t done any <button type="button" class="concept-term" data-concept="reasoning-into-action" aria-controls="concept-note" aria-expanded="false" aria-haspopup="dialog">task-specific prompt optimization</button>. Prompts that direct the model’s attention to a particular part of the scene, or ask it to consider certain factors before acting, might improve its performance further.</p>
-        <p>What did surprise me was how much Astra struggled with things I had expected it to find relatively easy. On the medium version of task 1@medium, for example, it often <a class="demo-link" data-demo="grasp-strategy" data-table="failure-behaviors" data-manifest="failure-behaviors.json" href="media/main/task1-medium-0.mp4" target="_blank" rel="noopener" aria-controls="rollout-panel" aria-expanded="false" aria-label="Watch the Task 1 medium grasping failure">fails to choose a sensible grasping strategy</a>. Even after the <button type="button" class="concept-term" data-concept="visual-feedback" aria-controls="concept-note" aria-expanded="false" aria-haspopup="dialog">object repeatedly slips</button>, Astra may keep trying to grasp it from the same angle, without considering whether a different pair of contact surfaces would work better. Some successful attempts seem to happen because repeated grasping attempts jostle the object into an easier-to-grasp pose, rather than because Astra deliberately identifies and switches to a better grasp.</p>
-<p>Astra&#x27;s memory is also not always reliable. When objects obscure important features, it can lose track of the scene. In one insertion attempt, <a class="demo-link" data-demo="occluded-slot" data-table="failure-behaviors" data-manifest="failure-behaviors.json" href="media/occluded-slot.mp4" target="_blank" rel="noopener" aria-controls="rollout-panel" aria-expanded="false" aria-label="Watch When the slot disappears">the object falls and covers the slot</a>, and Astra struggles to recover the alignment needed to continue. This suggests that its spatial understanding may become unreliable when parts of the scene are no longer visible. Its handling of the robot’s own kinematics also seems uneven. In some attempts, it steers the arm into <a class="demo-link" data-demo="kinematics" data-table="failure-behaviors" data-manifest="failure-behaviors.json" href="media/kinematics-attempt-1.mp4" target="_blank" rel="noopener" aria-controls="rollout-panel" aria-expanded="false" aria-label="Watch two kinematic difficulty examples">awkward configurations</a> that make its intended movements difficult to execute.</p>
+        </details>
+        <section id="main-performance-results" aria-labelledby="main-results-title">
+          <figure class="performance-summary">
+            <figcaption>
+              <h3 id="main-results-title">Astra results</h3>
+              <p id="main-results-hint">Each cell shows <strong>SR / PS</strong>: success rate and mean progress score. Click a cell to watch its samples in the side panel.</p>
+            </figcaption>
+            <div class="table-scroll performance-table-scroll" role="region" aria-labelledby="main-results-title" aria-describedby="main-results-hint" tabindex="0">
+              <table class="performance-table" id="main-results" aria-labelledby="main-results-title">
+                <thead><tr><th scope="col">Task</th><th scope="col">Easy</th><th scope="col">Medium</th><th scope="col">Hard</th><th scope="col">Extra hard <span>(xhard)</span></th></tr></thead>
+                <tbody>
+                  <tr>
+                    <th scope="row"><span class="performance-task-id">Task 0</span>Constrained extraction</th>
+                    <td><button class="performance-cell" type="button" data-task="0" data-difficulty="easy" data-variant="task0-easy" data-successes="20" data-total="20" data-ps="1.0000" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 0, Constrained extraction, Easy. SR 100%, PS 1.0000; 20 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">100%</strong> / <span class="performance-ps">1.0000</span></span><span class="performance-count">20/20 successes</span></button></td>
+                    <td><button class="performance-cell" type="button" data-task="0" data-difficulty="medium" data-variant="task0-medium" data-successes="20" data-total="20" data-ps="1.0000" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 0, Constrained extraction, Medium. SR 100%, PS 1.0000; 20 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">100%</strong> / <span class="performance-ps">1.0000</span></span><span class="performance-count">20/20 successes</span></button></td>
+                    <td><button class="performance-cell" type="button" data-task="0" data-difficulty="hard" data-variant="task0-hard" data-successes="9" data-total="20" data-ps="0.5293" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 0, Constrained extraction, Hard. SR 45%, PS 0.5293; 9 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">45%</strong> / <span class="performance-ps">0.5293</span></span><span class="performance-count">9/20 successes</span></button></td>
+                    <td><button class="performance-cell" type="button" data-task="0" data-difficulty="xhard" data-variant="task0-xhard" data-successes="3" data-total="20" data-ps="0.2593" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 0, Constrained extraction, Extra hard. SR 15%, PS 0.2593; 3 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">15%</strong> / <span class="performance-ps">0.2593</span></span><span class="performance-count">3/20 successes</span></button></td>
+                  </tr>
+                  <tr>
+                    <th scope="row"><span class="performance-task-id">Task 1</span>Odd-object grasping</th>
+                    <td><button class="performance-cell" type="button" data-task="1" data-difficulty="easy" data-variant="task1-easy" data-successes="16" data-total="20" data-ps="0.9931" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 1, Odd-object grasping, Easy. SR 80%, PS 0.9931; 16 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">80%</strong> / <span class="performance-ps">0.9931</span></span><span class="performance-count">16/20 successes</span></button></td>
+                    <td><button class="performance-cell" type="button" data-task="1" data-difficulty="medium" data-variant="task1-medium" data-successes="15" data-total="20" data-ps="0.9036" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 1, Odd-object grasping, Medium. SR 75%, PS 0.9036; 15 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">75%</strong> / <span class="performance-ps">0.9036</span></span><span class="performance-count">15/20 successes</span></button></td>
+                    <td><button class="performance-cell" type="button" data-task="1" data-difficulty="hard" data-variant="task1-hard" data-successes="7" data-total="20" data-ps="0.5765" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 1, Odd-object grasping, Hard. SR 35%, PS 0.5765; 7 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">35%</strong> / <span class="performance-ps">0.5765</span></span><span class="performance-count">7/20 successes</span></button></td>
+                    <td><button class="performance-cell" type="button" data-task="1" data-difficulty="xhard" data-variant="task1-xhard" data-successes="0" data-total="20" data-ps="0.0567" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 1, Odd-object grasping, Extra hard. SR 0%, PS 0.0567; 0 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">0%</strong> / <span class="performance-ps">0.0567</span></span><span class="performance-count">0/20 successes</span></button></td>
+                  </tr>
+                  <tr>
+                    <th scope="row"><span class="performance-task-id">Task 2</span>Precision insertion</th>
+                    <td><button class="performance-cell" type="button" data-task="2" data-difficulty="easy" data-variant="task2-easy" data-successes="16" data-total="20" data-ps="0.8907" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 2, Precision insertion, Easy. SR 80%, PS 0.8907; 16 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">80%</strong> / <span class="performance-ps">0.8907</span></span><span class="performance-count">16/20 successes</span></button></td>
+                    <td><button class="performance-cell" type="button" data-task="2" data-difficulty="medium" data-variant="task2-medium" data-successes="10" data-total="20" data-ps="0.6273" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 2, Precision insertion, Medium. SR 50%, PS 0.6273; 10 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">50%</strong> / <span class="performance-ps">0.6273</span></span><span class="performance-count">10/20 successes</span></button></td>
+                    <td><button class="performance-cell" type="button" data-task="2" data-difficulty="hard" data-variant="task2-hard" data-successes="3" data-total="20" data-ps="0.3731" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 2, Precision insertion, Hard. SR 15%, PS 0.3731; 3 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">15%</strong> / <span class="performance-ps">0.3731</span></span><span class="performance-count">3/20 successes</span></button></td>
+                    <td><button class="performance-cell" type="button" data-task="2" data-difficulty="xhard" data-variant="task2-xhard" data-successes="1" data-total="20" data-ps="0.1064" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 2, Precision insertion, Extra hard. SR 5%, PS 0.1064; 1 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">5%</strong> / <span class="performance-ps">0.1064</span></span><span class="performance-count">1/20 successes</span></button></td>
+                  </tr>
+                  <tr>
+                    <th scope="row"><span class="performance-task-id">Task 3</span>Standing stability</th>
+                    <td><button class="performance-cell" type="button" data-task="3" data-difficulty="easy" data-variant="task3-easy" data-successes="1" data-total="20" data-ps="0.3339" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 3, Standing stability, Easy. SR 5%, PS 0.3339; 1 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">5%</strong> / <span class="performance-ps">0.3339</span></span><span class="performance-count">1/20 successes</span></button></td>
+                    <td><button class="performance-cell" type="button" data-task="3" data-difficulty="medium" data-variant="task3-medium" data-successes="1" data-total="20" data-ps="0.2270" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 3, Standing stability, Medium. SR 5%, PS 0.2270; 1 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">5%</strong> / <span class="performance-ps">0.2270</span></span><span class="performance-count">1/20 successes</span></button></td>
+                    <td><button class="performance-cell" type="button" data-task="3" data-difficulty="hard" data-variant="task3-hard" data-successes="0" data-total="20" data-ps="0.1771" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 3, Standing stability, Hard. SR 0%, PS 0.1771; 0 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">0%</strong> / <span class="performance-ps">0.1771</span></span><span class="performance-count">0/20 successes</span></button></td>
+                    <td><button class="performance-cell" type="button" data-task="3" data-difficulty="xhard" data-variant="task3-xhard" data-successes="0" data-total="20" data-ps="0.1961" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 3, Standing stability, Extra hard. SR 0%, PS 0.1961; 0 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">0%</strong> / <span class="performance-ps">0.1961</span></span><span class="performance-count">0/20 successes</span></button></td>
+                  </tr>
+                  <tr>
+                    <th scope="row"><span class="performance-task-id">Task 4</span>Tool-assisted drawer</th>
+                    <td><button class="performance-cell" type="button" data-task="4" data-difficulty="easy" data-variant="task4-easy" data-successes="6" data-total="20" data-ps="0.4342" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 4, Tool-assisted drawer, Easy. SR 30%, PS 0.4342; 6 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">30%</strong> / <span class="performance-ps">0.4342</span></span><span class="performance-count">6/20 successes</span></button></td>
+                    <td><button class="performance-cell" type="button" data-task="4" data-difficulty="medium" data-variant="task4-medium" data-successes="1" data-total="20" data-ps="0.1125" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 4, Tool-assisted drawer, Medium. SR 5%, PS 0.1125; 1 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">5%</strong> / <span class="performance-ps">0.1125</span></span><span class="performance-count">1/20 successes</span></button></td>
+                    <td><button class="performance-cell" type="button" data-task="4" data-difficulty="hard" data-variant="task4-hard" data-successes="0" data-total="20" data-ps="0.0010" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 4, Tool-assisted drawer, Hard. SR 0%, PS 0.0010; 0 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">0%</strong> / <span class="performance-ps">0.0010</span></span><span class="performance-count">0/20 successes</span></button></td>
+                    <td><button class="performance-cell" type="button" data-task="4" data-difficulty="xhard" data-variant="task4-xhard" data-successes="0" data-total="20" data-ps="0.0003" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 4, Tool-assisted drawer, Extra hard. SR 0%, PS 0.0003; 0 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">0%</strong> / <span class="performance-ps">0.0003</span></span><span class="performance-count">0/20 successes</span></button></td>
+                  </tr>
+                  <tr>
+                    <th scope="row"><span class="performance-task-id">Task 5</span>Ring release</th>
+                    <td><button class="performance-cell" type="button" data-task="5" data-difficulty="easy" data-variant="task5-easy" data-successes="13" data-total="20" data-ps="0.8386" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 5, Ring release, Easy. SR 65%, PS 0.8386; 13 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">65%</strong> / <span class="performance-ps">0.8386</span></span><span class="performance-count">13/20 successes</span></button></td>
+                    <td><button class="performance-cell" type="button" data-task="5" data-difficulty="medium" data-variant="task5-medium" data-successes="6" data-total="20" data-ps="0.7732" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 5, Ring release, Medium. SR 30%, PS 0.7732; 6 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">30%</strong> / <span class="performance-ps">0.7732</span></span><span class="performance-count">6/20 successes</span></button></td>
+                    <td><button class="performance-cell" type="button" data-task="5" data-difficulty="hard" data-variant="task5-hard" data-successes="0" data-total="20" data-ps="0.5568" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 5, Ring release, Hard. SR 0%, PS 0.5568; 0 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">0%</strong> / <span class="performance-ps">0.5568</span></span><span class="performance-count">0/20 successes</span></button></td>
+                    <td><button class="performance-cell" type="button" data-task="5" data-difficulty="xhard" data-variant="task5-xhard" data-successes="1" data-total="20" data-ps="0.7119" aria-controls="rollout-panel" aria-expanded="false" aria-label="Task 5, Ring release, Extra hard. SR 5%, PS 0.7119; 1 of 20 successful. View samples."><span class="performance-value"><strong class="performance-sr">5%</strong> / <span class="performance-ps">0.7119</span></span><span class="performance-count">1/20 successes</span></button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </figure>
+          <p>Astra is far from perfect, but it often produces sensible actions and makes meaningful progress, completing or coming close to completing several tasks. It's impressive to see that Astra understands when and how to <a class="demo-link" data-demo="force-direction" href="media/force-direction.mp4" aria-controls="rollout-panel" aria-expanded="false" aria-label="Watch Direction and angle of force demo">apply force in specific directions and at specific angles</a>, knows how to <a class="demo-link" data-demo="tool-use" href="media/tool-use.mp4" aria-controls="rollout-panel" aria-expanded="false" aria-label="Watch Basic tool use demo">use simple tools</a>, and is able to <a class="demo-link" data-demo="spatial-reasoning" href="media/spatial-reasoning.mp4" aria-controls="rollout-panel" aria-expanded="false" aria-label="Watch Spatial reasoning demo">translate its spatial reasoning into effective actions</a>. And what surprised me most were some of the behaviors that emerged along the way, for example, <a class="demo-link" data-demo="online-adaptation" href="media/online-adaptation.mp4" aria-controls="rollout-panel" aria-expanded="false" aria-label="Watch Online adaptation demo">online adaptation</a>, <a class="demo-link" data-demo="fine-adjustments" href="media/fine-adjustments.mp4" aria-controls="rollout-panel" aria-expanded="false" aria-label="Watch Coordinated fine adjustments demo">coordinated fine adjustments</a>, <a class="demo-link" data-demo="incremental-progress" href="media/incremental-progress.mp4" aria-controls="rollout-panel" aria-expanded="false" aria-label="Watch Incremental progress demo">incremental progress</a>, <a class="demo-link" data-demo="physical-understanding" href="media/physical-understanding.mp4" aria-controls="rollout-panel" aria-expanded="false" aria-label="Watch Physical or world understanding demo">physical understanding</a>, and <a class="demo-link" data-demo="seating-check" href="media/seating-check.mp4" aria-controls="rollout-panel" aria-expanded="false" aria-label="Watch A surprisingly human-like check demo">some surprisingly human-like behaviors</a>.</p>
+          <section class="results-subsection" aria-labelledby="control-failures-title">
+            <h4 id="control-failures-title">Where control still breaks down</h4>
+            <p>In terms of cases where Astra failed more frequently, these include tasks requiring precise control (task0@xhard, task1@hard, task2@hard&amp;xhard), sustained contact and careful adjustment (task3), and more inventive ways of interacting with objects (task1@xhard, task4, task 5).</p>
+            <p>These failures don’t surprise me too much. The relatively low control frequency is one reason. Another is a broader limitation shared by LLMs like Astra: they tend to struggle with precise numerical computation and generation when relying on their native capabilities. We also haven’t done any <button type="button" class="concept-term" data-concept="reasoning-into-action" aria-controls="concept-note-reasoning-into-action" aria-expanded="false">task-specific prompt optimization</button>. Prompts that direct the model’s attention to a particular part of the scene, or ask it to consider certain factors before acting, might improve its performance further.</p>
+            <p>What did surprise me was how much Astra struggled with things I had expected it to find relatively easy. On the medium version of task 1@medium, for example, it often <a class="demo-link" data-demo="grasp-strategy" data-table="failure-behaviors" data-manifest="failure-behaviors.json" href="media/main/task1-medium-0.mp4" aria-controls="rollout-panel" aria-expanded="false" aria-label="Watch the Task 1 medium grasping failure">fails to choose a sensible grasping strategy</a>. Even after the <button type="button" class="concept-term" data-concept="visual-feedback" aria-controls="concept-note-visual-feedback" aria-expanded="false">object repeatedly slips</button>, Astra may keep trying to grasp it from the same angle, without considering whether a different pair of contact surfaces would work better. Some successful attempts seem to happen because repeated grasping attempts jostle the object into an easier-to-grasp pose, rather than because Astra deliberately identifies and switches to a better grasp.</p>
+            <p>Astra&#x27;s memory is also not always reliable. When objects obscure important features, it can lose track of the scene. In one insertion attempt, <a class="demo-link" data-demo="occluded-slot" data-table="failure-behaviors" data-manifest="failure-behaviors.json" href="media/occluded-slot.mp4" aria-controls="rollout-panel" aria-expanded="false" aria-label="Watch When the slot disappears">the object falls and covers the slot</a>, and Astra struggles to recover the alignment needed to continue. This suggests that its spatial understanding may become unreliable when parts of the scene are no longer visible. Its handling of the robot’s own kinematics also seems uneven. In some attempts, it steers the arm into <a class="demo-link" data-demo="kinematics" data-table="failure-behaviors" data-manifest="failure-behaviors.json" href="media/kinematics-attempt-1.mp4" aria-controls="rollout-panel" aria-expanded="false" aria-label="Watch two kinematic difficulty examples">awkward configurations</a> that make its intended movements difficult to execute.</p>
+          </section>
+        </section>
         <figure class="performance-summary" id="molmoact2-performance-results">
           <figcaption>
             <h3 id="molmoact2-results-title">MolmoAct2 results</h3>
-            <p id="molmoact2-results-hint">Each result shows <strong>SR / PS</strong>: success rate and mean progress score. Click a task’s difficulty cell to watch its samples in the side panel.</p>
+            <p id="main-results-hint">Each cell shows <strong>SR / PS</strong>: success rate and mean progress score. Click a cell to watch its samples in the side panel.</p>
           </figcaption>
           <div class="table-scroll performance-table-scroll" role="region" aria-labelledby="molmoact2-results-title" aria-describedby="molmoact2-results-hint" tabindex="0">
             <table class="performance-table molmoact2-table" id="molmoact2-results" aria-labelledby="molmoact2-results-title" aria-describedby="molmoact2-results-note">
@@ -238,18 +277,18 @@
             </table>
           </div>
         </figure>
-        <p>We also evaluate MolmoAct2 on the same task suite. MolmoAct2 performs worse overall in these experiments, but it also shows some useful generalization to our tasks. In particular, it shows promising grasping behavior on irregular objects. On task 1, it reaches a higher mean progress score than Astra at medium difficulty.</p>
+        <p>We also evaluate MolmoAct2 on Ditto-Bench. MolmoAct2 performs worse overall in these experiments, but it also shows some useful generalization to our tasks. In particular, it shows promising grasping behavior on irregular objects. On task 1, it reaches a higher mean progress score than Astra at medium difficulty. This may be a sign of the benefits of specialized embodied training.</p>
       </section>
       <section id="control-mode" aria-labelledby="control-title">
-        <h2 id="control-title">Control mode<sup><a href="#control-setup-note" aria-label="Ablation setup footnote 3">3</a></sup></h2>
+        <h2 id="control-title">Control interface<sup><a href="#control-setup-note" aria-label="Ablation setup footnote 3">3</a></sup></h2>
         <aside class="section-takeaway" aria-label="Section takeaway"><p><span class="takeaway-label">Takeaway</span> There is a trade-off between control effectiveness and efficiency. Astra tends to control the robot more effectively when it takes smaller steps and replans frequently, but the extra inference calls make each rollout slower and more expensive. Letting it generate several small actions at once can improve control over longer intervals without new observations. However, Astra still struggles to produce coherent action sequences that account for the robot’s kinematics and reliably achieve the intended motion.</p></aside>
         <figure class="experiment-figure" id="control-comparison" aria-label="Control mode comparison">
-          <div class="experiment-chart" data-table="control-results" role="group" aria-label="Control mode comparison: SR bars and PS line above, turns bars and tokens line below."></div>
+          <div class="experiment-chart" data-table="control-results" role="group" aria-label="Control mode comparison: SR bars and PS line above, episode length bars and tokens line below."></div>
           <div class="table-scroll experiment-table-scroll" role="region" aria-label="Control mode comparison data" tabindex="0">
             <table class="experiment-table" id="control-results">
-              <caption class="sr-only">Control mode results: success rate, progress score, average turns, and average tokens per rollout.</caption>
+              <caption class="sr-only">Control mode results: success rate, progress score, average episode length, and average tokens per rollout.</caption>
               <thead>
-                <tr><th scope="col">Variant</th><th scope="col">SR</th><th scope="col">PS</th><th scope="col">Turns / rollout</th><th scope="col">Tokens / rollout</th></tr>
+                <tr><th scope="col">Variant</th><th scope="col">SR</th><th scope="col">PS</th><th scope="col">Episode length</th><th scope="col">Tokens / rollout</th></tr>
               </thead>
               <tbody>
                 <tr data-variant="move-by-5"><th scope="row">H=5 (single target)</th><td>20%</td><td>0.33</td><td>86.55</td><td>972,488</td></tr>
@@ -261,24 +300,39 @@
           </div>
         </figure>
         <p>To start with, we ask how we should use an LLM agent for robot control—in other words, what “action language” should it speak to the downstream executor to control the robot effectively and efficiently?</p>
-        <p>Borrowing the codebase from <a href="https://github.com/robocurve/inspect-robots" target="_blank" rel="noopener">inspect-robots</a>, we start with a straightforward approach: let the LLM choose the next target end-effector (EEF) pose. The executor moves toward that target, then returns an updated observation so the model can decide what to do next. The LLM keeps choosing the next desired state in a closed loop.</p>
-        <p>We use <var>H</var> to express the allowed target offset as a multiple of a <button type="button" class="concept-term" data-concept="base-motion-unit" aria-controls="concept-note" aria-expanded="false">base motion unit</button> <var>δ</var><sup>*</sup>, which we set empirically for each robot embodiment. Its components define small translation and rotation limits along each axis. In this <button type="button" class="concept-term" data-concept="single-target" aria-controls="concept-note" aria-expanded="false">single target mode</button>, the model outputs a motion increment <var>δ</var> ∈ [−<var>Hδ</var><sup>*</sup>, <var>Hδ</var><sup>*</sup>], with the bounds applied componentwise. This specifies one target relative to the current pose, which the executor tracks for up to <var>H</var> control steps before the next model decision. Increasing <var>H</var> therefore lets the model request a more distant target and gives the executor a longer window to move toward it.</p>
-        <p>With <var>H</var>=5, the robot arm’s movements appear smoother. With <var>H</var>=10, the motion looks more awkward, and Astra needs repeated adjustments to reach its intended pose. A larger <var>H</var> allows larger movements while also leaving more time between observations. That gives Astra fewer opportunities to notice execution errors and correct them. Shorter execution windows and more frequent replanning could help, but they also require more model calls, making each rollout more expensive and slower.</p>
+        <p>Borrowing the codebase from <a href="https://github.com/robocurve/inspect-robots" target="_blank" rel="noopener">inspect-robots</a>, we start with a straightforward approach: let the LLM choose the next target end-effector (EEF) pose. The executor moves toward that target, then returns an updated observation so the model can decide what to do next. The LLM keeps choosing the next desired state in a closed loop. We call this <button type="button" class="concept-term" data-concept="single-target" aria-controls="concept-note-single-target" aria-expanded="false">single target mode</button>, in contrast to the <button type="button" class="concept-term" data-concept="multi-targets" aria-controls="concept-note-multi-targets" aria-expanded="false">multi targets mode</button> introduced below.</p>
+        <p>We use <var>H</var> to express the allowed target offset as a multiple of a <button type="button" class="concept-term" data-concept="base-motion-unit" aria-controls="concept-note-base-motion-unit" aria-expanded="false">base motion unit</button> <var>δ</var><sup>*</sup>, which we set empirically for each robot embodiment. Both <var>δ</var> and <var>δ</var><sup>*</sup> are six-dimensional (<var>δ</var>, <var>δ</var><sup>*</sup> ∈ ℝ<sup>6</sup>): three translation components in metres and three rotation components in radians. Gripper opening is specified separately. In this <button type="button" class="concept-term" data-concept="single-target" aria-controls="concept-note-single-target" aria-expanded="false">single target mode</button>, the model outputs a motion increment <var>δ</var> ∈ [−<var>Hδ</var><sup>*</sup>, <var>Hδ</var><sup>*</sup>], with <strong>component-wise bounds</strong>: each of the six coordinates is limited separately, rather than bounding the total length of the vector. This specifies one target relative to the current pose, which the executor tracks for up to <var>H</var> control steps before the next model decision. Increasing <var>H</var> therefore lets the model request a more distant target and gives the executor a longer window to move toward it.</p>
+        <details id="single-target-demo" class="control-demo">
+          <summary>A step-by-step illustration of single-target control</summary>
+          <div class="control-demo-content">
+            <figure>
+              <video controls playsinline muted preload="none" width="1280" height="640" poster="media/single-target-control-short-pauses.jpg" data-model-outputs="none" aria-label="Single-target control demonstration with measured end-effector poses and requested deltas">
+                <source src="media/single-target-control-short-pauses.webm" type="video/webm">
+                <source src="media/single-target-control-short-pauses.mp4" type="video/mp4">
+                Your browser does not support embedded video. <a href="media/single-target-control-short-pauses.mp4" data-media-viewer="video" aria-haspopup="dialog" aria-controls="media-viewer">Open the video</a>.
+              </video>
+              <figcaption class="video-caption">Scripted illustration with larger offsets and tracking until each target is reached. Pauses separate turns; the displayed poses and δ stay fixed within a turn. Poses use world coordinates (m, rad). <a class="video-link" href="media/single-target-control-short-pauses.mp4" data-media-viewer="video" aria-haspopup="dialog" aria-controls="media-viewer">Enlarge video</a></figcaption>
+              <p class="media-error" hidden>The video could not be loaded. Please reload the page or try another example.</p>
+            </figure>
+          </div>
+        </details>
+        <p>With <var>H</var>=5, the robot arm’s movements appear smoother. With <var>H</var>=10, the motion looks more awkward and jerky. A larger <var>H</var> allows a larger movement in a single decision, but Astra struggles to judge how far to move within that range. As a result, it often overshoots its intended pose and needs repeated adjustments. A larger <var>H</var> also means less frequent visual feedback, leaving a sparser record of the robot’s motion in the context. This makes it harder for Astra to detect errors and correct them promptly. Shorter execution windows and more frequent replanning could help, but they also require more model calls, making each rollout more expensive and slower.</p>
         <p>This made us wonder whether a single target was the best way to use those <var>H</var> execution steps. A distant target tells the robot where to go, but gives Astra no way to specify intermediate changes in direction. What if it could describe several smaller movements in the same model call?</p>
-        <p>In this <button type="button" class="concept-term" data-concept="multi-targets" aria-controls="concept-note" aria-expanded="false">multi targets mode</button>, the model outputs an ordered sequence (<var>δ</var><sub>1</sub>, …, <var>δ</var><sub>H</sub>), where <var>δ</var><sub>i</sub> ∈ [−<var>δ</var><sup>*</sup>, <var>δ</var><sup>*</sup>] for <var>i</var> = 1, …, <var>H</var>. Each increment stays within the base motion range and defines the next target relative to the previous planned target. The executor follows the resulting <var>H</var> targets in order, spending one control step on each. Both modes therefore have the same <var>H</var>-step execution budget per model call: over a full execution window, <button type="button" class="concept-term" data-concept="single-target" aria-controls="concept-note" aria-expanded="false">single target</button> tracks one target for <var>H</var> steps, while <button type="button" class="concept-term" data-concept="multi-targets" aria-controls="concept-note" aria-expanded="false">multi targets</button> tracks <var>H</var> targets for one step each. The difference is how the model expresses the motion within that window.</p>
-        <p>Interestingly, this <button type="button" class="concept-term" data-concept="multi-targets" aria-controls="concept-note" aria-expanded="false">action chunking</button> approach reversed the trend we observed as <var>H</var> increased. The larger chunk performed better than the smaller one, suggesting that Astra could make use of the more detailed motion representation. However, neither chunk setting matched the mean progress achieved by <button type="button" class="concept-term" data-concept="single-target" aria-controls="concept-note" aria-expanded="false">single target mode</button> with <var>H</var>=5. Our working hypothesis is that Astra still struggles to turn its intentions into a coherent sequence of small movements. A later movement may assume that an earlier target has already been reached, even when the robot is still catching up. The planned sequence can also contain abrupt changes rather than forming a smooth trajectory. Limitations in the executor and controller can widen the gap between the intended motion and what actually happens.</p>
+        <p>In this <button type="button" class="concept-term" data-concept="multi-targets" aria-controls="concept-note-multi-targets" aria-expanded="false">multi targets mode</button>, the model outputs an ordered sequence (<var>δ</var><sub>1</sub>, …, <var>δ</var><sub>H</sub>), where <var>δ</var><sub>i</sub> ∈ [−<var>δ</var><sup>*</sup>, <var>δ</var><sup>*</sup>] for <var>i</var> = 1, …, <var>H</var>. Each increment stays within the base motion range and defines the next target relative to the previous planned target. The executor follows the resulting <var>H</var> targets in order, spending one control step on each. Both modes therefore have the same nominal <var>H</var>-step execution budget per model call: over a full execution window, <button type="button" class="concept-term" data-concept="single-target" aria-controls="concept-note-single-target" aria-expanded="false">single target</button> tracks one target for <var>H</var> steps, while <button type="button" class="concept-term" data-concept="multi-targets" aria-controls="concept-note-multi-targets" aria-expanded="false">multi targets</button> tracks <var>H</var> targets for one step each. The difference is how the model expresses the motion within that window.</p>
+        <p>Interestingly, this <button type="button" class="concept-term" data-concept="multi-targets" aria-controls="concept-note-multi-targets" aria-expanded="false">action chunking</button> approach reversed the trend we observed as <var>H</var> increased. The larger chunk performed better than the smaller one, suggesting that Astra could make use of the more detailed motion representation. However, neither chunk setting matched the mean progress achieved by <button type="button" class="concept-term" data-concept="single-target" aria-controls="concept-note-single-target" aria-expanded="false">single target mode</button> with <var>H</var>=5. Our hypothesis is that Astra still struggles to turn its intentions into a coherent sequence of small movements. A later movement may assume that an earlier target has already been reached, even when the robot is still catching up. The planned sequence can also contain abrupt changes rather than forming a smooth trajectory. Limitations in the executor and controller can widen the gap between the intended motion and what actually happens.</p>
+        <p class="section-footnote" id="control-setup-note"><sup>3</sup> The Control mode, Memory, and Reasoning effort experiments use task 0@xhard. Within each comparison, all variants are evaluated on the same set of seeds.</p>
         <details id="control-extra-time" class="control-extra-time">
           <summary>The quality of Astra’s generated trajectories</summary>
           <div class="control-extra-time-content">
-            <p>As discussed above, Astra’s planned trajectory may not be faithfully reproduced by the low-level controller. In <button type="button" class="concept-term" data-concept="multi-targets" aria-controls="concept-note" aria-expanded="false">multi targets mode</button>, the controller moves on after just one control step per target, even if the robot has not reached it. The robot can therefore fall behind the planned sequence, making it difficult to tell whether a failure comes from the trajectory itself or from how it is executed.</p>
-            <p>To examine the quality of Astra’s generated trajectories more closely, we ran an additional experiment that doubles the execution time for each planned segment. In the <button type="button" class="concept-term" data-concept="execution-time" aria-controls="concept-note" aria-expanded="false">2× time</button> variant, each segment is spread over two control steps, so an <var>H</var>-target sequence uses 2<var>H</var> steps. The number of model-specified targets and their motion bounds stay the same, while the controller gets more time to follow the intended path. The longer execution window also means that Astra receives its next observation later in simulated time.</p>
+            <p>As discussed above, Astra’s planned trajectory may not be faithfully reproduced by the low-level controller. In <button type="button" class="concept-term" data-concept="multi-targets" aria-controls="concept-note-multi-targets" aria-expanded="false">multi targets mode</button>, the controller moves on after just one control step per target, even if the robot has not reached it. The robot can therefore fall behind the planned sequence, making it difficult to tell whether a failure comes from the trajectory itself or from how it is executed.</p>
+            <p>To examine the quality of Astra’s generated trajectories more closely, we ran an additional experiment that doubles the execution time for each planned segment. In the <button type="button" class="concept-term" data-concept="execution-time" aria-controls="concept-note-execution-time" aria-expanded="false">2× time</button> variant, each segment is spread over two control steps, so an <var>H</var>-target sequence uses 2<var>H</var> steps. The number of model-specified targets and their motion bounds stay the same, while the controller gets more time to follow the intended path. The longer execution window also means that Astra receives its next observation later in simulated time.</p>
             <figure class="experiment-figure" id="control-time-comparison" aria-label="Control mode with more execution time">
-              <div class="experiment-chart" data-table="control-time-results" data-rollout-table="control-results" role="group" aria-label="Control mode with more execution time: SR bars and PS line above, turns bars and tokens line below."></div>
+              <div class="experiment-chart" data-table="control-time-results" data-rollout-table="control-results" role="group" aria-label="Control mode with more execution time: SR bars and PS line above, episode length bars and tokens line below."></div>
               <div class="table-scroll experiment-table-scroll" role="region" aria-label="Control mode with more execution time data" tabindex="0">
                 <table class="experiment-table" id="control-time-results">
-                  <caption class="sr-only">Control mode with more execution time results: success rate, progress score, average turns, and average tokens per rollout.</caption>
+                  <caption class="sr-only">Control mode with more execution time results: success rate, progress score, average episode length, and average tokens per rollout.</caption>
                   <thead>
-                    <tr><th scope="col">Variant</th><th scope="col">SR</th><th scope="col">PS</th><th scope="col">Turns / rollout</th><th scope="col">Tokens / rollout</th></tr>
+                    <tr><th scope="col">Variant</th><th scope="col">SR</th><th scope="col">PS</th><th scope="col">Episode length</th><th scope="col">Tokens / rollout</th></tr>
                   </thead>
                   <tbody>
                     <tr data-variant="move-by-5"><th scope="row">H=5 (single target)</th><td>20%</td><td>0.33</td><td>86.55</td><td>972,488</td></tr>
@@ -291,9 +345,26 @@
                 </table>
               </div>
             </figure>
+            <p>For the shorter, <var>H</var>=5 chunks, the extra execution time improves mean progress from 0.16 to 0.27, while the success rate remains at 10%. The <var>H</var>=10 result, however, is unexpectedly worse: mean progress drops from 0.30 to 0.09, and the success rate falls from 20% to 0%.</p>
+            <p>The recorded trajectories nevertheless show a lower mean absolute error between the end-effector’s position at the end of a chunk and its final target when execution time is doubled:</p>
+            <figure aria-label="End-effector position tracking error">
+              <div class="table-scroll">
+                <table class="experiment-table trajectory-error-table" aria-describedby="trajectory-error-note">
+                  <caption class="sr-only">Mean end-effector position error with normal and doubled execution time.</caption>
+                  <thead>
+                    <tr><th scope="col">Metric</th><th scope="col">Normal execution time</th><th scope="col">2× execution time</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><th scope="row">Mean end-effector position error<sup><a href="#trajectory-error-note" aria-label="Position error measurement note">†</a></sup></th><td>12.35 mm</td><td><strong>7.36 mm</strong></td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <p class="table-footnote" id="trajectory-error-note"><sup>†</sup> We include only fully executed chunks that contain translation and are followed by another reasoning turn. The two conditions generate different actions, so these are statistics from the resulting trajectories, not a replay comparison using identical actions.</p>
+            </figure>
+            <p>This suggests that endpoint tracking may not be the only limitation: Astra’s longer open-loop plans may themselves be unreliable. One possible explanation for the stronger <var>H</var>=10 result at normal speed is that Astra receives new feedback and replans before the robot has fully realized the intended trajectory. Tracking lag may limit how far the robot follows a poor plan; allowing more time to execute it could expose weaknesses in the plan itself. The less frequent feedback in the 2× time condition may also contribute to the drop in performance.</p>
+            <p>Overall, these results suggest that <strong>small movements with frequent feedback and replanning</strong> are central to effective robot control with Astra in this setting.</p>
           </div>
         </details>
-        <p class="section-footnote" id="control-setup-note"><sup>3</sup> The Control mode results and the following ablations use task 0@xhard. Within each comparison, all variants are evaluated on the same set of seeds.</p>
       </section>
       <section id="memory" aria-labelledby="memory-title">
         <h2 id="memory-title">Memory<sup><a href="#memory-budget-note" aria-label="Execution budget footnote 4">4</a></sup></h2>
@@ -302,12 +373,12 @@
         <p>With memory length set to 0, Astra struggles to figure out how to control the particular robot it is given from the available camera viewpoints. This suggests that one important role of memory is helping the agent connect its commands to their physical effects: it can look back at what it asked the robot to do, compare that with the visual feedback, and gradually work out how to control it.</p>
         <p>With a short memory of two turns, Astra starts to pick up some basic control logic, but still struggles to finish the task. It often repeats similar actions without making much progress. In our experiments, longer memory makes successful completion more likely, while also reducing the number of decisions needed. This points to another role of memory: helping the agent recognize what went wrong in previous attempts and decide what to change. Having more of that history available gives the model a better basis for reasoning about its next move.</p>
         <figure class="experiment-figure" id="memory-comparison" aria-label="Memory length comparison">
-          <div class="experiment-chart" data-table="memory-results" role="group" aria-label="Memory length comparison: SR bars and PS line above, turns bars and tokens line below."></div>
+          <div class="experiment-chart" data-table="memory-results" role="group" aria-label="Memory length comparison: SR bars and PS line above, episode length bars and tokens line below."></div>
           <div class="table-scroll experiment-table-scroll" role="region" aria-label="Memory length comparison data" tabindex="0">
             <table class="experiment-table" id="memory-results">
-              <caption class="sr-only">Memory length results: success rate, progress score, average turns, and average tokens per rollout.</caption>
+              <caption class="sr-only">Memory length results: success rate, progress score, average episode length, and average tokens per rollout.</caption>
               <thead>
-                <tr><th scope="col">Variant</th><th scope="col">SR</th><th scope="col">PS</th><th scope="col">Turns / rollout</th><th scope="col">Tokens / rollout</th></tr>
+                <tr><th scope="col">Variant</th><th scope="col">SR</th><th scope="col">PS</th><th scope="col">Episode length</th><th scope="col">Tokens / rollout</th></tr>
               </thead>
               <tbody>
                 <tr data-variant="mem-0"><th scope="row">Memory: 0 turns</th><td>0%</td><td>0.00</td><td>180.00</td><td>463,495</td></tr>
@@ -319,42 +390,42 @@
           </div>
         </figure>
         <p class="section-footnote" id="memory-budget-note"><sup>4</sup> For Memory and Reasoning, we increase the execution budget from the normal-speed Control baseline of 450 physical control steps to 900 steps, allowing more time for useful behavior to emerge.</p>
-        <p>Interestingly, we also noticed what looks like an <a id="memory-aha-examples" class="demo-link" data-demo="aha-moments" data-table="article-demos" data-manifest="memory-examples.json" href="media/memory-board-adaptation.mp4" target="_blank" rel="noopener" aria-controls="rollout-panel" aria-expanded="false" aria-label="Watch two possible aha moment examples">“aha” moment</a> in some rollouts: Astra seems to suddenly find an approach that works, whether that means a small nudge or a different grasping strategy. We suspect that memory plays a role here, too. Once enough useful feedback is available in the context, the model may be able to piece together a better strategy.</p>
+        <p>Interestingly, we also noticed what looks like an <a id="memory-aha-examples" class="demo-link" data-demo="aha-moments" data-table="article-demos" data-manifest="memory-examples.json" href="media/memory-board-adaptation.mp4" aria-controls="rollout-panel" aria-expanded="false" aria-label="Watch two possible aha moment examples">“aha” moment</a> in some rollouts: Astra seems to suddenly find an approach that works, whether that means a small nudge or a different grasping strategy. We suspect that memory plays a role here, too. Once enough useful feedback is available in the context, the model may be able to piece together a better strategy.</p>
         <details id="memory-one-shot" class="memory-one-shot">
           <summary>One-shot learning from a demonstration</summary>
           <div class="memory-one-shot-content">
             <p>Viewed this way, memory gives the model an opportunity to learn in context during a rollout. That led us to another question: could a prerecorded trajectory provide some of the same benefits? To explore this, we injected a recorded trajectory into Astra’s context, including the full sequence of observations and the agent’s action outputs. <strong>In all three rollouts below, Astra has no online memory (memory length = 0).</strong> The model receives the current observation on each turn, but no previous turns from the ongoing rollout. In the demonstration conditions, the fixed prerecorded trajectory remains in its context.</p>
-            <p>For comparison, we also include a no-demonstration rollout from the memory=0 experiment above. We can see that with an <a id="memory-in-domain-demo" class="demo-link" data-demo="in-domain-teacher" data-table="article-demos" data-manifest="memory-examples.json" href="media/standard.mp4" target="_blank" rel="noopener" aria-controls="rollout-panel" aria-expanded="false" aria-label="Watch In-domain demonstration">in-domain demonstration</a>, Astra was able to complete the task without online memory, and even did so more efficiently in this example. When we switched to an <a id="memory-out-of-domain-demo" class="demo-link" data-demo="out-of-domain-teacher" data-table="article-demos" data-manifest="memory-examples.json" href="media/dropteacher.mp4" target="_blank" rel="noopener" aria-controls="rollout-panel" aria-expanded="false" aria-label="Watch Out-of-domain demonstration">out-of-domain demonstration</a>, Astra did not finish the task, but its control was noticeably better.</p>
+            <p>For comparison, we also include a no-demonstration rollout from the memory=0 experiment above. We can see that with an <a id="memory-in-domain-demo" class="demo-link" data-demo="in-domain-teacher" data-table="article-demos" data-manifest="memory-examples.json" href="media/standard.mp4" aria-controls="rollout-panel" aria-expanded="false" aria-label="Watch In-domain demonstration">in-domain demonstration</a>, Astra was able to complete the task without online memory, and even did so more efficiently in this example. When we switched to an <a id="memory-out-of-domain-demo" class="demo-link" data-demo="out-of-domain-teacher" data-table="article-demos" data-manifest="memory-examples.json" href="media/dropteacher.mp4" aria-controls="rollout-panel" aria-expanded="false" aria-label="Watch Out-of-domain demonstration">out-of-domain demonstration</a>, Astra did not finish the task, but its control was noticeably better.</p>
             <div class="student-demo-grid" role="group" aria-label="Astra with online memory off: no demonstration, in-domain demonstration, and out-of-domain demonstration" aria-describedby="memory-demo-comparison-note">
               <figure class="student-demo-baseline" id="memory-no-demo-rollout">
                 <figcaption><p><strong>No demonstration</strong></p></figcaption>
                 <video controls playsinline preload="metadata" poster="media/chart-rollout-memory-mem-0-seed-42.jpg" aria-label="Astra without a demonstration, online memory off">
                   <source src="media/chart-rollout-memory-mem-0-seed-42.mp4" type="video/mp4">
                   <source src="media/chart-rollout-memory-mem-0-seed-42.webm" type="video/webm">
-                  Your browser does not support embedded video. <a href="media/chart-rollout-memory-mem-0-seed-42.mp4">Open the video.</a>
+                  Your browser does not support embedded video. <a href="media/chart-rollout-memory-mem-0-seed-42.mp4" data-media-viewer="video" aria-haspopup="dialog" aria-controls="media-viewer">Open the video.</a>
                 </video>
-                <p class="video-caption">Astra · <strong>Online memory off (mem=0)</strong> · <a class="video-link" href="media/chart-rollout-memory-mem-0-seed-42.mp4" target="_blank" rel="noopener" aria-label="Open Astra without a demonstration video in a new tab">Open video</a></p>
-                <p class="media-error" hidden>The video could not be loaded. Check that the original recording is available, or <a href="media/chart-rollout-memory-mem-0-seed-42.mp4">open the video directly</a>.</p>
+                <p class="video-caption">Astra · <strong>Online memory off (mem=0)</strong></p>
+                <p class="media-error" hidden>The video could not be loaded. Please reload the page or try another example.</p>
               </figure>
               <figure id="memory-in-domain-rollout">
                 <figcaption><p><strong>In-domain demonstration</strong></p></figcaption>
                 <video controls playsinline preload="metadata" poster="media/idstudent.jpg" aria-label="Astra with an in-domain demonstration">
                   <source src="media/idstudent.mp4" type="video/mp4">
                   <source src="media/idstudent.webm" type="video/webm">
-                  Your browser does not support embedded video. <a href="media/idstudent.mp4">Open the video.</a>
+                  Your browser does not support embedded video. <a href="media/idstudent.mp4" data-media-viewer="video" aria-haspopup="dialog" aria-controls="media-viewer">Open the video.</a>
                 </video>
-                <p class="video-caption">Astra · <strong>Online memory off (mem=0)</strong> · <a class="video-link" href="media/idstudent.mp4" target="_blank" rel="noopener" aria-label="Open Astra with an in-domain demonstration video in a new tab">Open video</a></p>
-                <p class="media-error" hidden>The video could not be loaded. Check that the original recording is available, or <a href="media/idstudent.mp4">open the video directly</a>.</p>
+                <p class="video-caption">Astra · <strong>Online memory off (mem=0)</strong></p>
+                <p class="media-error" hidden>The video could not be loaded. Please reload the page or try another example.</p>
               </figure>
               <figure id="memory-out-of-domain-rollout">
                 <figcaption><p><strong>Out-of-domain demonstration</strong></p></figcaption>
                 <video controls playsinline preload="metadata" poster="media/oodstudent.jpg" aria-label="Astra with an out-of-domain demonstration">
                   <source src="media/oodstudent.mp4" type="video/mp4">
                   <source src="media/oodstudent.webm" type="video/webm">
-                  Your browser does not support embedded video. <a href="media/oodstudent.mp4">Open the video.</a>
+                  Your browser does not support embedded video. <a href="media/oodstudent.mp4" data-media-viewer="video" aria-haspopup="dialog" aria-controls="media-viewer">Open the video.</a>
                 </video>
-                <p class="video-caption">Astra · <strong>Online memory off (mem=0)</strong> · <a class="video-link" href="media/oodstudent.mp4" target="_blank" rel="noopener" aria-label="Open Astra with an out-of-domain demonstration video in a new tab">Open video</a></p>
-                <p class="media-error" hidden>The video could not be loaded. Check that the original recording is available, or <a href="media/oodstudent.mp4">open the video directly</a>.</p>
+                <p class="video-caption">Astra · <strong>Online memory off (mem=0)</strong></p>
+                <p class="media-error" hidden>The video could not be loaded. Please reload the page or try another example.</p>
               </figure>
             </div>
             <p>These examples fit our earlier hypothesis that memory serves at least two purposes: learning how to control the robot, and learning how to adjust when an approach does not work. A demonstration from another task may help with the first, while feedback from the current task—or a relevant demonstration—may be needed for the second.</p>
@@ -362,18 +433,18 @@
         </details>
       </section>
       <section id="reasoning-effort" aria-labelledby="reasoning-title">
-        <h2 id="reasoning-title">Reasoning effort</h2>
+        <h2 id="reasoning-title">Reasoning</h2>
         <aside class="section-takeaway" aria-label="Section takeaway"><p><span class="takeaway-label">Takeaway</span> Higher reasoning effort generally improves Astra's performance, allowing it to better understand where and why an action failed, and how to adjust its actions accordingly. But it can also lead to overthinking and abandoning promising strategies too quickly, which may not be the best strategy for robot control.</p></aside>
         <p>With the other settings held fixed, increasing reasoning effort from low to high generally improved performance in our experiments. Astra seemed better able to use the context to work out what was happening and adjust its actions. But there was an interesting exception: xhigh actually performed worse than high. Looking through the trajectories, we saw what looked like a form of “overthinking.”</p>
         <p>At higher reasoning effort, Astra tended to make larger, more frequent changes to its action strategy. It spent a substantial part of its limited step budget repositioning the robot and trying different approaches. Yet a stalled attempt does not always mean the strategy itself is wrong. Sometimes, the robot only needs a slightly different angle or position. In those cases, a quick cycle of small adjustments and another attempt may work better than repeatedly reconsidering the whole approach.</p>
         <p>This suggests a trade-off between refining a strategy through trial and error and stepping back to rethink it. More reasoning can help Astra recognize when it needs a different approach, but it may also lead the model to abandon a promising one too quickly. For robot control, knowing when to keep trying—and when to change strategy—seems to be an important part of the problem.</p>
         <figure class="experiment-figure" id="effort-comparison" aria-label="Reasoning effort comparison">
-          <div class="experiment-chart" data-table="effort-results" role="group" aria-label="Reasoning effort comparison: SR bars and PS line above, turns bars and tokens line below."></div>
+          <div class="experiment-chart" data-table="effort-results" role="group" aria-label="Reasoning effort comparison: SR bars and PS line above, episode length bars and tokens line below."></div>
           <div class="table-scroll experiment-table-scroll" role="region" aria-label="Reasoning effort comparison data" tabindex="0">
             <table class="experiment-table" id="effort-results">
-              <caption class="sr-only">Reasoning effort results: success rate, progress score, average turns, and average tokens per rollout.</caption>
+              <caption class="sr-only">Reasoning effort results: success rate, progress score, average episode length, and average tokens per rollout.</caption>
               <thead>
-                <tr><th scope="col">Variant</th><th scope="col">SR</th><th scope="col">PS</th><th scope="col">Turns / rollout</th><th scope="col">Tokens / rollout</th></tr>
+                <tr><th scope="col">Variant</th><th scope="col">SR</th><th scope="col">PS</th><th scope="col">Episode length</th><th scope="col">Tokens / rollout</th></tr>
               </thead>
               <tbody>
                 <tr data-variant="low"><th scope="row">Low reasoning effort</th><td>15%</td><td>0.30</td><td>159.84</td><td>1,707,936</td></tr>
@@ -385,15 +456,99 @@
           </div>
         </figure>
       </section>
+      <section id="trajectory-distributions" aria-labelledby="trajectory-distributions-title">
+        <h2 id="trajectory-distributions-title">Behavioral pattern analysis</h2>
+        <aside class="section-takeaway" aria-label="Section takeaway"><p><span class="takeaway-label">Takeaway</span> Astra’s trajectories differ substantially from those of π₀.₅-LIBERO, which more closely follows the training demonstrations. LLM-generated trajectories may offer a way to diversify VLA training data and reduce reliance on human demonstration habits.</p></aside>
+        <p>Next, we want to study how Astra and VLAs differ in their behavioral patterns.</p>
+        <p>We draw a sample of demonstration trajectories from the <strong>official LIBERO training dataset</strong> for LIBERO Spatial task 0: pick up the black bowl between the plate and the ramekin and place it on the plate. We then collect <strong>50 rollouts each from π₀.₅-LIBERO and Astra</strong> on the same task.</p>
+        <p>From these demonstration and model trajectories, we periodically sample states and represent them in two ways: a <strong>10D robot state</strong> describing the end-effector pose and gripper width, and a <strong>16D robot–object state</strong> that also includes the bowl and plate positions. For each representation, we use principal component analysis (PCA), fitted to the reference demonstrations, to reduce the states to a shared <strong>2D plane</strong>. Plotting all three groups in these shared coordinates lets us compare which regions of state space the demonstrations, π₀.₅-LIBERO, and Astra tend to visit.</p>
+        <details id="trajectory-distribution-setup" class="article-details">
+          <summary>Experimental setup</summary>
+          <div class="article-details-content">
+            <p>The <strong>10D representation</strong> contains end-effector position (three coordinates), a six-number representation of its 3D orientation, and gripper width. The <strong>16D representation</strong> adds the three-dimensional positions of the target bowl and plate. Positions use world coordinates; object orientations are not included.</p>
+            <p>We draw the reference demonstrations from the official LIBERO training set. The 10D reference contains 45 demonstrations for this task: 35 fit the reference model, and 10 are held out for evaluation. The 16D reference contains 20 accepted simulator replays of demonstrations, with 17 used for fitting and three held out. These replays passed robot-state and timing alignment checks; their object positions are reconstructed from replay. The two representations therefore use different reference samples.</p>
+            <p>We sample every fifth recorded state: control-step states for model rollouts and stored dataset frames for the training reference. Only reference-fit demonstrations determine feature scaling, the nearest-neighbor reference, and the two-dimensional principal component analysis (PCA) projection, with equal trajectory weights and at most 64 sampled states per fitting trajectory. A state is labeled out of distribution (OOD) when its standardized, group-balanced distance to the fifth-nearest reference state exceeds the fixed threshold <var>T</var>=0.5. This calculation uses the full 10D or 16D state, even when two points look close in the PCA plot. The threshold is a descriptive choice for this reference sample.</p>
+          </div>
+        </details>
+        <p class="state-space-reading-note">Blue points are labeled in-distribution (ID), and orange points are labeled out-of-distribution (OOD), according to whether their distance from the reference demonstrations falls within or beyond the chosen threshold. The labels use the full 10D or 16D state space, not the 2D projection, and describe proximity to the sampled demonstrations rather than task success. The gray background shows reference-fit visitation; crosses mark extra off-grid endpoints.</p>
+        <figure class="state-space-figure" id="trajectory-distribution-10d" aria-labelledby="trajectory-distribution-10d-caption">
+          <a class="state-space-overview" href="media/libero-state-space-10d.svg?v=latest-reference-1" aria-label="Open the full 10D trajectory state distribution figure" data-media-viewer="image" aria-haspopup="dialog" aria-controls="media-viewer">
+            <img src="media/libero-state-space-10d.svg?v=latest-reference-1" width="3120" height="1480" loading="lazy" decoding="async" alt="10D PCA views of the demonstration reference, pi05-libero, and Astra, with blue ID states and orange OOD states.">
+          </a>
+          <div class="table-scroll state-space-panels" role="region" aria-label="10D state distributions: Training, pi05-libero, and Astra" tabindex="0">
+            <a href="media/libero-state-space-10d-panel-0.svg?v=latest-reference-1" data-media-viewer="image" aria-haspopup="dialog" aria-controls="media-viewer"><img src="media/libero-state-space-10d-panel-0.svg?v=latest-reference-1" width="994" height="1034" loading="lazy" decoding="async" alt="10D Training reference: 45 trajectories, including 10 held out, with ID and OOD state labels."></a>
+            <a href="media/libero-state-space-10d-panel-1.svg?v=latest-reference-1" data-media-viewer="image" aria-haspopup="dialog" aria-controls="media-viewer"><img src="media/libero-state-space-10d-panel-1.svg?v=latest-reference-1" width="994" height="1034" loading="lazy" decoding="async" alt="10D pi05-libero: 50 trajectories with ID and OOD state labels."></a>
+            <a href="media/libero-state-space-10d-panel-2.svg?v=latest-reference-1" data-media-viewer="image" aria-haspopup="dialog" aria-controls="media-viewer"><img src="media/libero-state-space-10d-panel-2.svg?v=latest-reference-1" width="994" height="1034" loading="lazy" decoding="async" alt="10D Astra: 50 trajectories with ID and OOD state labels."></a>
+          </div>
+          <figcaption id="trajectory-distribution-10d-caption"><strong>Robot state (10D).</strong> End-effector position, orientation, and gripper width, shown in a shared PCA projection. <a href="media/libero-state-space-10d.svg?v=latest-reference-1" data-media-viewer="image" aria-haspopup="dialog" aria-controls="media-viewer">Enlarge figure</a></figcaption>
+        </figure>
+        <figure class="state-space-figure" id="trajectory-distribution-16d" aria-labelledby="trajectory-distribution-16d-caption">
+          <a class="state-space-overview" href="media/libero-state-space-16d.svg?v=latest-reference-1" aria-label="Open the full 16D trajectory state distribution figure" data-media-viewer="image" aria-haspopup="dialog" aria-controls="media-viewer">
+            <img src="media/libero-state-space-16d.svg?v=latest-reference-1" width="3120" height="1480" loading="lazy" decoding="async" alt="16D PCA views including bowl and plate positions for the demonstration reference, pi05-libero, and Astra, with blue ID states and orange OOD states.">
+          </a>
+          <div class="table-scroll state-space-panels" role="region" aria-label="16D state distributions: Training, pi05-libero, and Astra" tabindex="0">
+            <a href="media/libero-state-space-16d-panel-0.svg?v=latest-reference-1" data-media-viewer="image" aria-haspopup="dialog" aria-controls="media-viewer"><img src="media/libero-state-space-16d-panel-0.svg?v=latest-reference-1" width="994" height="1034" loading="lazy" decoding="async" alt="16D Training reference: 20 replayed demonstrations, including three held out, with ID and OOD state labels."></a>
+            <a href="media/libero-state-space-16d-panel-1.svg?v=latest-reference-1" data-media-viewer="image" aria-haspopup="dialog" aria-controls="media-viewer"><img src="media/libero-state-space-16d-panel-1.svg?v=latest-reference-1" width="994" height="1034" loading="lazy" decoding="async" alt="16D pi05-libero: 50 trajectories with ID and OOD state labels."></a>
+            <a href="media/libero-state-space-16d-panel-2.svg?v=latest-reference-1" data-media-viewer="image" aria-haspopup="dialog" aria-controls="media-viewer"><img src="media/libero-state-space-16d-panel-2.svg?v=latest-reference-1" width="994" height="1034" loading="lazy" decoding="async" alt="16D Astra: 50 trajectories with ID and OOD state labels."></a>
+          </div>
+          <figcaption id="trajectory-distribution-16d-caption"><strong>Robot and object state (16D).</strong> The robot features above together with the bowl and plate positions, projected using the 16D reference fit. <a href="media/libero-state-space-16d.svg?v=latest-reference-1" data-media-viewer="image" aria-haspopup="dialog" aria-controls="media-viewer">Enlarge figure</a></figcaption>
+        </figure>
+        <p>Both the robot-only view and the joint robot–object view show a pronounced distributional difference: across both representations, the VLA stays closer to the training reference, while Astra produces a distinct pattern of state visitation, which implies a different behavioral pattern.</p>
+        <p>This suggests another potential role for LLMs: <strong>generating diverse training trajectories for VLAs</strong>. Successful LLM rollouts with different strategies could complement human demonstrations, broaden the behavioral coverage of the training data, and potentially improve VLA generalization.</p>
+        <p>We also notice regions that the training demonstrations and π₀.₅-LIBERO frequently visit but Astra scarcely visits in these projections, even though Astra can still complete the task pretty well. We hypothesize that some of those patterns reflect human behavioral biases—habitual choices of approach or movement sequence—that the VLA has learned from its demonstrations. If so, LLM-generated trajectories might help reduce dependence on those habits by providing alternative successful strategies. Whether this can improve generalization or reduce inherited human biases remains a hypothesis to test, particularly by examining successful trajectories and evaluating their effect on VLA training.</p>
+      </section>
+      <section id="llm-vla-collaboration" aria-labelledby="collaboration-title">
+        <h2 id="collaboration-title">Exploring LLM-VLA collaboration</h2>
+        <aside class="section-takeaway" aria-label="Section takeaway"><p><span class="takeaway-label">Takeaway</span> A failed VLA demonstration can still provide useful context: the selected MolmoAct2 trajectory leads to better Astra results than the selected Astra trajectory in this initial test.</p></aside>
+        <p>The <a href="#memory-one-shot">one-shot learning examples</a> raise another possibility: could Astra learn from a VLA’s unsuccessful attempt? In the earlier <a href="#molmoact2-performance-results">MolmoAct2 results</a>, we saw that the model was quite good at identifying suitable grasp points, particularly for irregular objects, despite its limited overall task performance. A failed rollout may therefore contain useful manipulation behavior alongside the mistake that prevents completion. We want Astra to build on what MolmoAct2 does well and revise what goes wrong, turning the VLA’s experience into a starting point for its own reasoning and control.</p>
+        <p>We test this idea on <strong>task 3, Standing stability, at easy difficulty</strong>. We select one failed <a class="demo-link" href="media/collaboration-molmoact2-teacher.mp4" data-table="article-demos" data-manifest="collaboration-examples.json" data-demo="molmoact2-teacher" aria-controls="rollout-panel" aria-expanded="false">MolmoAct2 demonstration</a> and, for comparison, one failed <a class="demo-link" href="media/collaboration-astra-teacher.mp4" data-table="article-demos" data-manifest="collaboration-examples.json" data-demo="astra-teacher" aria-controls="rollout-panel" aria-expanded="false">Astra demonstration</a>. In each condition, Astra receives the teacher’s visual observations and robot states, then makes a fresh attempt. The context contains <strong>no teacher action outputs, tool calls, notes, or reasoning</strong>, so Astra must infer useful behavior from the observed trajectory.</p>
+        <details id="collaboration-setup" class="article-details">
+          <summary>Experimental setup</summary>
+          <div class="article-details-content">
+            <p>Online memory for Astra remains enabled here. Astra starts each trial from its own seeded reset; the demonstration provides fixed context rather than the robot’s starting state.</p>
+            <p>Each condition reuses one selected failed trajectory: MolmoAct2 seed 44 or Astra seed 53. Their observation sequences contain 30 and 91 recorded observation points, respectively. The context includes camera images and public robot state, with no privileged object state. This explores in-context adaptation on one task.</p>
+          </div>
+        </details>
+        <figure class="experiment-figure" id="collaboration-comparison" aria-label="Learning from failed demonstrations" aria-describedby="collaboration-comparison-note">
+          <div class="experiment-chart" data-table="collaboration-results" data-tokens-max="3000000" role="group" aria-label="Success rate, progress score, episode length, and tokens with and without a failed demonstration."></div>
+          <div class="table-scroll experiment-table-scroll" role="region" aria-label="Learning from failed demonstrations: results" tabindex="0">
+            <table class="experiment-table" id="collaboration-results">
+              <caption class="sr-only">Astra on task 3, easy: no demonstration, an Astra teacher, and a MolmoAct2 teacher. Each condition has 20 trials.</caption>
+              <thead><tr><th scope="col">Variant</th><th scope="col">SR</th><th scope="col">PS</th><th scope="col">Episode length</th><th scope="col">Tokens / rollout</th></tr></thead>
+              <tbody>
+                <tr data-variant="no-demo" data-manifest="main-samples.json" data-rollout-table="main-results" data-demo="task3-easy"><th scope="row">No demonstration</th><td>5%</td><td>0.3339</td><td data-value="82.05">82.05</td><td>890,124</td></tr>
+                <tr data-variant="astra-teacher" data-manifest="collaboration-examples.json" data-rollout-table="article-demos" data-demo="astra-students"><th scope="row">Astra teacher</th><td>5%</td><td>0.3809</td><td data-value="85.45">85.45</td><td>2,690,637</td></tr>
+                <tr data-variant="molmoact2-teacher" data-manifest="collaboration-examples.json" data-rollout-table="article-demos" data-demo="molmoact2-students"><th scope="row">MolmoAct2 teacher</th><td>15%</td><td>0.4826</td><td data-value="78.35">78.35</td><td>1,864,564</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </figure>
+        <p class="section-footnote" id="collaboration-comparison-note">Episode length is reported as mean ± sample standard deviation; tokens are averaged per rollout. The no-demonstration reference comes from the main results and uses medium reasoning effort; both teacher conditions use high reasoning effort. Improvements over this reference therefore do not isolate the effect of the demonstration. The two teacher conditions share the same student settings and evaluation seeds.</p>
+        <p>Both demonstrations are associated with higher mean progress than the no-demonstration reference. Success remains at 5% with the Astra teacher and rises to 15% with the MolmoAct2 teacher.</p>
+        <p>One possible explanation comes from the teacher demonstrations: the MolmoAct2 demonstration includes an attempt to grasp the upper part of the object, while the Astra demonstration does not. That attempt exposes the student to an alternative grasping strategy, even though it does not lead to success for the teacher. Astra may be able to use this clue to choose a better grasp and refine the subsequent movements, helping explain the stronger result with the MolmoAct2 teacher.</p>
+        <p>The MolmoAct2 demonstration leads to the stronger Astra result even though the teacher’s own attempt failed. This is an encouraging starting point for combining the models: a VLA’s partially useful behavior may give an LLM something to build on, while the LLM reasons about how to finish the task.</p>
+      </section>
+      <section id="conclusion" aria-labelledby="conclusion-title">
+        <h2 id="conclusion-title">Conclusion</h2>
+        <p>Overall, Astra has given me many pleasant surprises on embodied tasks. Its ability to follow instructions, reason about physical situations, and sometimes discover unexpected solutions is encouraging. Still, there seems to be a substantial gap between these demonstrations and an agentic system that is useful in the real world. Such systems are not yet precise or reliable enough, and they do not consistently make good decisions when faced with difficult physical interactions. Another limitation we have not emphasized enough is <strong>latency</strong>. A single turn in our experiments often takes more than ten seconds, sometimes several tens of seconds. A long rollout can take tens of minutes, or even around an hour, depending on reasoning effort, context complexity, and other factors. These delays would often be unacceptable in real deployment. We hope advances in software and hardware will make the process faster, alongside new algorithms that combine LLMs with more efficient action experts.</p>
+        <p>There are also limits to what our evaluation can tell us. Astra’s embodied behavior varies substantially across attempts, and its behavioral patterns differ from those of the VLAs we compared it with. This makes it difficult to say categorically that it “can” or “cannot” perform a task. Our observations suggest that, in many cases, giving it more opportunities to try, observe the outcome, and revise its approach may greatly increase its chances of eventually succeeding. A long interaction history may also provide more useful feedback for reasoning about what to try next. In practice, however, evaluation cannot allow unlimited attempts and computation. We measure Astra’s performance <strong>within a finite budget</strong>, under particular settings and constraints. The numbers in this blog may therefore not fully reflect the upper limits of its capabilities. How to evaluate such systems while accounting for opportunities to retry, available context, and the time and computation needed to reach success is itself an important research question.</p>
+        <p>Astra’s closed nature also limits our analysis: we cannot access its underlying reasoning process to understand more deeply how it arrives at its decisions. We would like to see such work being extended to open models, where greater access to the models and their implementations could support more detailed analysis and experimentation, and help us explore their potential more fully.</p>
+        <p>Despite these limitations, I find Astra powerful and remarkably steerable. It has shown me new possibilities and many directions for improvement. I hope future work can turn this potential into robots that respond quickly, act reliably, and adapt to the everyday world.</p>
+      </section>
+      <section id="references" aria-labelledby="references-title">
+        <h2 id="references-title">References</h2>
+        <ul class="references-list">
+          <li id="ref-chooi">Jay Chooi. <a href="https://x.com/chooi_jeq/status/2098427488787730636" target="_blank" rel="noopener">Post on Astra and MolmoAct2 for bimanual robot control</a>. X, September 11, 2026.</li>
+          <li id="ref-duan">Jiafei Duan. <a href="https://x.com/DJiafei/status/2098681827703808480" target="_blank" rel="noopener">Post demonstrating an open-loop Astra rollout</a>. X, September 12, 2026.</li>
+          <li id="ref-embodied-policy">Jiayi Su, Yixin Zheng, Mi Yan, Li Yi, Zhizheng Zhang, and He Wang. <a href="https://anonymous-report-421.github.io/public-website/?lang=en&amp;view=1" target="_blank" rel="noopener">GPT 6 Astra as an Embodied Policy</a>. Technical report, 2026.</li>
+          <li id="ref-physical-agency">Liane Galanti, Dhruv Shah, and Tri Dao. <a href="https://arxiv.org/pdf/2607.21725v1" target="_blank" rel="noopener">Addressing the Orchestration Gap in Generalist Robots via Physical Agency</a>. arXiv:2607.21725v1, 2026.</li>
+          <li id="ref-gemini-robotics-15">Abbas Abdolmaleki et al. <a href="https://arxiv.org/pdf/2510.03342v1" target="_blank" rel="noopener">Gemini Robotics 1.5: Pushing the Frontier of Generalist Robots with Advanced Embodied Reasoning, Thinking, and Motion Transfer</a>. arXiv:2510.03342v1, 2025.</li>
+          <li id="ref-gemini-robotics-2">Carolina Parada. <a href="https://deepmind.google/blog/gemini-robotics-2-brings-whole-body-intelligence-to-robots/" target="_blank" rel="noopener">Gemini Robotics 2 brings whole body intelligence to robots</a>. Google DeepMind, July 30, 2026.</li>
+          <li id="ref-show-harness">Yanzhe Chen et al. <a href="https://arxiv.org/abs/2609.10522" target="_blank" rel="noopener">Show-Harness: Just a VLM Agent Can Play Robots</a>. arXiv:2609.10522, 2026.</li>
+        </ul>
+      </section>
     </article>
   </main>
-  <aside id="concept-note" class="concept-note" role="dialog" aria-labelledby="concept-note-title" hidden>
-    <header class="concept-note-header">
-      <h2 id="concept-note-title">Concept note</h2>
-      <button id="concept-note-close" class="concept-note-close" type="button" aria-label="Close concept note">×</button>
-    </header>
-    <div id="concept-note-body" class="concept-note-body" role="region" aria-labelledby="concept-note-title" tabindex="0"></div>
-  </aside>
   <template id="concept-reasoning-into-action" data-title="Reasoning into physical actions">
     <p>Actually, for me, one of the biggest advantages of using LLMs like Astra for robot control is how they combine strong instruction following and reasoning with the ability to turn that reasoning into physical actions.</p>
     <p>This gives us a way to draw on the model’s broader problem-solving abilities when tackling physical tasks. We’ll explore the role of reasoning in more detail later.</p>
@@ -404,7 +559,7 @@
     <p>A direction worth exploring is giving the agent more frequent visual observations, without necessarily increasing its action-output frequency.</p>
   </template>
   <template id="concept-single-target" data-title="Single target mode">
-    <p>One model call specifies one fixed end-effector target. The requested translation and rotation satisfy <var>δ</var> ∈ [−<var>Hδ</var><sup>*</sup>, <var>Hδ</var><sup>*</sup>], with bounds applied separately to each component.</p>
+    <p>One model call specifies one fixed end-effector target. Its six-dimensional increment (three translations and three rotations) satisfies <var>δ</var> ∈ [−<var>Hδ</var><sup>*</sup>, <var>Hδ</var><sup>*</sup>], with bounds applied separately to each component.</p>
     <p>The executor keeps correcting toward that target for up to <var>H</var> control steps before the next decision. Completion or interruption can end execution earlier.</p>
   </template>
   <template id="concept-multi-targets" data-title="Multi targets mode">
@@ -412,8 +567,21 @@
     <p>The sequence stays fixed. At normal speed, the controller spends one step per target, even if it has not been reached. This gives the same <var>H</var>-step execution budget as single target mode; tracking error does not move later targets.</p>
   </template>
   <template id="concept-base-motion-unit" data-title="Base motion unit">
-    <p><var>δ</var><sup>*</sup> contains small translation and rotation request limits chosen empirically for the robot embodiment. Each component sets a separate per-axis bound.</p>
-    <p>These limits constrain what the model can request; they do not guarantee the actual movement. Single target mode uses <var>Hδ</var><sup>*</sup>, while each multi-target increment uses <var>δ</var><sup>*</sup>.</p>
+    <p><var>δ</var><sup>*</sup> ∈ ℝ<sup>6</sup> gives three translation bounds and three rotation bounds. Our current empirical settings use the same bound for all three axes within each group:</p>
+    <dl class="motion-unit-values">
+      <dt>ManiSkill / DROID · 30 Hz</dt>
+      <dd>Translation: 0.012 m (1.2 cm) per axis.<br>Rotation: 0.015 rad per axis.<br>Used by Ditto-Bench.</dd>
+      <dt>LIBERO / LIBERO-Plus · 20 Hz</dt>
+      <dd>Translation: 0.003 m (3 mm) per axis.<br>Rotation: 0.015 rad per axis.</dd>
+    </dl>
+    <p>ManiSkill uses robot-base-frame translation and XYZ Euler angle increments, applied by composing rotations. LIBERO uses world-frame translation and axis-angle rotation increments. Gripper commands are separate from this six-dimensional vector.</p>
+    <p>For example, ManiSkill with <var>H</var>=5 permits up to ±0.060 m on each translation axis and ±0.075 rad on each rotation component in a single-target request.</p>
+    <p>These are empirically chosen request limits, not guaranteed displacements or global physical maxima. Single target mode uses <var>Hδ</var><sup>*</sup>; each multi-target increment uses <var>δ</var><sup>*</sup>.</p>
+  </template>
+  <template id="concept-execution-budget" data-title="Execution budget">
+    <p>The main experiment allows 450 policy-controlled steps at 30 Hz: 15 seconds of simulated execution. Each model decision can use up to five of those steps. Model inference time is separate from simulated time.</p>
+    <p>If Astra declares completion, the evaluator can hold the current robot and gripper targets for up to four additional seconds to verify success, without further model calls. This verification does not apply when the normal budget simply runs out.</p>
+    <p>Episode length counts model decision turns, not these physical control steps.</p>
   </template>
   <template id="concept-execution-time" data-title="2× time">
     <p>Each planned segment is divided between two control steps, so a full <var>H</var>-target plan uses 2<var>H</var> steps instead of <var>H</var>.</p>
@@ -444,9 +612,8 @@
               <span class="rollout-outcome" id="rollout-current-outcome"></span>
             </div>
             <p class="rollout-current-metrics" id="rollout-current-metrics"></p>
-            <a id="rollout-open-video" target="_blank" rel="noopener">Open video in a new tab</a>
           </figcaption>
-          <p class="rollout-video-error" id="rollout-video-error" role="alert" hidden>The video could not be loaded. Try another example or open the video directly.</p>
+          <p class="rollout-video-error" id="rollout-video-error" role="alert" hidden>The video could not be loaded. Please reload the page or try another example.</p>
         </figure>
         <section class="model-output-section" id="model-output-section" aria-label="Model outputs" hidden>
           <div id="model-output-content" hidden>
@@ -467,13 +634,19 @@
         </section>
         <h3 class="rollout-list-title">Choose a rollout <span>4 examples</span></h3>
         <div class="rollout-clips" id="rollout-clips" aria-label="Rollout choices"></div>
-        <p class="rollout-selection-note">Four examples selected to show a range of outcomes. Their success rate need not match the chart average.</p>
-        <details class="rollout-source">
-          <summary>Source experiment</summary>
-          <code id="rollout-source-run"></code>
-        </details>
       </div>
     </div>
   </aside>
+  <dialog id="media-viewer" class="media-viewer" aria-labelledby="media-viewer-title">
+    <header class="media-viewer-header">
+      <h2 id="media-viewer-title">Media preview</h2>
+      <div class="media-viewer-actions">
+        <button id="media-viewer-zoom" type="button" aria-pressed="false" hidden>Zoom in</button>
+        <button id="media-viewer-close" type="button" aria-label="Close enlarged media">Close <span aria-hidden="true">×</span></button>
+      </div>
+    </header>
+    <div id="media-viewer-content" class="media-viewer-content"></div>
+    <p id="media-viewer-error" class="media-viewer-error" role="alert" hidden>The media could not be loaded. Please close this preview and try again.</p>
+  </dialog>
 </body>
 </html>

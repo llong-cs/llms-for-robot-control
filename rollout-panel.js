@@ -13,6 +13,14 @@
   const triggerSelector = ".chart-variant, .performance-cell, .demo-link, .model-output-open";
   const resultTables = new Set(["main-results", "molmoact2-results"]);
   const manifestPromises = new Map();
+  const taskNames = new Map([
+    ["slanted board", 0], ["constrained extraction", 0],
+    ["odd geometry", 1], ["odd-object grasping", 1],
+    ["precision insertion", 2],
+    ["stand object", 3], ["standing stability", 3],
+    ["tool drawer", 4], ["tool-assisted drawer", 4],
+    ["unlock ring", 5], ["ring release", 5],
+  ]);
   let activeGroup = null;
   let activeClip = null;
   let returnFocus = null;
@@ -28,10 +36,11 @@
     panel.setAttribute("role", modal ? "dialog" : "complementary");
     if (modal) panel.setAttribute("aria-modal", "true");
     else panel.removeAttribute("aria-modal");
-    if (modal && !panel.contains(document.activeElement)) closeButton.focus({ preventScroll: true });
+    if (modal && !window.MediaViewer?.isOpen() && !panel.contains(document.activeElement)) closeButton.focus({ preventScroll: true });
   }
 
   function stopVideo() {
+    window.MediaViewer?.close({ restoreFocus: false });
     window.RolloutOutputs.setClip(null, false);
     player.pause();
     activeClip = null;
@@ -67,8 +76,28 @@
     return clip.success ? "Success" : "Failure";
   }
 
+  function displayLabel(value = "") {
+    const parts = String(value).split("·").map((part) => {
+      const label = part.trim();
+      const taskId = taskNames.get(label.toLowerCase());
+      return taskId !== undefined ? `Task ${taskId}`
+        : label.replace(/\bTask\s+0*(\d+)\b/gi, "Task $1");
+    });
+    return [...new Set(parts.filter(Boolean))].join(" · ");
+  }
+
+  function normalizedLabel(value) {
+    return String(value).normalize("NFKC").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+  }
+
+  function contextWithoutTitle(context, title) {
+    const heading = ` ${normalizedLabel(title)} `;
+    return displayLabel(context).split(" · ")
+      .filter((part) => !heading.includes(` ${normalizedLabel(part)} `)).join(" · ");
+  }
+
   function clipTitle(clip, index) {
-    return clip.label || `Example ${index + 1} · Seed ${clip.seed}`;
+    return displayLabel(clip.label || `Example ${index + 1} · Seed ${clip.seed}`);
   }
 
   function clipMetrics(clip) {
@@ -88,7 +117,9 @@
     window.RolloutOutputs.setClip(clip, !resultTables.has(activeGroup.chartTableId));
     player.poster = clip.poster;
     const index = activeGroup.clips.findIndex((item) => item.id === clip.id);
-    player.setAttribute("aria-label", [activeGroup.title || activeGroup.variant, clipTitle(clip, index), outcome(clip)].filter(Boolean).join(", "));
+    const title = document.getElementById("rollout-title").textContent;
+    const selectedTitle = clipTitle(clip, index);
+    player.setAttribute("aria-label", [...new Set([title, selectedTitle, outcome(clip)].filter(Boolean))].join(", "));
     // VP9 is supported by the embedded browser even when H.264 is unavailable.
     [[clip.webm, "video/webm"], [clip.mp4, "video/mp4"]].forEach(([src, type]) => {
       const source = document.createElement("source");
@@ -99,7 +130,9 @@
       });
       player.append(source);
     });
-    document.getElementById("rollout-current-title").textContent = clipTitle(clip, index);
+    const currentTitle = document.getElementById("rollout-current-title");
+    currentTitle.textContent = contextWithoutTitle(selectedTitle, title);
+    currentTitle.hidden = !currentTitle.textContent;
     const badge = document.getElementById("rollout-current-outcome");
     badge.textContent = outcome(clip);
     badge.hidden = typeof clip.success !== "boolean";
@@ -107,8 +140,9 @@
     const metrics = document.getElementById("rollout-current-metrics");
     metrics.textContent = clipMetrics(clip);
     metrics.hidden = !metrics.textContent;
-    const directLink = document.getElementById("rollout-open-video");
-    directLink.href = player.canPlayType('video/webm; codecs="vp9"') ? clip.webm : clip.mp4;
+    const currentHeading = panel.querySelector(".rollout-current-heading");
+    currentHeading.hidden = currentTitle.hidden && badge.hidden;
+    currentHeading.closest("figcaption").hidden = currentHeading.hidden && metrics.hidden;
     clipsList.querySelectorAll("button").forEach((button) => {
       const selected = button.dataset.clipId === clip.id;
       button.classList.toggle("is-selected", selected);
@@ -124,30 +158,22 @@
     const failureDemo = group.chartTableId === "failure-behaviors";
     const demo = failureDemo || group.chartTableId === "promising-behaviors" || group.chartTableId === "article-demos";
     const singleDemo = demo && group.clips.length === 1;
-    document.getElementById("rollout-title").textContent = group.title || group.variant;
+    const title = displayLabel(group.title || group.variant);
+    document.getElementById("rollout-title").textContent = title;
     panel.querySelector(".rollout-eyebrow").textContent = failureDemo ? "Failure examples" : group.chartTableId === "article-demos" ? "Demo" : demo ? "Promising behaviors" : mainSamples ? "Task samples" : "Rollout examples";
     const first = group.clips[0];
-    document.getElementById("rollout-context").textContent =
-      group.context || `Task 0 · Slanted board · ${first.difficulty === "xhard" ? "Extra hard" : first.difficulty}`;
+    const context = document.getElementById("rollout-context");
+    context.textContent = contextWithoutTitle(
+      group.context || `Task 0 · ${first.difficulty === "xhard" ? "Extra hard" : first.difficulty}`, title);
+    context.hidden = mainSamples || !context.textContent;
     const scope = document.getElementById("rollout-scope");
-    scope.textContent = summary || group.description || (mainSamples ? "Samples for the selected task and difficulty." : group.clipStepLimit
-      ? `First ${group.clipStepLimit} control steps, or earlier completion. These clips follow the chart’s cutoff.`
-      : `Full rollouts · ${group.sourceMaxSteps.toLocaleString("en-US")} control-step budget.`);
+    scope.textContent = demo ? summary || group.description || "" : "";
+    scope.hidden = !scope.textContent || normalizedLabel(scope.textContent) === normalizedLabel(title);
     const listTitle = panel.querySelector(".rollout-list-title");
     listTitle.hidden = singleDemo;
     clipsList.hidden = singleDemo;
     listTitle.firstChild.textContent = demo ? "Choose an example " : mainSamples ? "Choose a sample " : "Choose a rollout ";
     listTitle.querySelector("span").textContent = `${group.clips.length} ${mainSamples ? (group.clips.length === 1 ? "sample" : "samples") : "examples"}`;
-    const selectionNote = panel.querySelector(".rollout-selection-note");
-    selectionNote.hidden = demo;
-    selectionNote.textContent = mainSamples
-      ? "Samples illustrate successful and failed attempts where available. The table summarizes all evaluated rollouts."
-      : "Four examples selected to show a range of outcomes. Their success rate need not match the chart average.";
-    panel.querySelector(".rollout-source").hidden = demo;
-    panel.querySelector(".rollout-source summary").textContent = mainSamples ? "Sample files" : "Source experiment";
-    document.getElementById("rollout-source-run").textContent = demo ? "" : mainSamples
-      ? group.clips.map((clip) => `${clip.source || group.source}/${clip.sourceFile}`).join("\n")
-      : group.runName;
     clipsList.setAttribute("aria-label", demo ? "Demo choices" : mainSamples ? "Sample choices" : "Rollout choices");
     clipsList.replaceChildren();
     (singleDemo ? [] : group.clips).forEach((clip, index) => {
@@ -166,7 +192,7 @@
       const text = document.createElement("span");
       text.className = "rollout-clip-text";
       const label = document.createElement("strong");
-      label.textContent = clip.label || `${index + 1}. Seed ${clip.seed}`;
+      label.textContent = displayLabel(clip.label || `${index + 1}. Seed ${clip.seed}`);
       const detail = document.createElement("span");
       detail.textContent = Number.isFinite(clip.progress)
         ? `${outcome(clip)} · PS ${clip.progress.toFixed(2)}` : clipMetrics(clip);
@@ -209,7 +235,7 @@
     activeGroup = null;
     loaded.hidden = true;
     status.textContent = tableId === "promising-behaviors" || tableId === "failure-behaviors" ? "Loading demo…" : "Loading samples…";
-    document.getElementById("rollout-title").textContent = title;
+    document.getElementById("rollout-title").textContent = displayLabel(title);
     panel.querySelector(".rollout-eyebrow").textContent = tableId === "failure-behaviors" ? "Failure examples" : tableId === "promising-behaviors" ? "Promising behaviors" : resultTables.has(tableId) ? "Task samples" : "Rollout examples";
     panel.hidden = false;
     panel.querySelector(".rollout-content").scrollTop = 0;
@@ -238,7 +264,6 @@
 
   closeButton.addEventListener("click", closePanel);
   backdrop.addEventListener("click", closePanel);
-  window.addEventListener("article:open-concept", () => closePanel({ restoreFocus: false }));
   window.addEventListener("article:navigate", () => closePanel({ restoreFocus: false }));
   window.addEventListener("resize", syncLayout);
   player.addEventListener("error", () => {
@@ -246,10 +271,9 @@
   });
   player.addEventListener("loadedmetadata", () => {
     mediaError.hidden = true;
-    if (player.currentSrc) document.getElementById("rollout-open-video").href = player.currentSrc;
   });
   document.addEventListener("keydown", (event) => {
-    if (panel.hidden) return;
+    if (panel.hidden || window.MediaViewer?.isOpen()) return;
     if (event.key === "Escape") {
       event.preventDefault();
       closePanel();

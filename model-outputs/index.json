@@ -463,6 +463,42 @@
       "turnCount": 100,
       "timeAlignment": "verified",
       "message": "The final model turn was recorded at control step 495. The remaining video frames contain no additional model turns."
+    },
+    "media/collaboration-molmoact2-teacher.mp4": {
+      "status": "unavailable",
+      "reason": "This MolmoAct2 teacher uses a native VLA policy. Its recording contains action predictions, not LLM tool calls or notes."
+    },
+    "media/collaboration-molmoact2-student-success.mp4": {
+      "status": "available",
+      "trace": "model-outputs/collaboration-molmoact2-student-success.json",
+      "turnCount": 52,
+      "timeAlignment": "verified",
+      "message": "The final model turn was recorded at control step 255. The remaining video frames contain no additional model turns."
+    },
+    "media/collaboration-molmoact2-student-failure.mp4": {
+      "status": "available",
+      "trace": "model-outputs/collaboration-molmoact2-student-failure.json",
+      "turnCount": 88,
+      "timeAlignment": "verified"
+    },
+    "media/collaboration-astra-teacher.mp4": {
+      "status": "available",
+      "trace": "model-outputs/collaboration-astra-teacher.json",
+      "turnCount": 91,
+      "timeAlignment": "verified"
+    },
+    "media/collaboration-astra-student-success.mp4": {
+      "status": "available",
+      "trace": "model-outputs/collaboration-astra-student-success.json",
+      "turnCount": 56,
+      "timeAlignment": "verified",
+      "message": "The final model turn was recorded at control step 275. The remaining video frames contain no additional model turns."
+    },
+    "media/collaboration-astra-student-failure.mp4": {
+      "status": "available",
+      "trace": "model-outputs/collaboration-astra-student-failure.json",
+      "turnCount": 90,
+      "timeAlignment": "verified"
     }
   }
 }

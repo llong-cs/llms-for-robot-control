@@ -43,6 +43,10 @@
     entries.forEach((entry) => {
       if (entry.target.getBoundingClientRect().top <= threshold) selected = entry;
     });
+    // A short final section may never reach the threshold above the viewport.
+    const atEnd = window.scrollY > 0 &&
+      Math.ceil(window.scrollY + window.innerHeight) >= document.documentElement.scrollHeight - 2;
+    if (atEnd) selected = entries[entries.length - 1];
     if (selected === activeEntry) return;
     activeEntry = selected;
     current.textContent = selected.link.textContent;

@@ -2,103 +2,160 @@
 
 (() => {
   const article = document.getElementById("article");
-  const note = document.getElementById("concept-note");
-  const title = document.getElementById("concept-note-title");
-  const body = document.getElementById("concept-note-body");
-  const closeButton = document.getElementById("concept-note-close");
-  const terms = Array.from(document.querySelectorAll(".concept-term"));
-  if (!article || !note || !title || !body || !closeButton) return;
-
-  let activeTerm = null;
+  if (!article) return;
+  const terms = Array.from(article.querySelectorAll(".concept-term"));
+  const notes = new Map();
+  const slots = new Map();
   let positionFrame = null;
 
-  function positionNote() {
-    if (note.hidden || !activeTerm) return;
-    const viewportWidth = document.documentElement.clientWidth;
-    const viewportHeight = window.innerHeight;
-    const availableWidth = article.getBoundingClientRect().left - 36;
-    const compact = availableWidth < 220;
-    note.classList.toggle("is-compact", compact);
-
-    if (compact) {
-      note.style.width = `${Math.min(340, viewportWidth - 24)}px`;
-      note.style.left = "12px";
-      note.style.top = "auto";
-      note.style.bottom = "12px";
-      return;
+  // Keep open notes outside disclosures so collapsing a section does not hide them.
+  function blockAfter(term) {
+    let block = term.closest("p") || term.parentElement;
+    for (let parent = term.parentElement; parent && parent !== article; parent = parent.parentElement) {
+      if (parent instanceof HTMLDetailsElement) block = parent;
     }
-
-    const width = Math.min(280, availableWidth);
-    note.style.width = `${width}px`;
-    note.style.left = `${article.getBoundingClientRect().left - width - 20}px`;
-    note.style.bottom = "auto";
-    const topLimit = Math.max(16, viewportHeight - note.getBoundingClientRect().height - 16);
-    note.style.top = `${Math.max(16, Math.min(activeTerm.getBoundingClientRect().top - 12, topLimit))}px`;
+    return block;
   }
 
-  function schedulePosition() {
-    if (note.hidden || positionFrame !== null) return;
-    positionFrame = requestAnimationFrame(() => {
-      positionFrame = null;
-      positionNote();
+  function slotFor(term) {
+    const anchor = blockAfter(term);
+    if (!slots.has(anchor)) {
+      const slot = document.createElement("div");
+      slot.className = "concept-note-slot";
+      slot.hidden = true;
+      anchor.after(slot);
+      slots.set(anchor, slot);
+    }
+    return slots.get(anchor);
+  }
+
+  function syncVisibility() {
+    slots.forEach((slot) => {
+      slot.hidden = !Array.from(slot.children).some((note) => !note.hidden);
     });
-  }
-
-  function closeNote({ restoreFocus = true } = {}) {
-    if (note.hidden) return;
-    const trigger = activeTerm;
-    note.hidden = true;
-    activeTerm = null;
     terms.forEach((term) => {
-      term.classList.remove("is-open");
-      term.setAttribute("aria-expanded", "false");
+      const entry = notes.get(term.dataset.concept);
+      if (!entry) return;
+      term.setAttribute("aria-expanded", String(!entry.note.hidden));
+      term.classList.toggle("is-active", !entry.note.hidden);
     });
-    if (restoreFocus && trigger?.isConnected) trigger.focus({ preventScroll: true });
+    positionNotes();
+  }
+
+  function closeNote(key) {
+    const entry = notes.get(key);
+    entry.note.hidden = true;
+    entry.note.classList.remove("is-active");
+    syncVisibility();
+    visibleAnchor(entry.term).focus({ preventScroll: true });
   }
 
   terms.forEach((term) => {
+    const key = term.dataset.concept;
+    const template = document.getElementById(`concept-${key}`);
+    if (!(template instanceof HTMLTemplateElement)) return;
+    if (!notes.has(key)) {
+      const note = document.createElement("aside");
+      note.id = `concept-note-${key}`;
+      note.className = "concept-note";
+      note.hidden = true;
+      note.tabIndex = -1;
+      note.setAttribute("aria-labelledby", `${note.id}-title`);
+      const title = document.createElement("h3");
+      title.id = `${note.id}-title`;
+      title.className = "concept-note-title";
+      title.textContent = template.dataset.title || term.textContent;
+      const header = document.createElement("div");
+      header.className = "concept-note-header";
+      const close = document.createElement("button");
+      close.type = "button";
+      close.className = "concept-note-close";
+      close.setAttribute("aria-label", `Close note: ${title.textContent}`);
+      close.textContent = "×";
+      close.addEventListener("click", () => closeNote(key));
+      header.append(title, close);
+      const body = document.createElement("div");
+      body.className = "concept-note-body";
+      body.append(template.content.cloneNode(true));
+      note.append(header, body);
+      slotFor(term).append(note);
+      notes.set(key, { note, term });
+    }
+    term.setAttribute("aria-controls", notes.get(key).note.id);
+    term.setAttribute("aria-expanded", "false");
+    term.removeAttribute("aria-haspopup");
     term.addEventListener("click", () => {
-      if (!note.hidden && activeTerm === term) {
-        closeNote();
+      const entry = notes.get(key);
+      const { note } = entry;
+      if (!note.hidden) {
+        closeNote(key);
+        term.focus({ preventScroll: true });
         return;
       }
-      const template = document.getElementById(`concept-${term.dataset.concept}`);
-      if (!(template instanceof HTMLTemplateElement)) return;
       window.dispatchEvent(new CustomEvent("article:open-concept", {
-        detail: { concept: term.dataset.concept, trigger: term },
+        detail: { concept: key, trigger: term },
       }));
-      activeTerm = term;
-      title.textContent = template.dataset.title || term.textContent;
-      body.replaceChildren(template.content.cloneNode(true));
-      body.scrollTop = 0;
-      terms.forEach((item) => {
-        const selected = item === term;
-        item.classList.toggle("is-open", selected);
-        item.setAttribute("aria-expanded", String(selected));
-      });
+      entry.term = term;
+      slotFor(term).append(note);
       note.hidden = false;
-      positionNote();
-      closeButton.focus({ preventScroll: true });
+      notes.forEach((entry) => entry.note.classList.toggle("is-active", entry.note === note));
+      syncVisibility();
+      // Preserve the reading position even when a long note extends offscreen.
+      note.focus({ preventScroll: true });
     });
   });
 
-  closeButton.addEventListener("click", () => closeNote());
-  document.addEventListener("keydown", (event) => {
-    if (event.key !== "Escape" || note.hidden) return;
-    event.preventDefault();
-    closeNote();
-  });
-  document.addEventListener("pointerdown", (event) => {
-    if (note.hidden || note.contains(event.target) || event.target.closest(".concept-term")) return;
-    closeNote({ restoreFocus: false });
-  });
-  window.addEventListener("experiment:open-rollouts", () => closeNote({ restoreFocus: false }));
-  window.addEventListener("article:navigate", () => closeNote({ restoreFocus: false }));
-  document.querySelectorAll("details").forEach((disclosure) => {
-    disclosure.addEventListener("toggle", () => {
-      if (!disclosure.open && activeTerm && disclosure.contains(activeTerm)) closeNote({ restoreFocus: false });
+  function visibleAnchor(term) {
+    let anchor = term;
+    for (let parent = term.parentElement; parent && parent !== article; parent = parent.parentElement) {
+      if (parent instanceof HTMLDetailsElement && !parent.open) {
+        anchor = parent.querySelector("summary") || parent;
+      }
+    }
+    return anchor;
+  }
+
+  function positionNotes() {
+    const articleBounds = article.getBoundingClientRect();
+    const availableWidth = articleBounds.left - 36;
+    const marginLayout = availableWidth >= 220;
+    article.classList.toggle("has-margin-notes", marginLayout);
+    const width = Math.min(280, availableWidth);
+    let bottom = 0;
+    const openNotes = Array.from(notes.values()).filter(({ note }) => !note.hidden);
+    openNotes.sort((a, b) => a.term.compareDocumentPosition(b.term) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1);
+    openNotes.forEach(({ note, term }) => {
+      if (!marginLayout) {
+        note.style.removeProperty("width");
+        note.style.removeProperty("left");
+        note.style.removeProperty("top");
+        return;
+      }
+      note.style.width = `${width}px`;
+      note.style.left = `${-width - 20}px`;
+      const anchorTop = visibleAnchor(term).getBoundingClientRect().top - article.getBoundingClientRect().top;
+      const top = Math.max(anchorTop - 10, bottom);
+      note.style.top = `${top}px`;
+      bottom = top + note.getBoundingClientRect().height + 18;
     });
-  });
-  window.addEventListener("scroll", schedulePosition, { passive: true });
+  }
+
+  function schedulePosition() {
+    if (positionFrame !== null) return;
+    positionFrame = requestAnimationFrame(() => {
+      positionFrame = null;
+      positionNotes();
+    });
+  }
+
   window.addEventListener("resize", schedulePosition);
+  article.addEventListener("load", schedulePosition, true);
+  article.querySelectorAll("details").forEach((details) => {
+    details.addEventListener("toggle", schedulePosition);
+  });
+  const observer = new ResizeObserver(schedulePosition);
+  observer.observe(article);
+  notes.forEach(({ note }) => observer.observe(note));
+  document.fonts.ready.then(schedulePosition);
+  positionNotes();
 })();

@@ -1,0 +1,132 @@
+{
+  "schemaVersion": 1,
+  "groups": [
+    {
+      "chartTableId": "article-demos",
+      "variant": "molmoact2-teacher",
+      "title": "MolmoAct2 teacher demonstration",
+      "context": "Task 3 · Standing stability · Easy",
+      "description": "This failed MolmoAct2 rollout supplied observations and robot states only. Teacher model actions and notes were not passed to the Astra student.",
+      "clips": [
+        {
+          "id": "collaboration-molmoact2-teacher",
+          "label": "MolmoAct2 teacher · Seed 44",
+          "success": false,
+          "seed": 44,
+          "progress": 0.3549897372722626,
+          "finalProgress": 0.0,
+          "steps": 450,
+          "mp4": "media/collaboration-molmoact2-teacher.mp4",
+          "webm": "media/collaboration-molmoact2-teacher.webm",
+          "poster": "media/collaboration-molmoact2-teacher.jpg",
+          "durationSeconds": 15.033333,
+          "source": "20260929T144029-175363Z-molmoact2-all",
+          "sourceFile": "evaluation/vlmvla-03-stand_object-easy-seed000044/videos/vlmvla-03-stand_object-easy-seed000044-e0.mp4",
+          "modelOutputs": "not-applicable"
+        }
+      ]
+    },
+    {
+      "chartTableId": "article-demos",
+      "variant": "molmoact2-students",
+      "title": "Astra with a MolmoAct2 demonstration",
+      "context": "Task 3 · Standing stability · Easy",
+      "description": "A successful and a failed Astra rollout after seeing the failed MolmoAct2 demonstration. The demonstration supplied only observations and robot states.",
+      "clips": [
+        {
+          "id": "collaboration-molmoact2-student-success",
+          "label": "Success example · Seed 51",
+          "success": true,
+          "seed": 51,
+          "progress": 0.9999977350234985,
+          "finalProgress": 0.9999977350234985,
+          "steps": 334,
+          "mp4": "media/collaboration-molmoact2-student-success.mp4",
+          "webm": "media/collaboration-molmoact2-student-success.webm",
+          "poster": "media/collaboration-molmoact2-student-success.jpg",
+          "durationSeconds": 11.166667,
+          "source": "20260930T061433-733795Z-astra-molmoact2-teacher",
+          "sourceFile": "evaluation/vlmvla-03-stand_object-easy-seed000051/videos/vlmvla-03-stand_object-easy-seed000051-e0.mp4"
+        },
+        {
+          "id": "collaboration-molmoact2-student-failure",
+          "label": "Failure example · Seed 61",
+          "success": false,
+          "seed": 61,
+          "progress": 0.3601457476615906,
+          "finalProgress": 0.0,
+          "steps": 436,
+          "mp4": "media/collaboration-molmoact2-student-failure.mp4",
+          "webm": "media/collaboration-molmoact2-student-failure.webm",
+          "poster": "media/collaboration-molmoact2-student-failure.jpg",
+          "durationSeconds": 14.566667,
+          "source": "20260930T061433-733795Z-astra-molmoact2-teacher",
+          "sourceFile": "evaluation/vlmvla-03-stand_object-easy-seed000061/videos/vlmvla-03-stand_object-easy-seed000061-e0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "article-demos",
+      "variant": "astra-teacher",
+      "title": "Astra teacher demonstration",
+      "context": "Task 3 · Standing stability · Easy",
+      "description": "This failed Astra rollout supplied observations and robot states only. Teacher model actions and notes were not passed to the Astra student.",
+      "clips": [
+        {
+          "id": "collaboration-astra-teacher",
+          "label": "Astra teacher · Seed 53",
+          "success": false,
+          "seed": 53,
+          "progress": 0.3464670777320862,
+          "finalProgress": 0.0,
+          "steps": 443,
+          "mp4": "media/collaboration-astra-teacher.mp4",
+          "webm": "media/collaboration-astra-teacher.webm",
+          "poster": "media/collaboration-astra-teacher.jpg",
+          "durationSeconds": 14.8,
+          "source": "20260929T153432-173317Z-astra-all-sec",
+          "sourceFile": "evaluation/vlmvla-03-stand_object-easy-seed000053/videos/vlmvla-03-stand_object-easy-seed000053-e0.mp4"
+        }
+      ]
+    },
+    {
+      "chartTableId": "article-demos",
+      "variant": "astra-students",
+      "title": "Astra with an Astra demonstration",
+      "context": "Task 3 · Standing stability · Easy",
+      "description": "A successful and a failed Astra rollout after seeing the failed Astra demonstration. The demonstration supplied only observations and robot states.",
+      "clips": [
+        {
+          "id": "collaboration-astra-student-success",
+          "label": "Success example · Seed 59",
+          "success": true,
+          "seed": 59,
+          "progress": 0.9999857544898987,
+          "finalProgress": 0.9999857544898987,
+          "steps": 377,
+          "mp4": "media/collaboration-astra-student-success.mp4",
+          "webm": "media/collaboration-astra-student-success.webm",
+          "poster": "media/collaboration-astra-student-success.jpg",
+          "durationSeconds": 12.6,
+          "source": "20260930T133151-886248Z-astra-astra-teacher",
+          "sourceFile": "evaluation/vlmvla-03-stand_object-easy-seed000059/videos/vlmvla-03-stand_object-easy-seed000059-e0.mp4"
+        },
+        {
+          "id": "collaboration-astra-student-failure",
+          "label": "Failure example · Seed 61",
+          "success": false,
+          "seed": 61,
+          "progress": 0.37774309515953064,
+          "finalProgress": 0.0,
+          "steps": 450,
+          "mp4": "media/collaboration-astra-student-failure.mp4",
+          "webm": "media/collaboration-astra-student-failure.webm",
+          "poster": "media/collaboration-astra-student-failure.jpg",
+          "durationSeconds": 15.033333,
+          "source": "20260930T133151-886248Z-astra-astra-teacher",
+          "sourceFile": "evaluation/vlmvla-03-stand_object-easy-seed000061/videos/vlmvla-03-stand_object-easy-seed000061-e0.mp4"
+        }
+      ]
+    }
+  ]
+}
