@@ -14,6 +14,26 @@ document.querySelectorAll("#article details").forEach((disclosure) => {
   });
 });
 
+// Each illustration selects its horizon independently.
+document.querySelectorAll("[data-control-demo-group]").forEach((controlDemo) => {
+  const selector = controlDemo.querySelector(".control-demo-selector");
+  const buttons = Array.from(controlDemo.querySelectorAll("[data-control-demo]"));
+  const examples = Array.from(controlDemo.querySelectorAll("[data-control-horizon]"));
+  const selectHorizon = (horizon) => {
+    buttons.forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.controlDemo === horizon)));
+    examples.forEach((figure) => {
+      const selected = figure.dataset.controlHorizon === horizon;
+      if (!selected) figure.querySelector("video")?.pause();
+      figure.hidden = !selected;
+    });
+  };
+  if (selector && buttons.length && examples.length) {
+    buttons.forEach((button) => button.addEventListener("click", () => selectHorizon(button.dataset.controlDemo)));
+    selectHorizon(buttons[0].dataset.controlDemo);
+    selector.hidden = false;
+  }
+});
+
 const videos = Array.from(document.querySelectorAll("#article video"));
 videos.forEach((video) => {
   const figure = video.closest("figure");
@@ -77,19 +97,97 @@ document.querySelectorAll(".demo-link").forEach((link) => {
 
 document.querySelectorAll(".performance-cell").forEach((cell) => {
   cell.addEventListener("click", () => {
-    const difficulty = { easy: "Easy", medium: "Medium", hard: "Hard", xhard: "Extra hard" }[cell.dataset.difficulty];
+    const difficulty = cell.dataset.difficulty;
     const sr = cell.querySelector(".performance-sr").textContent;
     const tableId = cell.dataset.table || "main-results";
     const model = cell.dataset.model || "Astra";
     window.dispatchEvent(new CustomEvent("experiment:open-rollouts", {
       detail: {
         tableId, variant: cell.dataset.variant, trigger: cell,
-        manifest: cell.dataset.manifest || "main-samples.json", title: `${model} · Task ${cell.dataset.task} · ${difficulty}`,
+        manifest: cell.dataset.manifest || "main-samples.json", title: `${model} · task ${cell.dataset.task} / ${difficulty}`,
         summary: `${model} aggregate results · SR ${sr} · PS ${cell.dataset.ps} · ${cell.dataset.successes}/${cell.dataset.total} successes.`,
       },
     }));
   });
 });
+
+// Compare current table values by task and difficulty, without duplicating data.
+(() => {
+  const toggle = document.getElementById("molmoact2-compare");
+  const control = document.getElementById("molmoact2-compare-control");
+  const table = document.getElementById("molmoact2-results");
+  const hint = document.getElementById("molmoact2-results-hint");
+  if (!toggle || !control || !table || !hint) return;
+  const key = (cell) => `${cell.dataset.task}:${cell.dataset.difficulty}`;
+  const astra = new Map(Array.from(document.querySelectorAll("#main-results .performance-cell"),
+    (cell) => [key(cell), cell]));
+  const pairs = Array.from(table.querySelectorAll(".performance-cell"), (cell) => ({ cell, reference: astra.get(key(cell)) }));
+  if (!pairs.length || pairs.some(({ cell, reference }) =>
+    !reference || [cell, reference].some((item) => !item.dataset.ps?.trim() || !Number.isFinite(Number(item.dataset.ps))))) return;
+  const defaultHint = hint.innerHTML;
+  const views = pairs.map(({ cell, reference }) => {
+    const molmoPS = Number(cell.dataset.ps);
+    const astraPS = Number(reference.dataset.ps);
+    const difference = Math.sign(molmoPS - astraPS);
+    const comparison = document.createElement("span");
+    comparison.className = "performance-comparison";
+    comparison.hidden = true;
+    const descriptions = [];
+    [["MolmoAct2", cell.dataset.ps, difference], ["Astra", reference.dataset.ps, -difference]].forEach(([model, value, rank]) => {
+      const outcome = rank > 0 ? "higher" : rank < 0 ? "lower" : "equal";
+      const row = document.createElement("span");
+      row.className = "performance-comparison-row";
+      const score = document.createElement("strong");
+      score.className = "performance-comparison-score";
+      score.dataset.outcome = outcome;
+      score.append(value);
+      const marker = document.createElement("span");
+      marker.className = "performance-comparison-marker";
+      marker.setAttribute("aria-hidden", "true");
+      marker.textContent = rank > 0 ? "↑" : rank < 0 ? "↓" : "=";
+      score.append(marker);
+      row.append(score);
+      comparison.append(row);
+      descriptions.push(`${model} PS ${value}, ${outcome}`);
+    });
+    cell.append(comparison);
+    return { cell, comparison, originalLabel: cell.getAttribute("aria-label"),
+      comparisonLabel: `task ${cell.dataset.task} / ${cell.dataset.difficulty}. ${descriptions.join("; ")}. View MolmoAct2 samples.` };
+  });
+  const modelLabels = Array.from(table.querySelectorAll("tbody th[scope='row']"), (header) => {
+    const heading = document.createElement("span");
+    heading.className = "performance-task-heading";
+    const task = document.createElement("span");
+    task.append(...header.childNodes);
+    const labels = document.createElement("span");
+    labels.className = "performance-comparison-models";
+    labels.hidden = true;
+    ["MolmoAct2", "Astra"].forEach((model) => {
+      const label = document.createElement("span");
+      label.textContent = model;
+      labels.append(label);
+    });
+    heading.append(task, labels);
+    header.append(heading);
+    return labels;
+  });
+  const update = () => {
+    const comparing = toggle.checked;
+    table.classList.toggle("is-comparing", comparing);
+    modelLabels.forEach((labels) => { labels.hidden = !comparing; });
+    views.forEach(({ cell, comparison, originalLabel, comparisonLabel }) => {
+      comparison.hidden = !comparing;
+      cell.setAttribute("aria-label", comparing ? comparisonLabel : originalLabel);
+    });
+    hint.innerHTML = comparing
+      ? "Models are labeled in the first column. <strong>PS</strong>: green ↑ is higher, red ↓ is lower, and = is tied. Click to watch MolmoAct2 samples."
+      : defaultHint;
+  };
+  toggle.checked = false;
+  toggle.addEventListener("change", update);
+  update();
+  control.hidden = false;
+})();
 
 // Tables retain every variant; filters only change the plotted selection.
 document.querySelectorAll(".experiment-chart[data-table]").forEach((container) => {
@@ -138,10 +236,8 @@ document.querySelectorAll(".experiment-chart[data-table]").forEach((container) =
   const tokensMax = Number.isFinite(tokenLimit) && tokenLimit > 0 ? tokenLimit : 2400000;
   const labelLines = (row) => {
     if (rolloutTableId === "control-results") {
-      const horizon = row.variant.match(/(?:move-by-|chunk-)(\d+)/)?.[1];
-      const mode = row.variant.includes("chunk") ? "multi targets" : "single target";
-      return [`H=${horizon}`, ...(data.length > 4 ? mode.split(" ") : [mode]),
-        ...(row.variant.endsWith("2xslow") ? ["2× time"] : [])];
+      const parts = row.label.match(/^(\d+ \d+-unit) (targets?)(?: \((2× time)\))?$/);
+      return parts ? parts.slice(1).filter(Boolean) : [row.label];
     }
     if (id === "memory-results") return ["Memory", `${row.variant.split("-")[1]} turns`];
     if (id === "effort-results") return [row.label.replace(/ reasoning effort$/, ""), "reasoning effort"];

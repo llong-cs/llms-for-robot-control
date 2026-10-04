@@ -16,7 +16,7 @@
   const taskNames = new Map([
     ["slanted board", 0], ["constrained extraction", 0],
     ["odd geometry", 1], ["odd-object grasping", 1],
-    ["precision insertion", 2],
+    ["precision insertion", 2], ["precision insert", 2],
     ["stand object", 3], ["standing stability", 3],
     ["tool drawer", 4], ["tool-assisted drawer", 4],
     ["unlock ring", 5], ["ring release", 5],
@@ -79,11 +79,55 @@
   function displayLabel(value = "") {
     const parts = String(value).split("·").map((part) => {
       const label = part.trim();
-      const taskId = taskNames.get(label.toLowerCase());
-      return taskId !== undefined ? `Task ${taskId}`
-        : label.replace(/\bTask\s+0*(\d+)\b/gi, "Task $1");
+      const taskId = taskNames.get(label.toLowerCase().replaceAll("_", " "));
+      return taskId !== undefined ? `task ${taskId}`
+        : label.replace(/\btask\s*0*(\d+)(?:\s*(?:[-/@]\s*|\s+)(easy|medium|extra[ -]?hard|xhard|hard)\b)?/gi,
+          (_, id, difficulty) => `task ${Number(id)}${difficulty ? ` / ${difficultyLabel(difficulty)}` : ""}`);
     });
-    return [...new Set(parts.filter(Boolean))].join(" · ");
+    const unique = [...new Set(parts.filter(Boolean))];
+    const combined = [];
+    for (let index = 0; index < unique.length; index += 1) {
+      const difficulty = difficultyLabel(unique[index + 1]);
+      if (/\btask \d+$/.test(unique[index]) && difficulty) {
+        combined.push(`${unique[index]} / ${difficulty}`);
+        index += 1;
+      } else combined.push(unique[index]);
+    }
+    return combined.join(" · ");
+  }
+
+  function difficultyLabel(value = "") {
+    const label = String(value).trim().toLowerCase().replace(/[ -]/g, "");
+    return label === "extrahard" ? "xhard" : ["easy", "medium", "hard", "xhard"].includes(label) ? label : "";
+  }
+
+  function setDisplayLabel(element, value) {
+    const label = displayLabel(value);
+    const pattern = /\btask \d+(?: \/ (?:easy|medium|hard|xhard))?\b/g;
+    const fragment = document.createDocumentFragment();
+    let cursor = 0;
+    for (const match of label.matchAll(pattern)) {
+      fragment.append(document.createTextNode(label.slice(cursor, match.index)));
+      const task = document.createElement("code");
+      task.className = "task-label";
+      task.textContent = match[0];
+      fragment.append(task);
+      cursor = match.index + match[0].length;
+    }
+    fragment.append(document.createTextNode(label.slice(cursor)));
+    element.replaceChildren(fragment);
+  }
+
+  function groupContext(group) {
+    if (group.context) return group.context;
+    const first = group.clips[0];
+    const benchmark = String(group.benchmark || first.benchmark || "");
+    const taskName = String(first.task ?? "").replaceAll("_", " ").toLowerCase();
+    const taskId = first.taskId ?? (/^\d+$/.test(taskName) ? Number(taskName) : taskNames.get(taskName));
+    if (taskId === undefined || taskId === null) return "";
+    const difficulty = difficultyLabel(first.difficulty);
+    const benchmarkLabel = /libero/i.test(benchmark) ? `${benchmark} · ` : "";
+    return `${benchmarkLabel}task ${taskId}${difficulty ? ` / ${difficulty}` : ""}`;
   }
 
   function normalizedLabel(value) {
@@ -131,7 +175,7 @@
       player.append(source);
     });
     const currentTitle = document.getElementById("rollout-current-title");
-    currentTitle.textContent = contextWithoutTitle(selectedTitle, title);
+    setDisplayLabel(currentTitle, contextWithoutTitle(selectedTitle, title));
     currentTitle.hidden = !currentTitle.textContent;
     const badge = document.getElementById("rollout-current-outcome");
     badge.textContent = outcome(clip);
@@ -159,15 +203,14 @@
     const demo = failureDemo || group.chartTableId === "promising-behaviors" || group.chartTableId === "article-demos";
     const singleDemo = demo && group.clips.length === 1;
     const title = displayLabel(group.title || group.variant);
-    document.getElementById("rollout-title").textContent = title;
+    setDisplayLabel(document.getElementById("rollout-title"), title);
     panel.querySelector(".rollout-eyebrow").textContent = failureDemo ? "Failure examples" : group.chartTableId === "article-demos" ? "Demo" : demo ? "Promising behaviors" : mainSamples ? "Task samples" : "Rollout examples";
     const first = group.clips[0];
     const context = document.getElementById("rollout-context");
-    context.textContent = contextWithoutTitle(
-      group.context || `Task 0 · ${first.difficulty === "xhard" ? "Extra hard" : first.difficulty}`, title);
+    setDisplayLabel(context, contextWithoutTitle(groupContext(group), title));
     context.hidden = mainSamples || !context.textContent;
     const scope = document.getElementById("rollout-scope");
-    scope.textContent = demo ? summary || group.description || "" : "";
+    setDisplayLabel(scope, demo ? summary || group.description || "" : "");
     scope.hidden = !scope.textContent || normalizedLabel(scope.textContent) === normalizedLabel(title);
     const listTitle = panel.querySelector(".rollout-list-title");
     listTitle.hidden = singleDemo;
@@ -192,7 +235,7 @@
       const text = document.createElement("span");
       text.className = "rollout-clip-text";
       const label = document.createElement("strong");
-      label.textContent = displayLabel(clip.label || `${index + 1}. Seed ${clip.seed}`);
+      setDisplayLabel(label, clip.label || `${index + 1}. Seed ${clip.seed}`);
       const detail = document.createElement("span");
       detail.textContent = Number.isFinite(clip.progress)
         ? `${outcome(clip)} · PS ${clip.progress.toFixed(2)}` : clipMetrics(clip);
@@ -235,7 +278,7 @@
     activeGroup = null;
     loaded.hidden = true;
     status.textContent = tableId === "promising-behaviors" || tableId === "failure-behaviors" ? "Loading demo…" : "Loading samples…";
-    document.getElementById("rollout-title").textContent = displayLabel(title);
+    setDisplayLabel(document.getElementById("rollout-title"), title);
     panel.querySelector(".rollout-eyebrow").textContent = tableId === "failure-behaviors" ? "Failure examples" : tableId === "promising-behaviors" ? "Promising behaviors" : resultTables.has(tableId) ? "Task samples" : "Rollout examples";
     panel.hidden = false;
     panel.querySelector(".rollout-content").scrollTop = 0;
