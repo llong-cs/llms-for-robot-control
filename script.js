@@ -1,9 +1,9 @@
 "use strict";
 
-// Capture play events so dynamically loaded rollout videos share this rule.
+// Manual videos share one playback slot; looping illustrations are independent.
 document.addEventListener("play", (event) => {
-  if (!(event.target instanceof HTMLVideoElement)) return;
-  document.querySelectorAll("video").forEach((other) => {
+  if (!(event.target instanceof HTMLVideoElement) || event.target.hasAttribute("data-looping-illustration")) return;
+  document.querySelectorAll("video:not([data-looping-illustration])").forEach((other) => {
     if (other !== event.target) other.pause();
   });
 }, true);
@@ -12,6 +12,28 @@ document.querySelectorAll("#article details").forEach((disclosure) => {
   disclosure.addEventListener("toggle", () => {
     if (!disclosure.open) disclosure.querySelectorAll("video").forEach((video) => video.pause());
   });
+});
+
+// Present lightweight video assets as noninteractive, visible-only animations.
+document.querySelectorAll("video[data-looping-illustration]").forEach((video) => {
+  let inView = false;
+  const updatePlayback = () => {
+    const visible = inView && !document.hidden && !video.closest("details:not([open])");
+    if (visible) {
+      if (video.paused) video.play().catch(() => { /* Keep the poster if autoplay is unavailable. */ });
+    } else {
+      video.pause();
+    }
+  };
+  const observer = new IntersectionObserver(([entry]) => {
+    inView = entry.isIntersecting && entry.intersectionRatio >= 0.05;
+    updatePlayback();
+  }, { threshold: [0, 0.05] });
+  observer.observe(video);
+  for (let parent = video.parentElement; parent; parent = parent.parentElement) {
+    if (parent instanceof HTMLDetailsElement) parent.addEventListener("toggle", updatePlayback);
+  }
+  document.addEventListener("visibilitychange", updatePlayback);
 });
 
 // Each illustration selects its horizon independently.
@@ -190,10 +212,13 @@ document.querySelectorAll(".performance-cell").forEach((cell) => {
 })();
 
 // Tables retain every variant; filters only change the plotted selection.
+const experimentRows = (table) => Array.from(table.tBodies)
+  .flatMap((body) => Array.from(body.rows))
+  .filter((row) => !row.hasAttribute("data-table-group"));
 document.querySelectorAll(".experiment-chart[data-table]").forEach((container) => {
   const table = document.getElementById(container.dataset.table);
   if (!table || !table.tBodies.length) return;
-  const tableRows = Array.from(table.tBodies[0].rows);
+  const tableRows = experimentRows(table);
   const parseNumber = (cell, optional = false) => {
     const value = (cell?.dataset.value ?? cell?.textContent ?? "").trim();
     if (value === "" || value === "—") return optional ? null : NaN;
@@ -202,12 +227,14 @@ document.querySelectorAll(".experiment-chart[data-table]").forEach((container) =
   const data = tableRows.map((row, index) => {
     const cells = Array.from(row.cells, (cell) => cell.textContent.trim());
     return {
-      index, variant: row.dataset.variant || cells[0], label: cells[0],
+      index, variant: row.dataset.variant || cells[0], label: row.dataset.label || cells[0],
       sr: parseNumber(row.cells[1]) / 100, ps: parseNumber(row.cells[2]),
       turns: parseNumber(row.cells[3], true), tokens: parseNumber(row.cells[4], true),
       psText: cells[2], turnsText: cells[3] || "—",
       manifest: row.dataset.manifest, rolloutTableId: row.dataset.rolloutTable,
       demo: row.dataset.demo,
+      controlMode: row.dataset.controlMode, horizon: Number(row.dataset.horizon),
+      executionTime: Number(row.dataset.executionTime || 1),
     };
   });
   if (!data.length || data.some((row) =>
@@ -228,17 +255,23 @@ document.querySelectorAll(".experiment-chart[data-table]").forEach((container) =
   const relatedVariants = Array.from(new Set(
     Array.from(document.querySelectorAll(".experiment-chart[data-table]"))
       .filter((chart) => (chart.dataset.rolloutTable || chart.dataset.table) === rolloutTableId)
-      .flatMap((chart) => Array.from(document.getElementById(chart.dataset.table).tBodies[0].rows,
-        (row) => row.dataset.variant))
+      .flatMap((chart) => experimentRows(document.getElementById(chart.dataset.table))
+        .map((row) => row.dataset.variant))
   ));
   const formatter = new Intl.NumberFormat("en-US");
   const tokenLimit = Number(container.dataset.tokensMax);
   const tokensMax = Number.isFinite(tokenLimit) && tokenLimit > 0 ? tokenLimit : 2400000;
+  const groupedControl = rolloutTableId === "control-results" && data.every((row) =>
+    ["single-target", "multi-target"].includes(row.controlMode) && Number.isFinite(row.horizon));
+  const compareExecutionTime = groupedControl && new Set(data.map((row) => row.executionTime)).size > 1;
+  const controlModeLines = {
+    "single-target": ["Single-target planning", "+ multi-step tracking"],
+    "multi-target": ["Multi-target planning", "+ one-step-per-target tracking"],
+  };
+  const executionTimeLabel = (row) => row.executionTime === 1
+    ? "Normal execution time" : `${row.executionTime}× execution time`;
   const labelLines = (row) => {
-    if (rolloutTableId === "control-results") {
-      const parts = row.label.match(/^(\d+ \d+-unit) (targets?)(?: \((2× time)\))?$/);
-      return parts ? parts.slice(1).filter(Boolean) : [row.label];
-    }
+    if (groupedControl) return [`H=${row.horizon}`];
     if (id === "memory-results") return ["Memory", `${row.variant.split("-")[1]} turns`];
     if (id === "effort-results") return [row.label.replace(/ reasoning effort$/, ""), "reasoning effort"];
     if (id === "collaboration-results") return row.variant === "no-demo" ? ["No", "demo"] : row.label.split(" ");
@@ -251,7 +284,32 @@ document.querySelectorAll(".experiment-chart[data-table]").forEach((container) =
   legend.textContent = "Show variants";
   const choices = document.createElement("div");
   choices.className = "chart-filter-options";
+  choices.classList.toggle("is-grouped", groupedControl);
+  const filterModes = new Map(), filterTimings = new Map();
+  const filterGroup = (groups, key, title, className, parent) => {
+    if (!groups.has(key)) {
+      const group = document.createElement("fieldset");
+      group.className = className;
+      const heading = document.createElement("legend");
+      heading.textContent = title;
+      const options = document.createElement("div");
+      options.className = "chart-filter-group-options";
+      group.append(heading, options);
+      parent.append(group);
+      groups.set(key, options);
+    }
+    return groups.get(key);
+  };
   const inputs = data.map((row) => {
+    let options = choices;
+    if (groupedControl) {
+      options = filterGroup(filterModes, row.controlMode, controlModeLines[row.controlMode].join(" "),
+        "chart-filter-mode", choices);
+      if (compareExecutionTime) {
+        options = filterGroup(filterTimings, `${row.controlMode}-${row.executionTime}`, executionTimeLabel(row),
+          "chart-filter-time", options);
+      }
+    }
     const label = document.createElement("label");
     label.className = "chart-filter-label";
     const input = document.createElement("input");
@@ -261,9 +319,9 @@ document.querySelectorAll(".experiment-chart[data-table]").forEach((container) =
     input.checked = true;
     input.setAttribute("aria-controls", `${id}-plot`);
     const name = document.createElement("span");
-    name.textContent = row.label;
+    name.textContent = groupedControl ? `H=${row.horizon}` : row.label;
     label.append(input, name);
-    choices.append(label);
+    options.append(label);
     input.addEventListener("change", render);
     return input;
   });
@@ -297,8 +355,9 @@ document.querySelectorAll(".experiment-chart[data-table]").forEach((container) =
   scroll.tabIndex = 0;
   scroll.setAttribute("role", "region");
   scroll.setAttribute("aria-label", `${title} chart. Scroll horizontally on small screens.`);
+  let chartHeight = Math.max(520, 446 + (Math.max(...data.map((row) => labelLines(row).length)) - 1) * 17 + 20);
   const svg = element("svg", {
-    id: `${id}-plot`, viewBox: "0 0 600 520", role: "group",
+    id: `${id}-plot`, viewBox: `0 0 600 ${chartHeight}`, role: "group",
     "aria-labelledby": `${id}-chart-title`, "aria-describedby": `${id}-chart-description`,
   });
   element("title", { id: `${id}-chart-title` }, title, svg);
@@ -362,7 +421,16 @@ document.querySelectorAll(".experiment-chart[data-table]").forEach((container) =
     const row = data[index];
     const variant = document.createElement("strong");
     variant.className = "chart-selected-variant";
-    variant.textContent = row.label;
+    if (groupedControl) {
+      const mode = document.createElement("span");
+      mode.className = "chart-selected-mode";
+      mode.textContent = controlModeLines[row.controlMode].join(" ");
+      const detail = document.createElement("span");
+      detail.className = "chart-selected-detail";
+      detail.textContent = compareExecutionTime
+        ? `${executionTimeLabel(row)} · H=${row.horizon}` : `H=${row.horizon}`;
+      variant.append(mode, detail);
+    } else variant.textContent = row.label;
     readout.append(variant);
     [
       ["Success rate", `${Math.round(row.sr * 100)}%`, "Upper left axis", "is-bar"],
@@ -427,6 +495,58 @@ document.querySelectorAll(".experiment-chart[data-table]").forEach((container) =
     });
     return control;
   });
+  const sharedLabels = element("g", { class: "chart-shared-labels", "aria-hidden": "true" }, null, svg);
+  const labelMeasure = document.createElement("canvas").getContext("2d");
+  labelMeasure.font = `500 12px ${getComputedStyle(container).fontFamily}`;
+  const wrapLabel = (value, width) => {
+    const result = [];
+    let current = "";
+    value.split(" ").forEach((word) => {
+      const candidate = current ? `${current} ${word}` : word;
+      if (current && labelMeasure.measureText(candidate).width > width) {
+        result.push(current);
+        current = word;
+      } else current = candidate;
+    });
+    if (current) result.push(current);
+    return result;
+  };
+  function renderControlGroups(band) {
+    sharedLabels.replaceChildren();
+    if (!groupedControl) return;
+    const modes = new Map(), timings = new Map();
+    visible.forEach((row, index) => {
+      [[modes, row.controlMode], [timings, `${row.controlMode}-${row.executionTime}`]].forEach(([groups, key]) => {
+        const group = groups.get(key) || { start: index, end: index, row };
+        group.end = index;
+        groups.set(key, group);
+      });
+    });
+    const drawGroup = (group, values, y, className) => {
+      const start = left + group.start * band + 8;
+      const end = left + (group.end + 1) * band - 8;
+      const center = (start + end) / 2;
+      const node = element("g", { class: className, "data-mode": group.row.controlMode,
+        "data-time": group.row.executionTime, "data-left": start, "data-right": end }, null, sharedLabels);
+      line(start, y, end, y, "chart-group-bracket", node);
+      line(start, y - 3, start, y, "chart-group-bracket", node);
+      line(end, y - 3, end, y, "chart-group-bracket", node);
+      const labels = values.flatMap((value) => wrapLabel(value, end - start - 8));
+      labels.forEach((value, index) => text(center, y + 20 + index * 17, value, "chart-mode-label", "middle", node));
+      return y + 20 + (labels.length - 1) * 17;
+    };
+    let modeY = 460;
+    if (compareExecutionTime && visible.length) {
+      const bottom = Math.max(...Array.from(timings.values(), (group) => drawGroup(group,
+        [executionTimeLabel(group.row)],
+        460, "chart-time-group")));
+      modeY = bottom + 18;
+    }
+    const bottoms = Array.from(modes.values(), (group) =>
+      drawGroup(group, controlModeLines[group.row.controlMode], modeY, "chart-mode-group"));
+    chartHeight = Math.max(540, ...bottoms.map((value) => value + 24));
+    svg.setAttribute("viewBox", `0 0 600 ${chartHeight}`);
+  }
   function render() {
     visible = data.filter((row) => inputs[row.index].checked);
     const hasSelection = visible.length > 0;
@@ -436,6 +556,7 @@ document.querySelectorAll(".experiment-chart[data-table]").forEach((container) =
     const band = (right - left) / Math.max(1, visible.length);
     const barWidth = Math.min(28, band * 0.4);
     const x = (index) => left + band * (index + 0.5);
+    renderControlGroups(band);
     bars.replaceChildren();
     lines.replaceChildren();
     patterns.replaceChildren();
@@ -492,7 +613,8 @@ document.querySelectorAll(".experiment-chart[data-table]").forEach((container) =
       control.replaceChildren();
       if (index < 0) return;
       element("rect", { x: left + index * band + 3, y: top - 8,
-        width: band - 6, height: bottom - top + 92, rx: 5, class: "chart-hit" }, null, control);
+        width: band - 6, height: groupedControl ? 460 - top : chartHeight - top - 8,
+        rx: 5, class: "chart-hit" }, null, control);
       labelLines(data[originalIndex]).forEach((label, lineIndex) =>
         text(x(index), 446 + lineIndex * 17, label, "chart-variant-label", "middle", control));
     });
