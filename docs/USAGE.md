@@ -1,8 +1,8 @@
 # Usage
 
-## Evaluate a JSON configuration
+## Run an evaluation
 
-From the project root, activate `envs/agentic-framework`, then run `python3 scripts/eval.py CONFIG.json`. Examples and experiment configs expose the research settings relevant to their mode and condition. Paths resolve relative to the config file; model/resource profile paths resolve from the project root. `{timestamp}` gives each run a fresh directory under `outputs/`. `--dry-run` prints the resolved plan without reading credentials, calling a provider, loading weights or starting a simulator.
+After [installation](INSTALLATION.md) and [API key setup](../README.md#api-key), use the same entry point for previews, LLM agents and native policies:
 
 ```bash
 source envs/agentic-framework/bin/activate
@@ -10,62 +10,103 @@ python3 scripts/eval.py examples/agent.json --dry-run
 CUDA_VISIBLE_DEVICES=0 python3 scripts/eval.py examples/agent.json
 ```
 
-| Group         | Research settings                                                          |
-| ------------- | -------------------------------------------------------------------------- |
-| `evaluation`  | Benchmark, mode, layout randomization and condition-specific repeats       |
-| `environment` | Task IDs, difficulty, trial count, initial-state offset and reset seed     |
-| `execution`   | Motion interface, H, K, step budget and timing changes                     |
-| `policy`      | Native model profile, policy seed and condition-specific inference timeout |
-| `llm`         | Model, backend, reasoning, memory, request budgets and credential path     |
-| `observation` | Demonstration path/type and condition-specific context limits              |
-| `output`      | Recording and output directory                                             |
+`--dry-run` validates and prints the resolved configuration and launch plan without inference, simulation or credential access. `--list-benches` and `--list-models` list supported selections. The [README examples](../README.md#quick-start) provide starting points for each policy and benchmark.
 
-For LLM runs, edit `llm.model`, `llm.augmentations.reasoning.effort` and `llm.augmentations.memory.history_length`. For native runs, select `policy.model_profile`; its profile supplies the matching execution schedule. Each supplied config has one model selector. Preview has no LLM/API settings.
+`evaluation.mode` selects `preview` for initial-scene inspection, `agent` for LLM motion control, or `vla` for native pi05/MolmoAct2 inference. Native runs automatically start the selected model server in its model environment; simulator workers run in their own environment.
 
-Optional implementation settings are omitted when the framework's defaults suffice. Add them only when needed, such as a different simulator interpreter, native server endpoint or request transport. Native model profiles supply checkpoint identity, embodiment, action timing and adapter defaults. Conditions that vary timing, repeats or demonstration context keep those changes in their JSON.
+## Configuration
 
-For example, an agent example's credential path is `../credentials.env`, while an experiment under `configs/experiments/GROUP/` uses `../../../credentials.env`. Keep that config-file-relative rule when moving a config or assigning a recorded teacher path.
+An experiment JSON combines the choices needed to define a run:
 
-Task IDs are zero-based; `all`, `0` and `0,2-4` are accepted. Ditto difficulties are `easy`, `medium`, `hard`, `xhard`, comma-separated lists or `all`. `environment.trials` schedules consecutive initial-state indices starting at `init_start`; Ditto reset seeds are `seed + initial-state index`. LIBERO uses official saved initial states. `evaluation.repeats` repeats those conditions and policy seeds; the launcher numbers repeated jobs automatically.
+| Group | Main settings | Purpose |
+| --- | --- | --- |
+| `evaluation` | `bench`, `mode`, `task_randomize`, `repeats` | Select the benchmark, policy mode, Ditto scene randomization and repeated runs. |
+| `environment` | `task_ids`, `difficulty`, `trials`, `init_start`, `seed` | Select tasks and initial conditions. |
+| `execution` | `control_interface`, `h`, `k`, `motion_time_scale`, `max_steps` | Set LLM motion execution and the trial's control-step budget. |
+| `policy` | `model_profile`, `seed`, `inference_timeout` | Select native weights/scheduling or set inference timeout; the policy seed is independent of the environment seed. |
+| `llm` | `model`, `backend`, `env_file`, `max_output_tokens`, `max_attempts`, `augmentations` | Set the API model, request limits, online history and reasoning. |
+| `observation` | `profile`, `max_images`, `max_context_chars`, `demo*` | Set the policy's observation/context and optional teacher demonstration. |
+| `output` | `directory`, `record_trajectory` | Set the run directory and trajectory recording. |
 
-Supported benchmarks are `ditto`, `molmoact2-maniskill`, and the LIBERO suites `libero_spatial`, `libero_object`, `libero_goal`, `libero_10`, `libero_90`, `libero_all`. `libero_all` combines the four 10-task evaluation suites; select `libero_90` separately. Ditto Bench's distribution, import package and suite identifier are `ditto`.
+Start from the closest [example](../examples) or [experiment](../configs/experiments), change the conditions and output name, and inspect the resolved configuration before running. For example, copy the agent example beside the original, edit `environment.task_ids`, `environment.difficulty` and the desired LLM/execution settings, then run it:
 
-Supported native profiles are `pi05-droid`, `pi05-libero`, `molmoact2-droid` and `molmoact2-libero`. DROID profiles serve Ditto Bench and the official MolmoAct2-ManiSkill task; LIBERO profiles serve LIBERO. `--list-benches` and `--list-models` list the entries.
+```bash
+cp examples/agent.json examples/my-agent.json
+python3 scripts/eval.py examples/my-agent.json --dry-run
+CUDA_VISIBLE_DEVICES=0 python3 scripts/eval.py examples/my-agent.json
+```
 
-## Credentials and providers
+File-valued experiment settings resolve relative to the JSON file, including a custom `policy.model_profile` JSON path. Paths inside model/resource profiles resolve from the repository root. `{timestamp}` in `output.directory` expands at launch.
 
-Fill your personal OpenAI key in the root's local `credentials.env` and run `chmod 600 credentials.env`. Preserve other entries if the file exists. This file is ignored by Git; the blank `credentials.env.example` is tracked. See the brief [API key instructions](../README.md#api-key).
+For `agent`, set `llm.model` explicitly. `llm.augmentations.reasoning.effort` selects reasoning effort; `llm.augmentations.memory.history_length` sets the number of recent decisions retained in the Responses context. A nonpositive history length disables online memory. These controls are independent of a fixed demonstration.
 
-LLM configs select `llm.env_file`. Responses uses `OPENAI_API_KEY` and `https://api.openai.com/v1`; keep `OPENAI_BASE_URL` in the private file aligned with that endpoint. The LLM implementation is primarily adapted for Astra/OpenAI Responses; compatibility with other providers or models is not guaranteed. Private integrations are external packages; [architecture](ARCHITECTURE.md) describes the optional extension contract.
+For `vla`, choose a matching `policy.model_profile`: `pi05-droid` or `molmoact2-droid` for Ditto/the official MolmoAct2-ManiSkill box task, and `pi05-libero` or `molmoact2-libero` for LIBERO. The [model profiles](../agentic-framework/configs/models) supply checkpoint paths, action adapters and native timing. LIBERO selections include its spatial, object, goal, 10-task and 90-task suites; `libero_all` combines the first four.
 
-Each decision permits `llm.max_attempts` calls, including repair and transport retries. Exhaustion discards that trial. Discarded and infrastructure-error trials are excluded from success/progress/cost means; normal task failures remain evaluated trials. Model permissions are checked when inference starts. A missing/malformed key, unreadable credential file or endpoint mismatch fails locally before sending a request.
+Task IDs are zero-based and accept `all`, a single ID, or lists/ranges such as `0,2-4`. Ditto difficulty accepts `easy`, `medium`, `hard`, `xhard`, `all`, or a comma-separated selection. `environment.trials` chooses consecutive initial states starting at `init_start`. Ditto reset seeds are `seed + initial-state index`; LIBERO uses official saved initial states. `evaluation.repeats` reruns those same conditions without changing their environment or policy seeds.
+
+## Supplied experiments
+
+The JSON files under [configs/experiments](../configs/experiments) define individual conditions that run through `scripts/eval.py`:
+
+| Directory | Conditions |
+| --- | --- |
+| [main](../configs/experiments/main) | Astra and MolmoAct2 across six tasks, four difficulties and 20 initial states: 480 trials per method. |
+| [control](../configs/experiments/control) | Fixed-target versus chunked LLM control with H/K values of 5 or 10; chunk variants also include doubled execution time. |
+| [reasoning](../configs/experiments/reasoning) | Low, medium, high and xhigh reasoning effort on constrained extraction at xhard difficulty. |
+| [memory](../configs/experiments/memory) | History windows of 0, 2, 5 and 10 decisions on constrained extraction at xhard difficulty. |
+| [oneshot](../configs/experiments/oneshot) | In-distribution and out-of-distribution LLM teacher demonstrations, with online memory disabled. |
+| [collaboration](../configs/experiments/collaboration) | Astra using a MolmoAct2 observation demonstration on the standing task. |
+
+For example, run the full native baseline with:
+
+```bash
+CUDA_VISIBLE_DEVICES=0 python3 scripts/eval.py configs/experiments/main/main-molmoact2.json
+```
+
+On multiple selected GPUs, the launcher distributes trials across workers and starts a native model replica for each GPU group. The one-shot and collaboration configs require a recorded teacher; replace their `observation.demo_path` placeholders as described below.
 
 ## Motion and budgets
 
-`move_by` supplies one fixed target with per-axis bounds scaled by positive H. `move_by_chunk` supplies H increments, frozen into cumulative waypoints from the measured call-start pose. K limits execution before replanning; K=-1 consumes the complete available plan (only for `move_by` control mode). `execution.motion_time_scale: 2` divides each chunk segment into two controller intervals while retaining its endpoint. Native VLA H must match its checkpoint horizon.
+LLM motion tools use physical end-effector translations and rotations in the world frame. `move_by` tracks one fixed target, with per-axis motion bounds scaled by H. `move_by_chunk` converts H increments into cumulative waypoints from the pose at the start of the call. Positive K caps control steps before replanning; **K=-1 is supported only by `move_by`**. `execution.max_motion_steps`, when supplied, also bounds one fixed-target motion.
 
-Ditto uses 30 Hz control for Astra and 15 Hz control for MolmoAct2, and 150 Hz physics. LIBERO uses 20 Hz. Native profiles identify their action cadence. `execution.max_steps` counts actual policy-controlled steps. A Ditto LLM `done` call adds up to four seconds of physical completion confirmation, recorded separately; `give_up` stops with one neutral step.
+`execution.motion_time_scale` subdivides chunk segments without changing endpoints and scales positive K execution budgets. Native VLA H must match the checkpoint's output horizon, and native timing requires `motion_time_scale: 1`.
+
+Control frequency is the number of executed action updates per simulated second. One policy inference can cover several control steps; the simulator advances its physics internally between these updates and pauses while awaiting inference. The main Ditto configs allow 15 seconds of policy-controlled simulation: 450 steps at 30 Hz for Astra, or 225 steps at 15 Hz for MolmoAct2. pi05-DROID also uses 15 Hz; LIBERO uses 20 Hz. Native control frequency is set by the model profile, rather than an experiment-level simulator override.
+
+`execution.max_steps` counts executed policy control steps. A Ditto LLM `done` call can add four seconds of completion confirmation while holding the current pose and gripper target. Those steps are recorded separately from the policy budget.
 
 ## Demonstrations
 
-A teacher is a finalized schema-v2 `trajectory.json` from a recorded run. Set `observation.demo: true` and edit `observation.demo_path` to the chosen file; a directory containing exactly one teacher is also accepted. Teacher recording does not enable privilege.
+To prepare a one-shot or collaboration run:
 
-`demo_content: "observations"` accepts LLM/native VLA teachers and supplies public robot states and camera images. It excludes actions, reasoning, outcomes and object ground truth. `"full"` retains visible LLM interaction turns and requires compatible observation/action contracts.
+1. Run the teacher's agent or native configuration with `output.record_trajectory: true` and demonstrations disabled.
+2. Select a finalized trial's `trajectory.json`, retaining its referenced image files. A directory is also accepted when it contains exactly one recorded trial.
+3. Set the student's `observation.demo: true` and replace `observation.demo_path` with that recording. Choose `demo_mode` and `demo_content`, then validate and run the student configuration.
 
-`demo_mode: "id"` provides task-relevant context; `"ood"` transfers embodiment/control conventions to a different task. Neither changes the live reset. Image/context limits must fit the full projected demonstration; frames are never silently dropped. To collect a teacher, run your own configuration with `output.record_trajectory: true` and demonstrations disabled. Use compatible LLM teachers for full transcripts; observation-only context also accepts native VLA teachers.
+`demo_content: "observations"` accepts LLM or native VLA teachers and supplies images and public robot states from at least two distinct teacher inference points. `"full"` includes visible interactions from compatible LLM recordings, including an accepted motion call and its following observation; its observation profile and control interface must match the student's.
 
-## Processes, outputs and metrics
+`demo_mode: "id"` supplies task-relevant guidance, while `"ood"` transfers control conventions across tasks. Demonstrations stay available independently of the online history window. Teacher success is not required, but the recording must be finalized and cannot be a discarded trial. Privileged observations remain disabled for both teacher and student unless explicitly selected; recording scene diagnostics does not expose them to the policy.
 
-Select devices with `CUDA_VISIBLE_DEVICES`; multiple devices can run independent trial workers. Native VLA mode starts model servers automatically and closes them when evaluation ends. Agents and preview need no native server settings. Environments remain separate under `envs/`, and output paths point into `outputs/`; the launcher refuses nonempty run directories.
+## Outputs and metrics
 
-Each run saves its plan, resolved config, status, per-job logs, `evaluation/results.json` and `evaluation/summary.json`. Recorded trials also contain `trajectory.json`, step/event sidecars, camera frames, API telemetry and video.
+Each run contains the launch plan and resolved per-job configuration, with evaluation artifacts under `evaluation/`:
 
-Read `evaluation/summary.json` for the run's built-in summary and `evaluation/results.json` for per-trial results. Success rate uses explicit oracle outcomes from eligible trials. Ditto progress is the peak task score; final progress is separate. Logical decisions, model calls and control steps are recorded separately; model calls include retries. Missing provider usage remains explicit.
+| Artifact | Contents |
+| --- | --- |
+| `evaluation/results.json` | One result per trial, including task success, progress, steps and model-call counts. |
+| `evaluation/summary.json` | Aggregate outcomes and counts of completed, discarded and failed jobs. |
+| `evaluation/<job>/evals/<scene>/trajectory.json` | Recorded decisions, observation references, execution metadata and outcome. |
+| `trajectory-steps.jsonl`, `trajectory-events.jsonl` beside the trajectory | Dense measured control-step samples and inference/execution events. |
+| `evaluation/<job>/videos/` | Composite videos of the registered cameras. |
 
-Use [tools/summarize.py](../tools/summarize.py) to summarize recorded runs offline using only the Python standard library:
+Trajectory artifacts and videos require `output.record_trajectory: true`. Video recording uses the reset image and one image per executed control step; playback FPS comes from the recorded `control_hz`. Thus a 15 Hz rollout is exported at 15 FPS. Inference waiting time is excluded from playback, including in agent mode.
+
+Task success is the explicit `oracle_success` value. A trial's execution status `"success"` means it completed normally and can still represent a task failure. Retry-exhausted trials and infrastructure errors are listed but excluded from aggregate metrics; ordinary task failures count. Ditto `progress_score` is the episode peak, while `final_progress_score` describes the terminal state. Logical decisions, model calls including retries, and control steps are distinct counts.
+
+Summarize one or more runs offline with [tools/summarize.py](../tools/summarize.py):
 
 ```bash
 python3 tools/summarize.py outputs/run-a outputs/run-b --output-dir outputs/summary
 ```
 
-The output directory contains `summary.json`, `summary.csv`, `trials.csv`, `runs.csv` and `report.md`.
+The utility writes JSON, CSV and a Markdown report grouped by run, task and difficulty, with success/progress and recorded timing, token and call statistics. Success rates pool evaluated trials; parallel trials' summed wall time describes cumulative work rather than elapsed run time.

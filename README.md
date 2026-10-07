@@ -2,34 +2,39 @@
 
 ![Blog](https://img.shields.io/badge/Blog-LLMs%20for%20Robot%20Control-blue?style=flat-square)
 
-This repository provides a simple **agentic framework to use LLMs for robot control** and **Ditto Bench**, a benchmark designed to evaluate motion and control understanding with physical-challenging manipulation tasks. Use it to run LLM policies and native **pi05** and **MolmoAct2** baselines, define experiments through JSON configurations, and record and compare their behavior. Supported environments are **Ditto Bench**, **LIBERO**, and the official **MolmoAct2-ManiSkill** box task. 
+This repository provides a simple **agentic framework for LLM robot control** and **Ditto Bench**, a benchmark for studying motion and control through physically demanding manipulation tasks. It supports LLM policies and native **pi05** and **MolmoAct2** baselines on Ditto Bench, LIBERO and the official MolmoAct2-ManiSkill box task.
 
-The framework draws on [Inspect Robots](https://github.com/robocurve/inspect-robots), with a simplified control loop and detailed recording for research. Its LLM integration is primarily adapted for OpenAI-family models such as Astra through OpenAI Responses; compatibility with other models is not guaranteed.
+The framework draws on [Inspect Robots](https://github.com/robocurve/inspect-robots), simplified for research and trajectory analysis. Its LLM integration primarily targets OpenAI-family models such as Astra; compatibility with other models is not guaranteed.
 
 ## What is included
 
-
-
 ### Ditto Bench
 
-Ditto Bench contains six tasks that require handling contact, geometric constraints, precise motion or tool use. Each task has `easy`, `medium`, `hard` and `xhard` variants, for 24 task–difficulty combinations. It is implemented in ManiSkill 3 / SAPIEN using MolmoAct2's DROID simulation setup with a Franka FR3 arm and Robotiq 2F-85 gripper.
+Six tasks, each with `easy`, `medium`, `hard` and `xhard` variants, test contact, geometry, precision and tool use. They run in ManiSkill 3 / SAPIEN with the Franka FR3 and Robotiq 2F-85 gripper from MolmoAct2's DROID setup.
 
 
-| ID  | Task                   | Illustration                                                                                               | Goal                                                             | Core challenge                                                                          |
-| --- | ---------------------- | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| 0   | Constrained extraction | ![Blue board inside a tilted gray channel](docs/images/ditto/task-0-slanted_board-hard.jpg)                | Pull the blue board completely out of the slot.                  | Align motion with a narrow channel while managing contact.                              |
-| 1   | Odd-object grasping    | ![Blue pointed object beside a basket](docs/images/ditto/task-1-odd_geometry-hard.jpg)                     | Pick up the blue object and put it in the basket.                | Choose grasps across changes in shape and contact properties.                           |
-| 2   | Precision insertion    | ![Yellow rectangular peg beside a matching slot](docs/images/ditto/task-2-precision_insert-hard.jpg)       | Insert the yellow object fully into the matching slot.           | Match shape and orientation under tight clearances.                                     |
-| 3   | Standing stability     | ![Orange object lying on its side with a narrow gray base](docs/images/ditto/task-3-stand_object-hard.jpg) | Stand the object upright, gray base down, without robot contact. | Reorient and balance the object through controlled release.                             |
-| 4   | Tool-assisted drawer   | ![Blue rod beside a drawer beneath an overhang](docs/images/ditto/task-4-tool_drawer-hard.jpg)             | Use the blue tool to open the drawer.                            | Engage the tool and transmit force through contact despite resistance and obstructions. |
-| 5   | Ring release           | ![Blue open ring around a fixed gray bridge](docs/images/ditto/task-5-unlock_ring-hard.jpg)                | Take the blue open ring off the fixed bridge.                    | Coordinate translation and rotation through a constrained opening.                      |
+| ID  | Task                   | Illustration                                                                                               | Goal                                                    |
+| --- | ---------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| 0   | Constrained extraction | ![Blue board inside a tilted gray channel](docs/images/ditto/task-0-slanted_board-hard.jpg)                | Pull the board out of the slot.                         |
+| 1   | Odd-object grasping    | ![Blue pointed object beside a basket](docs/images/ditto/task-1-odd_geometry-hard.jpg)                     | Put the object in the basket.                           |
+| 2   | Precision insertion    | ![Yellow rectangular peg beside a matching slot](docs/images/ditto/task-2-precision_insert-hard.jpg)       | Insert the object fully into its matching slot.         |
+| 3   | Standing stability     | ![Orange object lying on its side with a narrow gray base](docs/images/ditto/task-3-stand_object-hard.jpg) | Stand the object gray base down, without robot contact. |
+| 4   | Tool-assisted drawer   | ![Blue rod beside a drawer beneath an overhang](docs/images/ditto/task-4-tool_drawer-hard.jpg)             | Open the drawer using the tool.                         |
+| 5   | Ring release           | ![Blue open ring around a fixed gray bridge](docs/images/ditto/task-5-unlock_ring-hard.jpg)                | Remove the open ring from the bridge.                   |
 
 
-Evaluation records task success and a continuous progress score. See [task definitions](ditto-bench/docs/TASKS.md) for difficulty designs and scoring, and the [benchmark README](ditto-bench/README.md) for preview and direct Gym examples.
+[Task definitions](ditto-bench/docs/TASKS.md) · [Gym API](ditto-bench/README.md#direct-gym-example)
+
+Each task provides a language instruction, camera observations, a task-specific success check and continuous progress. Difficulty changes the physical problem, such as clearance, object geometry or tool access. Seeded layouts support comparisons across policies.
 
 ### Agentic framework
 
-The framework connects observations, policy decisions and motion execution. An LLM receives camera images and public robot state, together with configurable interaction history and optional demonstrations, then issues a motion command. The controller executes the configured steps before the next observation. Native vision-language-action (VLA) policies use their own action adapters within the same evaluation and recording pipeline.
+The framework runs a shared observation–decision–execution loop for LLM agents and native vision-language-action (VLA) policies:
+
+- **LLM control:** the model receives camera images and robot state, then issues a relative motion target or a motion chunk. The controller executes it for a configurable number of control steps before the next decision.
+- **Context and demonstrations:** configure reasoning effort, interaction history and a recorded teacher trajectory. Teachers can be LLM or native VLA policies; demonstration content determines what the student receives.
+- **Native baselines:** pi05 and MolmoAct2 adapters preserve each checkpoint's observation and action conventions. The launcher manages local model servers and simulator workers.
+- **Rollout records:** save model requests and responses, actions, scene states, camera frames and videos alongside task outcomes for research analysis. Privileged observations are disabled by default, including for teachers.
 
 ```mermaid
 flowchart LR
@@ -42,86 +47,93 @@ flowchart LR
 
 
 
-Recorded rollouts connect model requests and decisions to executed actions, observations and task outcomes. The framework includes DROID and LIBERO profiles for both native model families, with separate environments for simulator workers and model servers.
+Supported policy and environment combinations are:
+
+
+| Policy                              | Ditto Bench | MolmoAct2-ManiSkill | LIBERO |
+| ----------------------------------- | ----------- | ------------------- | ------ |
+| LLM agent, primarily OpenAI / Astra | Yes         | Yes                 | Yes    |
+| pi05 / MolmoAct2 DROID profiles     | Yes         | Yes                 | —      |
+| pi05 / MolmoAct2 LIBERO profiles    | —           | —                   | Yes    |
+
+
+`molmoact2-maniskill` selects the official `DroidPutEverythingInBox-v1` task. LIBERO supports its spatial, object, goal, 10-task and 90-task suites.
 
 ## Repository structure
 
 ```text
-agentic-framework/       Policies, controllers, adapters, simulator workers and recording
-ditto-bench/             Task physics, procedural geometry and success/progress scoring
-examples/                Offline loop and focused agent, native VLA and preview configs
-configs/experiments/     Configurations for the experiment conditions
-scripts/                 Setup, evaluation and native model serving entry points
-tools/                   Result summaries
-docs/                    Installation, usage, architecture and task illustrations
-credentials.env.example  Blank credential template
+agentic-framework/
+  src/agentic_framework/  Policies, controllers, model adapters and simulator workers
+  configs/                Native model and embodiment profiles
+ditto-bench/src/ditto/     Task physics, geometry, scoring and framework integration
+examples/                 Offline loop and small runnable configurations
+configs/experiments/      Configurations for the blog's experiment conditions
+scripts/                  Evaluation launcher, setup and model serving
+tools/summarize.py        Result aggregation
+docs/                     Installation, configuration and code guides
 ```
 
-Environments, dependencies, weights, assets, caches and run outputs stay within the project under `envs/`, `third_party/`, `models/`, `data/`, `cache/`, `.config/` and `outputs/`. These local resources and your `credentials.env` are ignored by Git.
-
-### Reading guide
-
-Start with [Quick start](#quick-start) to run an example. For implementation details, [architecture](docs/ARCHITECTURE.md) explains the component boundaries; the entry points below show how configurations become policy decisions and motion.
-
-
-| Area                     | Entry points                                                                                                                                                                                                                                                                                             |
-| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Configuration and launch | [examples](examples), [experiment configs](configs/experiments) and [scripts/eval.py](scripts/eval.py).                                                                                                                                                                                                  |
-| LLM control loop         | [harness/run.py](agentic-framework/src/agentic_framework/harness/run.py) assembles the run; [policy.py](agentic-framework/src/agentic_framework/harness/policy.py) makes decisions; [controller.py](agentic-framework/src/agentic_framework/harness/controller.py) executes motion.                      |
-| Native VLA integration   | [Model profiles](agentic-framework/configs/models) select the checkpoint and defaults; [models/vla](agentic-framework/src/agentic_framework/models/vla) maps observations and actions; [native_controller.py](agentic-framework/src/agentic_framework/harness/native_controller.py) schedules execution. |
-| Benchmark implementation | The [catalog](ditto-bench/src/ditto/catalog.py) lists tasks, [task implementations](ditto-bench/src/ditto/tasks) define physics and scoring, and [integration](ditto-bench/src/ditto/integration) connects them to the framework.                                                                        |
-
-
-
+Start with [examples/offline.py](examples/offline.py) to see the policy/controller contract, or the JSON examples below to run a simulator experiment. The [usage guide](docs/USAGE.md) explains configuration and experiment workflows; the [architecture guide](docs/ARCHITECTURE.md) follows execution through the source modules. For benchmark changes, read the [task definitions](ditto-bench/docs/TASKS.md) and [Ditto API](ditto-bench/docs/API.md).
 
 ## Quick start
 
-
-
 ### Environment
 
-Requires Linux and Python 3.11. Install [uv](https://docs.astral.sh/uv/) first, then run:
+Requires Linux, Python 3.11 and [uv](https://docs.astral.sh/uv/).
 
 ```bash
-cd /path/to/project
 bash scripts/setup.sh
-envs/agentic-framework/bin/python -B examples/offline.py
+source envs/agentic-framework/bin/activate
+python examples/offline.py
 ```
 
-The offline example runs two scripted decisions through the real policy and motion controller. It requires no GPU, simulator or API key and makes no model calls.
+The offline example runs the policy/controller loop with scripted decisions, without a simulator or model call.
 
-### API Key
+### API key
 
-For LLM runs, create a personal key in [OpenAI Platform](https://platform.openai.com/api-keys). Setup creates the ignored `credentials.env` from the blank [template](credentials.env.example) if it is absent. Fill `OPENAI_API_KEY`, keep `OPENAI_BASE_URL=https://api.openai.com/v1`, and run `chmod 600 credentials.env`. Preserve other entries if the file already exists. LLM configurations load this file through `llm.env_file`.
-
-Preview and native VLA runs do not require an OpenAI key.
+Set `OPENAI_API_KEY` to your [OpenAI API key](https://platform.openai.com/api-keys) and `OPENAI_BASE_URL=https://api.openai.com/v1` in `credentials.env` ([template](credentials.env.example)).
 
 ### Run a configuration
 
-Complete the [simulator installation](docs/INSTALLATION.md) and, for native VLA runs, the model setup and weight downloads described there. Then activate the framework environment, inspect a configuration, and choose an example to run:
+Install the simulator and model dependencies using the [installation guide](docs/INSTALLATION.md).
+
+
+| Example                                                 | Purpose                                                    |
+| ------------------------------------------------------- | ---------------------------------------------------------- |
+| [offline.py](examples/offline.py)                       | Minimal policy/controller loop                             |
+| [preview.json](examples/preview.json)                   | Inspect all Ditto tasks and difficulties without inference |
+| [agent.json](examples/agent.json)                       | Astra agent on Ditto                                       |
+| [molmoact2.json](examples/molmoact2.json)               | Local MolmoAct2-DROID on Ditto                             |
+| [pi05-maniskill.json](examples/pi05-maniskill.json)     | Local pi05-DROID on `DroidPutEverythingInBox-v1`           |
+| [molmoact2-libero.json](examples/molmoact2-libero.json) | Local MolmoAct2-LIBERO on LIBERO                           |
+
 
 ```bash
-source envs/agentic-framework/bin/activate
-python3 scripts/eval.py examples/agent.json --dry-run
-CUDA_VISIBLE_DEVICES=0 python3 scripts/eval.py examples/preview.json
-CUDA_VISIBLE_DEVICES=0 python3 scripts/eval.py examples/agent.json
-CUDA_VISIBLE_DEVICES=0 python3 scripts/eval.py examples/molmoact2.json
+python scripts/eval.py examples/agent.json --dry-run
+CUDA_VISIBLE_DEVICES=0 python scripts/eval.py examples/preview.json
+CUDA_VISIBLE_DEVICES=0 python scripts/eval.py examples/agent.json
+CUDA_VISIBLE_DEVICES=0 python scripts/eval.py examples/molmoact2.json
 ```
 
-`--dry-run` prints the resolved plan without starting models or simulators. Preview renders task scenes; `agent.json` runs the LLM controller; `molmoact2.json` runs the native MolmoAct2 policy. Select your GPU with `CUDA_VISIBLE_DEVICES`.
+`--dry-run` resolves the configuration without inference or simulation. To define an experiment, copy a suitable JSON example and set its tasks, initial states, policy, execution budget and output directory. LLM settings are explicit in the experiment JSON; native checkpoint and embodiment conventions come from the selected model profile. See the [configuration guide](docs/USAGE.md) for field meanings and path resolution.
 
 ## Experiments and results
 
-Copy a configuration from [examples](examples) or use a supplied condition under [configs/experiments](configs/experiments), then launch it with `python3 scripts/eval.py CONFIG.json`. Configure the model, reasoning effort, history, demonstrations, motion interface and H/K, tasks, seeds, step budgets, recording and output path in that JSON. Mode-specific runtime details use defaults unless overridden.
-
-Runs save their resolved configuration, per-trial results and summaries under `outputs/` by default. Recorded runs also include trajectories, camera frames and video. Use [tools/summarize.py](tools/summarize.py) to aggregate completed runs:
+The [experiment configurations](configs/experiments) cover main Astra/MolmoAct2 results, motion horizon and execution scheduling, reasoning effort, history length, one-shot demonstrations and Astra–MolmoAct2 collaboration. Each is run through the same evaluation entry point:
 
 ```bash
-python3 tools/summarize.py outputs/run-a outputs/run-b --output-dir outputs/summary
+CUDA_VISIBLE_DEVICES=0 python scripts/eval.py configs/experiments/main/main-astra.json
+CUDA_VISIBLE_DEVICES=0 python scripts/eval.py configs/experiments/main/main-molmoact2.json
 ```
 
-See [usage](docs/USAGE.md) for configuration fields, demonstration inputs, motion semantics and output formats.
+The main configurations each evaluate six tasks × four difficulties × 20 initial states. Demonstration and collaboration configurations require a recorded teacher trajectory; the [usage guide](docs/USAGE.md) describes how to collect and select it.
+
+Runs write per-trial outcomes and an aggregate summary under `evaluation/`. With trajectory recording enabled, each trial also contains its model interaction, dense state/action trace and camera records, with an exported MP4. Aggregate completed runs with:
+
+```bash
+python tools/summarize.py outputs/run-a outputs/run-b --output-dir outputs/summary
+```
 
 ## License
 
-Original project code is licensed under the [MIT License](LICENSE). Bundled third-party code and separately downloaded resources retain their own licenses; see [third-party notices](THIRD_PARTY_NOTICES.md).
+Original code is licensed under [MIT](LICENSE). See [third-party notices](THIRD_PARTY_NOTICES.md) for bundled code and downloaded resources.
