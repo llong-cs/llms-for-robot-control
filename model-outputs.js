@@ -99,7 +99,9 @@
         option.textContent = `Turn ${turn.turn} · ${formatVideoTime(turn.timeSeconds) || "Time unavailable"}`;
         select.append(option);
       });
-      status.textContent = `${trace.turns.length} recorded turns. ${result.message || ""}`.trim();
+      // Update exporter-authored status text only; recorded model outputs stay verbatim.
+      const traceMessage = (result.message || "").replace(/\bcontrol steps?\b/g, (term) => term.replace("control", "execution"));
+      status.textContent = `${trace.turns.length} recorded turns. ${traceMessage}`.trim();
       controls.hidden = false;
       renderTurn();
     } catch (error) {

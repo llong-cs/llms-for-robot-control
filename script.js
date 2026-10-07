@@ -77,9 +77,9 @@ videos.forEach((video) => {
   const mp4 = video.querySelector('source[type="video/mp4"]')?.getAttribute("src");
   const webm = video.querySelector('source[type="video/webm"]')?.getAttribute("src");
   if (!mp4 || !webm) return;
-  const title = figure.querySelector("h4")?.textContent || video.getAttribute("aria-label");
-  const context = figure.querySelector(".video-caption")?.textContent.replace(/\s*·?\s*(?:Open|Enlarge) video\s*$/, "").trim() || "";
-  const description = figure.querySelector("figcaption p")?.textContent || "Recorded demonstration.";
+  const title = window.BlogMath.text(figure.querySelector("h4")) || video.getAttribute("aria-label");
+  const context = window.BlogMath.text(figure.querySelector(".video-caption")).replace(/\s*·?\s*(?:Open|Enlarge) video\s*$/, "").trim() || "";
+  const description = window.BlogMath.text(figure.querySelector("figcaption p")) || "Recorded demonstration.";
   const variant = mp4.split("/").pop().replace(/\.mp4$/, "");
   const button = document.createElement("button");
   button.type = "button";
@@ -111,7 +111,7 @@ document.querySelectorAll(".demo-link").forEach((link) => {
     window.dispatchEvent(new CustomEvent("experiment:open-rollouts", {
       detail: {
         tableId: link.dataset.table || "promising-behaviors", variant: link.dataset.demo, trigger: link,
-        manifest: link.dataset.manifest || "promising-behaviors.json", title: link.textContent.trim(),
+        manifest: link.dataset.manifest || "promising-behaviors.json", title: window.BlogMath.text(link).trim(),
       },
     }));
   });
@@ -220,12 +220,12 @@ document.querySelectorAll(".experiment-chart[data-table]").forEach((container) =
   if (!table || !table.tBodies.length) return;
   const tableRows = experimentRows(table);
   const parseNumber = (cell, optional = false) => {
-    const value = (cell?.dataset.value ?? cell?.textContent ?? "").trim();
+    const value = (cell?.dataset.value ?? window.BlogMath.text(cell)).trim();
     if (value === "" || value === "—") return optional ? null : NaN;
     return Number(value.replace(/[,%\s]/g, ""));
   };
   const data = tableRows.map((row, index) => {
-    const cells = Array.from(row.cells, (cell) => cell.textContent.trim());
+    const cells = Array.from(row.cells, (cell) => window.BlogMath.text(cell).trim());
     return {
       index, variant: row.dataset.variant || cells[0], label: row.dataset.label || cells[0],
       sr: parseNumber(row.cells[1]) / 100, ps: parseNumber(row.cells[2]),
@@ -319,7 +319,7 @@ document.querySelectorAll(".experiment-chart[data-table]").forEach((container) =
     input.checked = true;
     input.setAttribute("aria-controls", `${id}-plot`);
     const name = document.createElement("span");
-    name.textContent = groupedControl ? `H=${row.horizon}` : row.label;
+    window.BlogMath.setText(name, groupedControl ? `H=${row.horizon}` : row.label);
     label.append(input, name);
     options.append(label);
     input.addEventListener("change", render);
@@ -427,10 +427,10 @@ document.querySelectorAll(".experiment-chart[data-table]").forEach((container) =
       mode.textContent = controlModeLines[row.controlMode].join(" ");
       const detail = document.createElement("span");
       detail.className = "chart-selected-detail";
-      detail.textContent = compareExecutionTime
-        ? `${executionTimeLabel(row)} · H=${row.horizon}` : `H=${row.horizon}`;
+      window.BlogMath.setText(detail, compareExecutionTime
+        ? `${executionTimeLabel(row)} · H=${row.horizon}` : `H=${row.horizon}`);
       variant.append(mode, detail);
-    } else variant.textContent = row.label;
+    } else window.BlogMath.setText(variant, row.label);
     readout.append(variant);
     [
       ["Success rate", `${Math.round(row.sr * 100)}%`, "Upper left axis", "is-bar"],
@@ -615,8 +615,20 @@ document.querySelectorAll(".experiment-chart[data-table]").forEach((container) =
       element("rect", { x: left + index * band + 3, y: top - 8,
         width: band - 6, height: groupedControl ? 460 - top : chartHeight - top - 8,
         rx: 5, class: "chart-hit" }, null, control);
-      labelLines(data[originalIndex]).forEach((label, lineIndex) =>
-        text(x(index), 446 + lineIndex * 17, label, "chart-variant-label", "middle", control));
+      if (groupedControl) {
+        // HTML inside SVG lets the axis use the same KaTeX as article formulas.
+        const box = element("foreignObject", {
+          x: x(index) - band / 2, y: 428, width: band, height: 30,
+          class: "chart-horizon-label", "aria-hidden": "true", "pointer-events": "none",
+        }, null, control);
+        const label = document.createElement("div");
+        label.className = "chart-horizon-content";
+        window.BlogMath.setText(label, `H=${data[originalIndex].horizon}`);
+        box.append(label);
+      } else {
+        labelLines(data[originalIndex]).forEach((label, lineIndex) =>
+          text(x(index), 446 + lineIndex * 17, label, "chart-variant-label", "middle", control));
+      }
     });
     select(visible.some((row) => row.index === selectedIndex) ? selectedIndex : visible[0]?.index ?? null);
   }

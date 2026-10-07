@@ -105,16 +105,21 @@
     const label = displayLabel(value);
     const pattern = /\btask \d+(?: \/ (?:easy|medium|hard|xhard))?\b/g;
     const fragment = document.createDocumentFragment();
+    const appendLabelText = (value) => {
+      const span = document.createElement("span");
+      window.BlogMath.setText(span, value);
+      fragment.append(...span.childNodes);
+    };
     let cursor = 0;
     for (const match of label.matchAll(pattern)) {
-      fragment.append(document.createTextNode(label.slice(cursor, match.index)));
+      appendLabelText(label.slice(cursor, match.index));
       const task = document.createElement("code");
       task.className = "task-label";
       task.textContent = match[0];
       fragment.append(task);
       cursor = match.index + match[0].length;
     }
-    fragment.append(document.createTextNode(label.slice(cursor)));
+    appendLabelText(label.slice(cursor));
     element.replaceChildren(fragment);
   }
 
@@ -146,7 +151,7 @@
 
   function clipMetrics(clip) {
     if (Number.isFinite(clip.progress) && Number.isFinite(clip.finalProgress) && Number.isFinite(clip.steps)) {
-      return `Peak PS ${clip.progress.toFixed(2)} · Final PS ${clip.finalProgress.toFixed(2)} · ${clip.steps.toLocaleString("en-US")} control steps`;
+      return `Peak PS ${clip.progress.toFixed(2)} · Final PS ${clip.finalProgress.toFixed(2)} · ${clip.steps.toLocaleString("en-US")} execution steps`;
     }
     return Number.isFinite(clip.durationSeconds) ? `Duration ${clip.durationSeconds.toFixed(1)} s` : "";
   }
@@ -161,7 +166,7 @@
     window.RolloutOutputs.setClip(clip, !resultTables.has(activeGroup.chartTableId));
     player.poster = clip.poster;
     const index = activeGroup.clips.findIndex((item) => item.id === clip.id);
-    const title = document.getElementById("rollout-title").textContent;
+    const title = window.BlogMath.text(document.getElementById("rollout-title"));
     const selectedTitle = clipTitle(clip, index);
     player.setAttribute("aria-label", [...new Set([title, selectedTitle, outcome(clip)].filter(Boolean))].join(", "));
     // VP9 is supported by the embedded browser even when H.264 is unavailable.
@@ -211,7 +216,7 @@
     context.hidden = mainSamples || !context.textContent;
     const scope = document.getElementById("rollout-scope");
     setDisplayLabel(scope, demo ? summary || group.description || "" : "");
-    scope.hidden = !scope.textContent || normalizedLabel(scope.textContent) === normalizedLabel(title);
+    scope.hidden = !scope.textContent || normalizedLabel(window.BlogMath.text(scope)) === normalizedLabel(title);
     const listTitle = panel.querySelector(".rollout-list-title");
     listTitle.hidden = singleDemo;
     clipsList.hidden = singleDemo;

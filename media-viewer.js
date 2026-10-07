@@ -90,8 +90,9 @@
       scrollX: window.scrollX, scrollY: window.scrollY,
     };
     active = view;
-    title.textContent = link.dataset.mediaTitle || sourceFigure?.querySelector("#rollout-current-title, figcaption strong")?.textContent || sourceVideo?.getAttribute("aria-label") ||
+    const titleText = link.dataset.mediaTitle || window.BlogMath.text(sourceFigure?.querySelector("#rollout-current-title, figcaption strong")) || sourceVideo?.getAttribute("aria-label") ||
       thumbnail?.alt || link.getAttribute("aria-label") || (kind === "image" ? "Image" : "Video");
+    window.BlogMath.setText(title, titleText);
     error.hidden = true;
     error.textContent = `The ${kind} could not be loaded. Close this viewer and try again.`;
     setZoom(false);
@@ -118,7 +119,7 @@
     if (kind === "image") {
       const image = document.createElement("img");
       image.className = "media-viewer-image";
-      image.alt = thumbnail?.alt || title.textContent;
+      image.alt = thumbnail?.alt || titleText;
       image.decoding = "async";
       image.addEventListener("load", () => {
         if (active !== view) return;
@@ -156,7 +157,7 @@
       video.controls = true;
       video.playsInline = true;
       video.preload = "metadata";
-      video.setAttribute("aria-label", title.textContent);
+      video.setAttribute("aria-label", titleText);
       video.src = link.href;
     }
     video.addEventListener("error", showError, listenerOptions);

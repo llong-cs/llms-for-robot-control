@@ -64,13 +64,14 @@
       const title = document.createElement("h3");
       title.id = `${note.id}-title`;
       title.className = "concept-note-title";
-      title.textContent = template.dataset.title || term.textContent;
+      const titleText = template.dataset.title || window.BlogMath.text(term);
+      window.BlogMath.setText(title, titleText);
       const header = document.createElement("div");
       header.className = "concept-note-header";
       const close = document.createElement("button");
       close.type = "button";
       close.className = "concept-note-close";
-      close.setAttribute("aria-label", `Close note: ${title.textContent}`);
+      close.setAttribute("aria-label", `Close note: ${titleText}`);
       close.textContent = "×";
       close.addEventListener("click", () => closeNote(key));
       header.append(title, close);
