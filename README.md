@@ -1,14 +1,18 @@
-# Agentic Framework and Ditto Bench
+# LLM-agent for Robot Control
 
 ![Blog](https://img.shields.io/badge/Blog-LLMs%20for%20Robot%20Control-blue?style=flat-square)
 
-Inspired by [Inspect Robots](https://github.com/robocurve/inspect-robots), this framework simplifies the robot control loop for research analysis and adds detailed trajectory recording. The agentic framework is primarily adapted for OpenAI-family models such as Astra through OpenAI Responses; compatibility with other models is not guaranteed.
+This repository provides a simple **agentic framework to use LLMs for robot control** and **Ditto Bench**, a benchmark designed to evaluate motion and control understanding with physical-challenging manipulation tasks. Use it to run LLM policies and native **pi05** and **MolmoAct2** baselines, define experiments through JSON configurations, and record and compare their behavior. Supported environments are **Ditto Bench**, **LIBERO**, and the official **MolmoAct2-ManiSkill** box task. 
 
-This repository contains **Ditto Bench**, an **agentic robot-control framework**, and native **pi05** and **MolmoAct2** baselines. Supported environments are **Ditto Bench**, **LIBERO**, and the official **MolmoAct2-ManiSkill** box task.
+The framework draws on [Inspect Robots](https://github.com/robocurve/inspect-robots), with a simplified control loop and detailed recording for research. Its LLM integration is primarily adapted for OpenAI-family models such as Astra through OpenAI Responses; compatibility with other models is not guaranteed.
 
-## Ditto Bench
+## What is included
 
-Ditto Bench evaluates physical interaction: goals are straightforward to describe, while success requires handling contact, geometric constraints, precise motion or tool use. It contains six tasks, each with `easy`, `medium`, `hard` and `xhard` variants, for 24 task–difficulty combinations. The benchmark uses ManiSkill 3 / SAPIEN and MolmoAct2's DROID simulation setup with a Franka FR3 arm and Robotiq 2F-85 gripper.
+
+
+### Ditto Bench
+
+Ditto Bench contains six tasks that require handling contact, geometric constraints, precise motion or tool use. Each task has `easy`, `medium`, `hard` and `xhard` variants, for 24 task–difficulty combinations. It is implemented in ManiSkill 3 / SAPIEN using MolmoAct2's DROID simulation setup with a Franka FR3 arm and Robotiq 2F-85 gripper.
 
 
 | ID  | Task                   | Illustration                                                                                               | Goal                                                             | Core challenge                                                                          |
@@ -23,9 +27,9 @@ Ditto Bench evaluates physical interaction: goals are straightforward to describ
 
 Evaluation records task success and a continuous progress score. See [task definitions](ditto-bench/docs/TASKS.md) for difficulty designs and scoring, and the [benchmark README](ditto-bench/README.md) for preview and direct Gym examples.
 
-## Agentic framework
+### Agentic framework
 
-The framework runs an observation–decision–motion loop. An LLM receives current images and public robot state, together with configurable interaction history and optional demonstrations, then issues a motion command. The controller executes the configured steps before the next observation and decision. Native pi05 and MolmoAct2 policies use their own action adapters within the same evaluation and recording pipeline.
+The framework connects observations, policy decisions and motion execution. An LLM receives camera images and public robot state, together with configurable interaction history and optional demonstrations, then issues a motion command. The controller executes the configured steps before the next observation. Native vision-language-action (VLA) policies use their own action adapters within the same evaluation and recording pipeline.
 
 ```mermaid
 flowchart LR
@@ -38,35 +42,41 @@ flowchart LR
 
 
 
-JSON configurations select tasks, models, reasoning effort, history, demonstrations, motion interfaces, H/K schedules, step budgets and recording. Saved trajectories connect model requests and decisions to executed actions, observations and task outcomes. The framework supports DROID and LIBERO profiles for both native model families; simulator workers and model servers run in separate environments. See [architecture](docs/ARCHITECTURE.md) for component boundaries and [usage](docs/USAGE.md) for configuration and output conventions.
+Recorded rollouts connect model requests and decisions to executed actions, observations and task outcomes. The framework includes DROID and LIBERO profiles for both native model families, with separate environments for simulator workers and model servers.
 
-## Repository structure and reading guide
+## Repository structure
 
 ```text
 agentic-framework/       Policies, controllers, adapters, simulator workers and recording
 ditto-bench/             Task physics, procedural geometry and success/progress scoring
 examples/                Offline loop and focused agent, native VLA and preview configs
-configs/experiments/     Configurations for the research experiment conditions
+configs/experiments/     Configurations for the experiment conditions
 scripts/                 Setup, evaluation and native model serving entry points
 tools/                   Result summaries
 docs/                    Installation, usage, architecture and task illustrations
 credentials.env.example  Blank credential template
 ```
 
-Setup and evaluation populate project-local `envs/`, `third_party/`, `models/`, `data/`, `cache/`, `.config/` and `outputs/` directories. These resources and your `credentials.env` are ignored by Git.
+Environments, dependencies, weights, assets, caches and run outputs stay within the project under `envs/`, `third_party/`, `models/`, `data/`, `cache/`, `.config/` and `outputs/`. These local resources and your `credentials.env` are ignored by Git.
+
+### Reading guide
+
+Start with [Quick start](#quick-start) to run an example. For implementation details, [architecture](docs/ARCHITECTURE.md) explains the component boundaries; the entry points below show how configurations become policy decisions and motion.
 
 
-| To understand or change…                | Start here                                                                                                                                                                                                                                |
-| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Running the code                        | Follow [Quick start](#quick-start), then [installation](docs/INSTALLATION.md) and [usage](docs/USAGE.md).                                                                                                                                 |
-| Experiment settings                     | Start from [examples](examples), then inspect [experiment configs](configs/experiments). [scripts/eval.py](scripts/eval.py) resolves and launches a config.                                                                               |
-| LLM decisions and motion execution      | Read [harness/run.py](agentic-framework/src/agentic_framework/harness/run.py), [policy.py](agentic-framework/src/agentic_framework/harness/policy.py) and [controller.py](agentic-framework/src/agentic_framework/harness/controller.py). |
-| Native VLA inference and action mapping | Read [models/vla](agentic-framework/src/agentic_framework/models/vla), [native_controller.py](agentic-framework/src/agentic_framework/harness/native_controller.py) and the [model profiles](agentic-framework/configs/models).           |
-| Benchmark tasks and scoring             | Read [task definitions](ditto-bench/docs/TASKS.md), the [catalog](ditto-bench/src/ditto/catalog.py), [task implementations](ditto-bench/src/ditto/tasks) and [framework integration](ditto-bench/src/ditto/integration).                  |
-| Recorded results                        | Read the output conventions in [usage](docs/USAGE.md#processes-outputs-and-metrics), then use [tools/summarize.py](tools/summarize.py) to aggregate runs.                                                                                 |
+| Area                     | Entry points                                                                                                                                                                                                                                                                                             |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Configuration and launch | [examples](examples), [experiment configs](configs/experiments) and [scripts/eval.py](scripts/eval.py).                                                                                                                                                                                                  |
+| LLM control loop         | [harness/run.py](agentic-framework/src/agentic_framework/harness/run.py) assembles the run; [policy.py](agentic-framework/src/agentic_framework/harness/policy.py) makes decisions; [controller.py](agentic-framework/src/agentic_framework/harness/controller.py) executes motion.                      |
+| Native VLA integration   | [Model profiles](agentic-framework/configs/models) select the checkpoint and defaults; [models/vla](agentic-framework/src/agentic_framework/models/vla) maps observations and actions; [native_controller.py](agentic-framework/src/agentic_framework/harness/native_controller.py) schedules execution. |
+| Benchmark implementation | The [catalog](ditto-bench/src/ditto/catalog.py) lists tasks, [task implementations](ditto-bench/src/ditto/tasks) define physics and scoring, and [integration](ditto-bench/src/ditto/integration) connects them to the framework.                                                                        |
+
+
 
 
 ## Quick start
+
+
 
 ### Environment
 
@@ -82,15 +92,13 @@ The offline example runs two scripted decisions through the real policy and moti
 
 ### API Key
 
-Create a personal project key in [OpenAI Platform](https://platform.openai.com/api-keys), following the [official API quickstart](https://developers.openai.com/api/docs/quickstart). Fill `OPENAI_API_KEY` in the root `credentials.env`, keep `OPENAI_BASE_URL=https://api.openai.com/v1`, and run `chmod 600 credentials.env`. Setup creates this file from the tracked [credentials.env.example](credentials.env.example) only if it is absent; preserve other entries if your local credentials file already exists.
+For LLM runs, create a personal key in [OpenAI Platform](https://platform.openai.com/api-keys). Setup creates the ignored `credentials.env` from the blank [template](credentials.env.example) if it is absent. Fill `OPENAI_API_KEY`, keep `OPENAI_BASE_URL=https://api.openai.com/v1`, and run `chmod 600 credentials.env`. Preserve other entries if the file already exists. LLM configurations load this file through `llm.env_file`.
 
-LLM configs select this local file through `llm.env_file`.
+Preview and native VLA runs do not require an OpenAI key.
 
 ### Run a configuration
 
-Edit the JSON's research settings: model, reasoning effort, history, motion interface and H/K, tasks, seeds, budgets, recording and output path. Agent, native VLA and preview configs contain the settings relevant to that mode. Runtime details use framework defaults unless a condition needs an override.
-
-After [simulator installation](docs/INSTALLATION.md), activate the framework environment and select a GPU:
+Complete the [simulator installation](docs/INSTALLATION.md) and, for native VLA runs, the model setup and weight downloads described there. Then activate the framework environment, inspect a configuration, and choose an example to run:
 
 ```bash
 source envs/agentic-framework/bin/activate
@@ -100,6 +108,20 @@ CUDA_VISIBLE_DEVICES=0 python3 scripts/eval.py examples/agent.json
 CUDA_VISIBLE_DEVICES=0 python3 scripts/eval.py examples/molmoact2.json
 ```
 
-Experiment conditions are ordinary JSON files under [configs/experiments](configs/experiments); launch each with `python3 scripts/eval.py CONFIG.json`. See [usage](docs/USAGE.md), [installation](docs/INSTALLATION.md) and [architecture](docs/ARCHITECTURE.md).
+`--dry-run` prints the resolved plan without starting models or simulators. Preview renders task scenes; `agent.json` runs the LLM controller; `molmoact2.json` runs the native MolmoAct2 policy. Select your GPU with `CUDA_VISIBLE_DEVICES`.
+
+## Experiments and results
+
+Copy a configuration from [examples](examples) or use a supplied condition under [configs/experiments](configs/experiments), then launch it with `python3 scripts/eval.py CONFIG.json`. Configure the model, reasoning effort, history, demonstrations, motion interface and H/K, tasks, seeds, step budgets, recording and output path in that JSON. Mode-specific runtime details use defaults unless overridden.
+
+Runs save their resolved configuration, per-trial results and summaries under `outputs/` by default. Recorded runs also include trajectories, camera frames and video. Use [tools/summarize.py](tools/summarize.py) to aggregate completed runs:
+
+```bash
+python3 tools/summarize.py outputs/run-a outputs/run-b --output-dir outputs/summary
+```
+
+See [usage](docs/USAGE.md) for configuration fields, demonstration inputs, motion semantics and output formats.
+
+## License
 
 Original project code is licensed under the [MIT License](LICENSE). Bundled third-party code and separately downloaded resources retain their own licenses; see [third-party notices](THIRD_PARTY_NOTICES.md).
