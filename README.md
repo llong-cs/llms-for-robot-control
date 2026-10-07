@@ -68,6 +68,8 @@ Setup and evaluation populate project-local `envs/`, `third_party/`, `models/`, 
 
 ## Quick start
 
+### Environment
+
 Requires Linux and Python 3.11. Install [uv](https://docs.astral.sh/uv/) first, then run:
 
 ```bash
@@ -78,13 +80,13 @@ envs/agentic-framework/bin/python -B examples/offline.py
 
 The offline example runs two scripted decisions through the real policy and motion controller. It requires no GPU, simulator or API key and makes no model calls.
 
-## API key
+### API Key
 
 Create a personal project key in [OpenAI Platform](https://platform.openai.com/api-keys), following the [official API quickstart](https://developers.openai.com/api/docs/quickstart). Fill `OPENAI_API_KEY` in the root `credentials.env`, keep `OPENAI_BASE_URL=https://api.openai.com/v1`, and run `chmod 600 credentials.env`. Setup creates this file from the tracked [credentials.env.example](credentials.env.example) only if it is absent; preserve other entries if your local credentials file already exists.
 
 LLM configs select this local file through `llm.env_file`.
 
-## Run a configuration
+### Run a configuration
 
 Edit the JSON's research settings: model, reasoning effort, history, motion interface and H/K, tasks, seeds, budgets, recording and output path. Agent, native VLA and preview configs contain the settings relevant to that mode. Runtime details use framework defaults unless a condition needs an override.
 
