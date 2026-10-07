@@ -1,0 +1,22 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ditto"
+version = "0.7.4"
+description = "Ditto Bench: physical-interaction tasks for frozen robot policies and agentic VLMs"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.11,<3.13"
+dependencies = ["numpy>=1.26", "pillow>=10"]
+
+[project.optional-dependencies]
+sim = ["mani-skill==3.0.1", "sapien==3.0.3", "torch>=2.5", "trimesh>=4", "transforms3d>=0.4", "gymnasium>=1.0", "shapely==2.1.2", "manifold3d==3.3.2", "mapbox-earcut==2.0.0"]
+
+[project.scripts]
+ditto-preview = "ditto.preview:main"
+ditto-eval = "ditto.integration.agentic:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ditto"]

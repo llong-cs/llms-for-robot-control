@@ -1,0 +1,53 @@
+{
+  "id": "molmoact2-droid",
+  "label": "MolmoAct2-DROID",
+  "aliases": [
+    "molmoact2",
+    "molmo"
+  ],
+  "family": "molmoact2",
+  "adapter": "droid_joint_position",
+  "defaults": {
+    "h": 15,
+    "k": 15,
+    "control_hz": 15,
+    "max_steps": 2000,
+    "inference_timeout": 240
+  },
+  "environment": {
+    "benchmark": "maniskill",
+    "control_mode": "pd_joint_pos",
+    "observation_profile": "control"
+  },
+  "transport": {
+    "kind": "http",
+    "host": "127.0.0.1",
+    "port": 8019,
+    "url": "http://127.0.0.1:8019/act"
+  },
+  "model": {
+    "checkpoint": "models/molmoact2-droid",
+    "expected_metadata": {
+      "molmoact2_commit": "66b87e64efd99dfd103241418113955cf64dfa9c",
+      "repo_id": "allenai/MolmoAct2-DROID",
+      "revision": "d8c1abd8a27d8e859455bbe514df2bcc617db0fb",
+      "action_horizon": 15,
+      "output_action_dim": 8,
+      "norm_tag": "franka_droid",
+      "camera_layout": "official_sim_two",
+      "flow_steps": 10,
+      "enable_depth_reasoning": false,
+      "status": "loaded"
+    }
+  },
+  "server": {
+    "script": "models/serve_molmoact2.py",
+    "environment": "envs/agentic-framework-molmoact2",
+    "source": "third_party/molmoact2",
+    "checkpoint_marker": "VLA_SOURCE.json",
+    "gpus": 1,
+    "metadata": {
+      "model_action_dim": 32
+    }
+  }
+}

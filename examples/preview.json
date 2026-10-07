@@ -1,0 +1,21 @@
+{
+  "evaluation": {
+    "bench": "ditto",
+    "mode": "preview",
+    "task_randomize": true
+  },
+  "environment": {
+    "task_ids": "all",
+    "difficulty": "all",
+    "trials": 1,
+    "init_start": 0,
+    "seed": 42
+  },
+  "observation": {
+    "profile": "control"
+  },
+  "output": {
+    "directory": "../outputs/{timestamp}-example-preview",
+    "record_trajectory": true
+  }
+}

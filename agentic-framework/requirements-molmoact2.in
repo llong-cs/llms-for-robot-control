@@ -1,0 +1,19 @@
+# Official allenai/molmoact2 66b87e64efd99dfd103241418113955cf64dfa9c
+# Isolated MolmoAct2 inference server environment; CUDA 12.8 supports this host.
+--extra-index-url https://download.pytorch.org/whl/cu128
+torch==2.11.0+cu128
+torchvision==0.26.0+cu128
+transformers>=4.57,<4.58
+accelerate>=1.0
+safetensors>=0.4
+huggingface-hub>=0.36,<1
+hf-transfer>=0.1.8
+pillow>=10
+numpy>=1.26,<3
+einops>=0.7
+sentencepiece>=0.2
+protobuf>=4.25
+fastapi>=0.116
+uvicorn[standard]>=0.35
+json-numpy>=2.1.0
+python-dotenv>=1.0

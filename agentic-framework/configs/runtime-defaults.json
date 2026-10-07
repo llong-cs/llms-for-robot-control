@@ -1,0 +1,97 @@
+{
+  "run": {
+    "mode": "preview",
+    "preview_context": false,
+    "preview_dx": null,
+    "repeat_id": null
+  },
+  "environment": {
+    "benchmark": "maniskill",
+    "suite": null,
+    "task_ids": "0",
+    "trials": 1,
+    "init_start": 0,
+    "seed": null,
+    "category": null,
+    "control_hz": null,
+    "sim_hz": 150,
+    "sim_backend": "cpu",
+    "sim_shader": "rt-fast",
+    "gpu": null,
+    "molmoact2_source": "third_party/molmoact2",
+    "maniskill_assets": "data/molmoact2-sim-eval-assets",
+    "python": null,
+    "difficulty": "easy"
+  },
+  "execution": {
+    "h": 5,
+    "control_interface": "move_by",
+    "k": 5,
+    "motion_time_scale": 1,
+    "max_motion_steps": 100,
+    "auto_motion": {
+      "position_tolerance_m": 0.001,
+      "rotation_tolerance_rad": 0.02,
+      "stable_steps": 3,
+      "stall_steps": 20,
+      "position_progress_m": 0.0002,
+      "rotation_progress_rad": 0.002,
+      "gripper_min_steps": 8,
+      "gripper_stable_steps": 4
+    },
+    "max_steps": 1800,
+    "done_verification_seconds": 0.0,
+    "action_tools": "move_by",
+    "approver": "none"
+  },
+  "policy": {
+    "model_profile": null,
+    "inference_timeout": 240,
+    "family": null,
+    "profile": "native",
+    "host": null,
+    "port": null,
+    "url": null,
+    "metadata": null,
+    "seed": null
+  },
+  "llm": {
+    "model": "gpt-5.6-sol",
+    "backend": "responses",
+    "base_url": null,
+    "api_key_env": null,
+    "env_file": "credentials.env",
+    "backend_options": {},
+    "max_output_tokens": null,
+    "supported_efforts": null,
+    "reasoning_mode": null,
+    "max_response_chars": 32768,
+    "max_attempts": 3,
+    "augmentations": {
+      "memory": {
+        "history_length": 2
+      },
+      "reasoning": {
+        "enabled": true,
+        "effort": "low",
+        "notes": true,
+        "hindsight": true
+      }
+    }
+  },
+  "observation": {
+    "max_images": 16,
+    "max_context_chars": 64000,
+    "cameras": "",
+    "profile": "control",
+    "demo": false,
+    "demo_path": null,
+    "demo_mode": "ood",
+    "demo_content": "observations",
+    "demo_image_max_side": 256
+  },
+  "output": {
+    "directory": null,
+    "record_trajectory": false
+  }
+}

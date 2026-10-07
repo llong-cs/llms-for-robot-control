@@ -1,0 +1,576 @@
+"""The rollout engine — the closed control loop at the heart of Inspect Robots.
+
+One [`rollout`][inspect_robots.rollout.rollout] runs a single trial (one scene, one epoch): it
+drives the policy↔embodiment loop through the [`Controller`][inspect_robots.controller.Controller]
+(open-loop chunk execution) and the [`Approver`][inspect_robots.approver.Approver] safety
+gate, logging each step to the sinks, and returns an immutable
+[`TrialRecord`][inspect_robots.rollout.TrialRecord] that scorers consume.
+"""
+
+from __future__ import annotations
+
+import json
+import warnings
+import zlib
+from collections.abc import Mapping
+from dataclasses import dataclass, field, replace
+from typing import TYPE_CHECKING, Any
+
+import numpy as np
+
+from inspect_robots.approver import Approver
+from inspect_robots.controller import _INFER_KEY, Controller
+from inspect_robots.embodiment import Embodiment
+from inspect_robots.errors import (
+    EmbodimentFault,
+    InspectRobotsError,
+    PolicyError,
+    PolicyStop,
+    SafetyAbort,
+    _CancelledTrial,
+)
+from inspect_robots.frames import FrameRef, FrameStore
+from inspect_robots.policy import Policy
+from inspect_robots.scene import Scene
+from inspect_robots.transcript import (
+    Event,
+    approval_event,
+    error_event,
+    inference_event,
+    operator_event,
+    operator_message_event,
+    reset_event,
+    step_event,
+)
+from inspect_robots.types import OPERATOR_END, Action, Observation, StepResult
+
+if TYPE_CHECKING:
+    from inspect_robots.console import OperatorInput
+    from inspect_robots.logging.sink import LogSink
+
+_TRANSCRIPT_BYTE_LIMIT = 2 * 1024 * 1024
+_APPROVALS_KEY = "_rollout_approvals"
+_OPERATOR_MSGS_KEY = "_rollout_operator_messages"
+
+
+def derive_seed(eval_seed: int | None, scene_seed: int | None, epoch: int) -> int:
+    """Deterministically combine eval/scene seeds and the epoch index (R2).
+
+    Distinct epochs of the same scene get distinct seeds so repeats actually vary
+    for stochastic policies, while a fixed ``(eval_seed, scene_seed, epoch)``
+    reproduces bitwise. ``None`` and ``0`` hash differently, so an unseeded
+    input does not silently alias ``seed=0``.
+    """
+    payload = f"{eval_seed}:{scene_seed}:{epoch}".encode()
+    return zlib.crc32(payload) & 0xFFFFFFFF
+
+
+@dataclass(frozen=True, eq=False)
+class StepRecord:
+    """One step of a recorded trajectory.
+
+    When a [`FrameStore`][inspect_robots.frames.FrameStore] is used, both
+    ``observation`` and ``result.observation`` have their images stripped.
+    ``image_refs`` and ``result_image_refs`` hold the corresponding on-disk
+    handles instead (R5).
+    """
+
+    t: int
+    observation: Observation
+    action: Action
+    result: StepResult
+    image_refs: Mapping[str, FrameRef] | None = None
+    result_image_refs: Mapping[str, FrameRef] | None = None
+
+
+@dataclass
+class TrialRecord:
+    """The full record of one trial — the unit scorers consume."""
+
+    scene_id: str
+    epoch: int
+    seed: int | None
+    steps: list[StepRecord] = field(default_factory=list)
+    # In-memory only: EvalLog embeds SceneResult aggregates and never TrialRecord,
+    # so no asdict path reaches the numpy images and the log schema is untouched.
+    parked_observation: Observation | None = None
+    terminated: bool = False
+    truncated: bool = False
+    termination_reason: str | None = None
+    status: str = "success"  # "success" (ran to completion) | "error" | "cancelled"
+    error: str | None = None
+    inference_latencies: list[float] = field(default_factory=list)
+    # Human operator's success verdict, captured once during rollout (R6). Read
+    # by OperatorScorer; remains None for unattended/CI runs.
+    operator_judgement: str | None = None
+    # Qualitative context from the operator; read by nothing that scores.
+    operator_note: str | None = None
+    # Typed transcript of what happened during the trial.
+    events: list[Event] = field(default_factory=list)
+    # Extensible metadata for the trial (e.g. populated by policies).
+    metadata: dict[str, Any] = field(default_factory=dict)
+    # The policy's optional per-trial audit record (e.g. an LLM conversation),
+    # collected via the duck-typed transcript() hook and normalized to plain
+    # JSON types by _collect_transcript. None when the policy has no hook.
+    policy_transcript: Any = None
+
+
+def _collect_transcript(policy: object) -> Any:
+    """Normalize a policy's optional audit hook without affecting trial outcome."""
+    try:
+        transcript = getattr(policy, "transcript", None)
+        if not callable(transcript):
+            return None
+        raw = transcript()
+        if raw is None:
+            return None
+        dumped = json.dumps(raw, default=str)
+        normalized = json.loads(dumped)
+        size = len(dumped.encode())
+        if size > _TRANSCRIPT_BYTE_LIMIT:
+            return {
+                "transcript_dropped": True,
+                "bytes": size,
+                "note": "exceeds inline limit; policies must not embed binary data",
+            }
+        return normalized
+    except Exception as exc:
+        try:
+            detail = f"{type(exc).__name__}: {exc}"
+        except Exception:
+            detail = type(exc).__name__
+        return {"transcript_error": detail}
+
+
+def _record_failure(record: TrialRecord, exc: InspectRobotsError, t: int) -> InspectRobotsError:
+    """Mark ``record`` failed and attach it to ``exc`` (see ``InspectRobotsError.record``).
+
+    The partial record — steps walked and transcript events up to the failure —
+    is forensic data the orchestrator preserves in the eval log.
+    """
+    message = str(exc)
+    record.events.append(error_event(t, type(exc).__name__, message))
+    record.status = "error"
+    record.error = f"{type(exc).__name__}: {message}"
+    exc.record = record
+    return exc
+
+
+def _connection_failure(exc: Exception) -> bool:
+    """Return whether an exception chain contains a connection failure."""
+    current: BaseException | None = exc
+    seen: set[int] = set()
+    while current is not None and id(current) not in seen:
+        seen.add(id(current))
+        if isinstance(current, ConnectionError) or type(current).__name__ in {
+            "ConnectionError",
+            "NewConnectionError",
+            "ConnectError",
+        }:
+            return True
+        if current.__cause__ is not None:
+            current = current.__cause__
+        elif not current.__suppress_context__:
+            current = current.__context__
+        else:
+            current = None
+    return False
+
+
+def _policy_error(policy: Policy, exc: Exception) -> PolicyError:
+    """Wrap a generic policy exception, appending a hint on connection failures."""
+    message = str(exc)
+    if _connection_failure(exc):
+        try:
+            url = getattr(policy, "server_url", None)
+            remedy = getattr(policy, "remedy", None)
+            name = policy.info.name
+            if url:
+                # "up and healthy", not "running": builtin ConnectionError
+                # matches also cover reset/broken-pipe, where the server
+                # answered and then dropped the connection.
+                message += (
+                    f"\nhint: policy {name!r} could not hold a connection to its "
+                    f"action server at {url} — is the server up and healthy? "
+                    "Start (or restart) it, then rerun."
+                )
+            else:
+                message += (
+                    f"\nhint: policy {name!r} hit a connection failure — "
+                    "a backend it depends on may be down or unreachable."
+                )
+            if remedy:
+                message += f"\nhint: {remedy}"
+        except Exception:
+            pass  # a raising server_url/remedy property must not mask the trial error
+    return PolicyError(message)
+
+
+def _non_finite_detail(data: object) -> str | None:
+    """Describe why action data is not finite, or return ``None`` when it is."""
+    try:
+        array = np.asarray(data, dtype=np.float64)
+    except (TypeError, ValueError, OverflowError) as exc:
+        return f"is not numeric: {exc}"
+    if np.isfinite(array).all():
+        return None
+    if np.isnan(array).any():
+        return "contains nan"
+    return "contains inf"
+
+
+def _store_frames(
+    frame_store: FrameStore | None, trial_id: str, t: int, obs: Observation
+) -> tuple[Observation, Mapping[str, FrameRef] | None]:
+    """If a frame store is configured, stream images to disk and strip them."""
+    if frame_store is None or not obs.images:
+        return obs, None
+    refs = {cam: frame_store.put(trial_id, t, cam, image) for cam, image in obs.images.items()}
+    return replace(obs, images={}), refs
+
+
+def _end_operator_trial(operator_input: OperatorInput | None) -> None:
+    """Best-effort call the optional operator-input trial teardown hook."""
+    if operator_input is not None:
+        try:
+            end_trial = getattr(operator_input, "end_trial", None)
+            if callable(end_trial):
+                end_trial()
+        except Exception as exc:
+            # stacklevel=3 skips this helper so the warning points at rollout's
+            # caller, like the disable-site warnings issued from rollout() itself.
+            warnings.warn(
+                f"Operator console disabled for this trial after {type(exc).__name__}: {exc}",
+                RuntimeWarning,
+                stacklevel=3,
+            )
+
+
+def rollout(
+    policy: Policy,
+    embodiment: Embodiment,
+    scene: Scene,
+    *,
+    max_steps: int,
+    seed: int | None,
+    epoch: int,
+    controller: Controller,
+    approver: Approver,
+    sink: LogSink,
+    frame_store: FrameStore | None = None,
+    operator_input: OperatorInput | None = None,
+) -> TrialRecord:
+    """Run a single trial and return its record.
+
+    Generic exceptions raised by the policy, or a non-finite action, are
+    reported as [`PolicyError`][inspect_robots.errors.PolicyError]; generic
+    exceptions raised by the embodiment are reported as
+    [`EmbodimentFault`][inspect_robots.errors.EmbodimentFault]; by the approver as
+    [`SafetyAbort`][inspect_robots.errors.SafetyAbort] (an approver that crashed cannot
+    vouch for safety), as is a non-finite action introduced by the approver.
+    Already-typed Inspect Robots errors (incl.
+    [`SafetyAbort`][inspect_robots.errors.SafetyAbort]) propagate unchanged, so the
+    eval orchestrator can apply the correct continue-vs-halt policy. Every error
+    raised from inside the trial carries the partial ``TrialRecord`` on
+    ``exc.record`` for the orchestrator to preserve.
+
+    The loop applies no wall-clock pacing of its own: ``embodiment.step()`` is
+    called as fast as the policy/controller/approver can produce actions. An
+    embodiment that needs real-time cadence paces itself inside ``step()`` and
+    declares the ``"self_paced"`` capability to document that it does (see
+    [`Embodiment`][inspect_robots.embodiment.Embodiment]).
+    """
+    if getattr(policy, "requires_motion_controller", False) and not getattr(controller, "supports_motion_plans", False):
+        raise ValueError("MotionPlanEnvelope requires FrameworkController")
+    trial_id = f"{scene.id}-e{epoch}"
+    record = TrialRecord(scene_id=scene.id, epoch=epoch, seed=seed)
+    record.events.append(reset_event(seed))
+    store: dict[str, Any] = {}
+    expected_dim = embodiment.info.action_space.dim
+    policy_reset_ok = False
+    last_observation = None
+    executed_steps = 0
+    delta_hook: Any = getattr(policy, "transcript_delta", None)
+    messages_hook: Any = getattr(sink, "log_policy_messages", None)
+    stream_ok = callable(delta_hook) and callable(messages_hook)
+    console_ok = operator_input is not None
+
+    try:
+        t = -1
+        try:
+            policy.reset(scene)
+            policy_reset_ok = True
+        except InspectRobotsError as exc:
+            _record_failure(record, exc, -1)
+            raise
+        except Exception as exc:
+            raise _record_failure(record, _policy_error(policy, exc), -1) from exc
+        try:
+            obs = embodiment.reset(scene, seed=seed)
+            last_observation = obs
+        except InspectRobotsError as exc:
+            _record_failure(record, exc, -1)
+            raise
+        except Exception as exc:
+            raise _record_failure(record, EmbodimentFault(str(exc)), -1) from exc
+
+        if operator_input is not None:
+            try:
+                operator_input.begin_trial()
+            except Exception as exc:
+                console_ok = False
+                _end_operator_trial(operator_input)
+                warnings.warn(
+                    f"Operator console disabled for this trial after {type(exc).__name__}: {exc}",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
+
+        obs_rec, refs = _store_frames(frame_store, trial_id, 0, obs)
+        t = 0
+        if getattr(embodiment, "last_reset_info", {}).get("success", False):
+            record.truncated = True
+            record.termination_reason = "initially_solved"
+            record.metadata["initially_solved"] = True
+            record.parked_observation = obs_rec
+            return record
+        while t < max_steps:
+            poll = None
+            if operator_input is not None and console_ok:
+                try:
+                    poll = operator_input.poll()
+                except Exception as exc:
+                    console_ok = False
+                    _end_operator_trial(operator_input)
+                    warnings.warn(
+                        "Operator console disabled for this trial after "
+                        f"{type(exc).__name__}: {exc}",
+                        RuntimeWarning,
+                        stacklevel=2,
+                    )
+            if poll is not None:
+                for i, text in enumerate(poll.messages):
+                    source = poll.sources[i] if i < len(poll.sources) else "console"
+                    store.setdefault(_OPERATOR_MSGS_KEY, []).append(
+                        {"t": t, "text": text, "source": source}
+                    )
+                    record.events.append(operator_message_event(t, text, source))
+
+            prev_inferences = len(store.get(_INFER_KEY, []))
+            all_approvals = store.get(_APPROVALS_KEY, [])
+            last_approvals_idx = store.get("_rollout_last_approvals_idx", 0)
+            tail_approvals = [dict(a) for a in all_approvals[last_approvals_idx:]]
+            all_operator_msgs = store.get(_OPERATOR_MSGS_KEY, [])
+            last_operator_msgs_idx = store.get("_rollout_last_operator_msgs_idx", 0)
+            tail_operator_msgs = [
+                dict(message) for message in all_operator_msgs[last_operator_msgs_idx:]
+            ]
+
+            if poll is not None and poll.end is not None:
+                record.terminated = True
+                record.termination_reason = OPERATOR_END
+                if poll.end.verdict is not None:
+                    record.operator_judgement = poll.end.verdict
+                    record.operator_note = poll.end.note
+                    record.events.append(
+                        operator_event(
+                            t=t,
+                            verdict=poll.end.verdict,
+                            source="console",
+                            note=poll.end.note,
+                        )
+                    )
+                break
+
+            try:
+                policy_extra = {**obs.extra, "env_step": t, "approvals": tail_approvals}
+                if operator_input is not None:
+                    policy_extra["operator_messages"] = tail_operator_msgs
+                obs_with_extra = replace(
+                    obs,
+                    extra=policy_extra,
+                )
+                action = controller.next_action(policy, obs_with_extra, t, store)
+            except PolicyStop as stop:
+                record.truncated = True
+                record.termination_reason = stop.name
+                record.metadata["policy_stop"] = {"name": stop.name, "detail": stop.detail, "hindsight": stop.hindsight}
+                record.parked_observation = obs_rec
+                break
+            except InspectRobotsError as exc:
+                _record_failure(record, exc, t)
+                raise
+            except Exception as exc:
+                raise _record_failure(record, _policy_error(policy, exc), t) from exc
+
+            inferences = store.get(_INFER_KEY, [])
+            if len(inferences) > prev_inferences:
+                store["_rollout_last_approvals_idx"] = len(all_approvals)
+                if operator_input is not None:
+                    store["_rollout_last_operator_msgs_idx"] = len(all_operator_msgs)
+                latency, chunk_len = inferences[-1]
+                record.events.append(inference_event(t, latency, chunk_len))
+                if stream_ok:
+                    try:
+                        delta = delta_hook()
+                        entries = list(delta) if delta is not None else []
+                        if entries:
+                            messages_hook(t, entries)
+                    except Exception as exc:
+                        stream_ok = False
+                        warnings.warn(
+                            "Live policy transcript streaming disabled for this "
+                            f"trial after {type(exc).__name__}: {exc}",
+                            RuntimeWarning,
+                            stacklevel=2,
+                        )
+
+            # A malformed action is the policy's fault; catching it here keeps it
+            # from surfacing inside the approver/embodiment as a halting fault.
+            emitted_dim = int(np.asarray(action.data).size)
+            if emitted_dim != expected_dim:
+                raise _record_failure(
+                    record,
+                    PolicyError(
+                        f"policy emitted a {emitted_dim}-D action but embodiment "
+                        f"{embodiment.info.name!r} expects {expected_dim}-D"
+                    ),
+                    t,
+                )
+            non_finite_detail = _non_finite_detail(action.data)
+            if non_finite_detail is not None:
+                raise _record_failure(
+                    record,
+                    PolicyError(
+                        "policy emitted a non-finite action "
+                        f"({non_finite_detail}) for embodiment {embodiment.info.name!r}"
+                    ),
+                    t,
+                )
+
+            # Policy-requested stop (plan 0008 §3d), captured from the
+            # PRE-review action so an approver rewrite cannot erase the
+            # intent. Note: EnsemblingController rebuilds actions with chunk
+            # meta, so this channel works under Default/SmoothingController
+            # (which preserve per-action meta), not under ensembling.
+            requested_stop = bool(action.meta.get("request_stop"))
+            stop_reason = str(action.meta.get("stop_reason", "policy_stop"))
+
+            try:
+                reviewed = approver.review(action, store)  # may raise SafetyAbort
+            except InspectRobotsError as exc:
+                _record_failure(record, exc, t)
+                raise
+            except Exception as exc:
+                raise _record_failure(record, SafetyAbort(str(exc)), t) from exc
+            if reviewed is not action:
+                flags = [k for k in ("clamped", "delta_clamped") if reviewed.meta.get(k)]
+                detail = ", ".join(flags) or None
+                record.events.append(approval_event(t, modified=True, detail=detail))
+                store.setdefault(_APPROVALS_KEY, []).append({"t": t, "detail": detail})
+            action = reviewed
+
+            # Recheck because an approver may mutate the array in place and return it.
+            non_finite_detail = _non_finite_detail(action.data)
+            if non_finite_detail is not None:
+                raise _record_failure(
+                    record,
+                    SafetyAbort(
+                        f"approver {type(approver).__name__} returned a non-finite "
+                        f"action ({non_finite_detail})"
+                    ),
+                    t,
+                )
+
+            try:
+                result: StepResult = embodiment.step(action)
+                executed_steps += 1
+                last_observation = result.observation
+                applied_hook = getattr(controller, "record_applied", None)
+                if callable(applied_hook):
+                    applied_hook(action)
+            except InspectRobotsError as exc:
+                _record_failure(record, exc, t)
+                raise
+            except Exception as exc:
+                raise _record_failure(record, EmbodimentFault(str(exc)), t) from exc
+
+            sink.log_step(t, obs, action, result)
+            result_obs_rec, result_refs = _store_frames(
+                frame_store, trial_id, t + 1, result.observation
+            )
+            result_rec = (
+                result
+                if result_obs_rec is result.observation
+                else replace(result, observation=result_obs_rec)
+            )
+            record.steps.append(
+                StepRecord(
+                    t=t,
+                    observation=obs_rec,
+                    action=action,
+                    result=result_rec,
+                    image_refs=refs,
+                    result_image_refs=result_refs,
+                )
+            )
+            record.events.append(
+                step_event(t, result.terminated, result.truncated, result.termination_reason)
+            )
+            t += 1
+
+            if result.terminated:
+                record.terminated = True
+                record.termination_reason = result.termination_reason
+                break
+            if result.truncated:
+                record.truncated = True
+                record.termination_reason = result.termination_reason or "truncated"
+                break
+            if requested_stop:
+                # Embodiment-reported termination above wins (ground truth);
+                # otherwise the policy's stop ends the trial as a truncation —
+                # scoring stays the scorer's job, done() is not success.
+                record.truncated = True
+                record.termination_reason = stop_reason
+                break
+            obs = result.observation
+            obs_rec = result_obs_rec
+            refs = result_refs
+        else:
+            record.truncated = True
+            record.termination_reason = "max_steps"
+    except KeyboardInterrupt as exc:
+        record.status = "cancelled"
+        record.error = "cancelled by user (KeyboardInterrupt)"
+        record.events.append(error_event(t, "KeyboardInterrupt", "cancelled by user"))
+        raise _CancelledTrial(record.error, record) from exc
+    finally:
+        finish = getattr(controller, "finalize", None)
+        if callable(finish) and last_observation is not None:
+            try:
+                finish(policy, last_observation, executed_steps, record.termination_reason or record.status, store)
+            except Exception as exc:
+                record.metadata["finalize_error"] = f"{type(exc).__name__}: {exc}"
+                record.status = "error"
+                record.error = record.error or record.metadata["finalize_error"]
+        if getattr(controller, "supports_motion_plans", False):
+            record.metadata["executed_control_steps"] = executed_steps
+        # FrameworkController emits JSON-ready physical accounting and decision
+        # events during finalize; preserve them on partial and successful trials.
+        if "policy_stop" in store:
+            record.metadata["policy_stop"] = dict(store["policy_stop"])
+        if "controller_totals" in store:
+            record.metadata["controller_totals"] = dict(store["controller_totals"])
+        if "controller_decisions" in store:
+            record.metadata["controller_decisions"] = [
+                dict(decision) for decision in store["controller_decisions"]
+            ]
+        _end_operator_trial(operator_input)
+        # Preserve measured latencies even when the trial ends in an error.
+        record.inference_latencies = [
+            lat for lat, _ in store.get(_INFER_KEY, []) if lat is not None
+        ]
+        if policy_reset_ok:  # pragma: no branch - false only while an exception unwinds
+            record.policy_transcript = _collect_transcript(policy)
+    return record

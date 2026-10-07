@@ -1,0 +1,49 @@
+{
+  "evaluation": {
+    "bench": "ditto",
+    "mode": "agent",
+    "task_randomize": true
+  },
+  "environment": {
+    "task_ids": "0",
+    "difficulty": "xhard",
+    "trials": 10,
+    "init_start": 0,
+    "seed": 42
+  },
+  "execution": {
+    "control_interface": "move_by_chunk",
+    "h": 10,
+    "k": 10,
+    "motion_time_scale": 2,
+    "max_steps": 900
+  },
+  "policy": {
+    "inference_timeout": 1200
+  },
+  "observation": {
+    "profile": "control",
+    "max_images": 256,
+    "max_context_chars": 2000000
+  },
+  "output": {
+    "directory": "../../../outputs/{timestamp}-control-move_by_chunk-10-time2",
+    "record_trajectory": true
+  },
+  "llm": {
+    "model": "gpt-6-astra",
+    "backend": "responses",
+    "env_file": "../../../credentials.env",
+    "max_output_tokens": 65536,
+    "max_attempts": 2,
+    "augmentations": {
+      "memory": {
+        "history_length": 10
+      },
+      "reasoning": {
+        "enabled": true,
+        "effort": "medium"
+      }
+    }
+  }
+}

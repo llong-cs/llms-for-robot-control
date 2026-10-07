@@ -1,0 +1,26 @@
+{
+  "evaluation": {
+    "bench": "molmoact2-maniskill",
+    "mode": "vla"
+  },
+  "environment": {
+    "task_ids": "0",
+    "trials": 1,
+    "init_start": 0,
+    "seed": 42
+  },
+  "execution": {
+    "max_steps": 2000
+  },
+  "policy": {
+    "model_profile": "pi05-droid",
+    "seed": 1000
+  },
+  "observation": {
+    "profile": "control"
+  },
+  "output": {
+    "directory": "../outputs/{timestamp}-example-pi05-maniskill",
+    "record_trajectory": true
+  }
+}

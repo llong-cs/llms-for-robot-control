@@ -1,0 +1,53 @@
+{
+  "evaluation": {
+    "bench": "ditto",
+    "mode": "agent",
+    "task_randomize": true
+  },
+  "environment": {
+    "task_ids": "3",
+    "difficulty": "easy",
+    "trials": 20,
+    "init_start": 0,
+    "seed": 42
+  },
+  "execution": {
+    "control_interface": "move_by",
+    "h": 5,
+    "k": 5,
+    "max_steps": 450
+  },
+  "policy": {
+    "inference_timeout": 1200
+  },
+  "observation": {
+    "profile": "control",
+    "max_images": 256,
+    "max_context_chars": 2000000,
+    "demo": true,
+    "demo_path": "../../../outputs/teachers/molmoact2-teacher/trajectory.json",
+    "demo_mode": "id",
+    "demo_content": "observations",
+    "demo_image_max_side": 128
+  },
+  "output": {
+    "directory": "../../../outputs/{timestamp}-collaboration-astra-molmoact2",
+    "record_trajectory": true
+  },
+  "llm": {
+    "model": "gpt-6-astra",
+    "backend": "responses",
+    "env_file": "../../../credentials.env",
+    "max_output_tokens": 65536,
+    "max_attempts": 2,
+    "augmentations": {
+      "memory": {
+        "history_length": 10
+      },
+      "reasoning": {
+        "enabled": true,
+        "effort": "high"
+      }
+    }
+  }
+}

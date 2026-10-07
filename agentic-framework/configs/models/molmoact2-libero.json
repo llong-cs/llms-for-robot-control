@@ -1,0 +1,58 @@
+{
+  "id": "molmoact2-libero",
+  "label": "MolmoAct2-LIBERO",
+  "aliases": [],
+  "family": "molmoact2",
+  "adapter": "libero_osc",
+  "defaults": {
+    "h": 10,
+    "k": 10,
+    "control_hz": 20,
+    "max_steps": 220,
+    "inference_timeout": 240
+  },
+  "environment": {
+    "benchmark": "libero",
+    "control_mode": "eef_delta_pose",
+    "observation_profile": "control"
+  },
+  "transport": {
+    "kind": "http",
+    "host": "127.0.0.1",
+    "port": 8020,
+    "url": "http://127.0.0.1:8020/act"
+  },
+  "model": {
+    "checkpoint": "models/molmoact2-libero",
+    "expected_metadata": {
+      "molmoact2_commit": "66b87e64efd99dfd103241418113955cf64dfa9c",
+      "repo_id": "allenai/MolmoAct2-LIBERO",
+      "revision": "0d24a92bd1faf321ef497c3bbd5681af97c65aa2",
+      "action_horizon": 10,
+      "output_action_dim": 7,
+      "norm_tag": "libero",
+      "camera_layout": "libero_agentview_wrist",
+      "flow_steps": 10,
+      "enable_depth_reasoning": false,
+      "status": "loaded",
+      "dtype": "float32",
+      "inference_action_mode": "continuous",
+      "enable_cuda_graph": false
+    }
+  },
+  "server": {
+    "script": "models/serve_molmoact2.py",
+    "environment": "envs/agentic-framework-molmoact2",
+    "source": "third_party/molmoact2",
+    "checkpoint_marker": "VLA_SOURCE.json",
+    "gpus": 1,
+    "metadata": {
+      "model_action_dim": 32
+    },
+    "source_files": [
+      "experiments/lerobot/src/lerobot/processor/env_processor.py",
+      "experiments/scripts/serve_policy.py",
+      "experiments/launch_scripts/data_mixtures.py"
+    ]
+  }
+}

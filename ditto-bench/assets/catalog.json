@@ -1,0 +1,36 @@
+{
+  "schema_version": 2,
+  "suite": "ditto",
+  "units": "metres",
+  "quaternion": "wxyz",
+  "generation": "On environment creation; procedural sources and immutable project-local cache",
+  "cache_environment_variable": "DITTO_ASSET_DIR",
+  "cache_default": "data/generated/ditto-bench/v1 (relative to the project root)",
+  "task_geometry_sources": [
+    "src/ditto/tasks/geometry_tasks.py",
+    "src/ditto/tasks/contact_tasks.py",
+    "src/ditto/tasks/geometry_profiles.py",
+    "src/ditto/tasks/contact_geometry.py",
+    "src/ditto/tasks/unlock_geometry.py",
+    "src/ditto/tasks/unlock_task.py"
+  ],
+  "scene_inventory": "render_manifest.json in the preview output; task_configuration.asset_files in framework logs",
+  "task_ids": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "suite_version": "0.7.4",
+  "task_design_version": 5,
+  "scoring_version": "physical-relative-progress-v7",
+  "difficulties": [
+    "easy",
+    "medium",
+    "hard",
+    "xhard"
+  ],
+  "default_difficulty": "easy"
+}

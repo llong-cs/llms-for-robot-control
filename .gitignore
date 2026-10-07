@@ -1,3 +1,24 @@
-.DS_Store
 __pycache__/
-*.pyc
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+.ruff_cache/
+.env
+.env.*
+dist/
+build/
+
+# Local transports and private credential files are never part of the release.
+/local/
+/local-extensions/
+credentials.env
+credentials.env.*
+!/credentials.env.example
+/envs/
+/data/
+/outputs/
+/models/
+/cache/
+/third_party/
+/.config/

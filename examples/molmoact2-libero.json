@@ -1,0 +1,26 @@
+{
+  "evaluation": {
+    "bench": "libero_spatial",
+    "mode": "vla"
+  },
+  "environment": {
+    "task_ids": "0",
+    "trials": 1,
+    "init_start": 0,
+    "seed": 42
+  },
+  "execution": {
+    "max_steps": 220
+  },
+  "policy": {
+    "model_profile": "molmoact2-libero",
+    "seed": 1000
+  },
+  "observation": {
+    "profile": "control"
+  },
+  "output": {
+    "directory": "../outputs/{timestamp}-example-molmoact2-libero",
+    "record_trajectory": true
+  }
+}

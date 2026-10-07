@@ -1,0 +1,20 @@
+{
+  "repository": "https://github.com/robocurve/inspect-robots",
+  "commit": "7e4d1b7aee1c0d3cfc3a05a7492b9d12cda666f9",
+  "upstream_path": "plugins/inspect-robots-agent/src/inspect_robots_agent/_tools.py",
+  "copied_from": "vendor/inspect-robots/plugins/inspect-robots-agent/src/inspect_robots_agent/_tools.py",
+  "sha256": "4973be3536ea2b5766a3c6366235ad845fa34a28e6a6ed8de70b40cf6229c9e4",
+  "license": "MIT",
+  "local_vendor_patches": [
+    "build_toolset permits axis_angle only for eef_delta_pose",
+    "build_toolset narrows alignment of inferred state labels"
+  ],
+  "used_methods": [
+    "Toolset.__init__",
+    "Toolset._move_displacement",
+    "Toolset._cap_error",
+    "Toolset._success",
+    "Toolset.schemas"
+  ],
+  "used_methods_note": "Selected methods are unmodified upstream implementations. build_toolset is not used by the adapter. Coordinate conversion, gripper command preservation and scheduling belong to the local driver."
+}

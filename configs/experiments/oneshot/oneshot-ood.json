@@ -1,0 +1,54 @@
+{
+  "evaluation": {
+    "bench": "ditto",
+    "mode": "agent",
+    "task_randomize": false
+  },
+  "environment": {
+    "task_ids": "0",
+    "difficulty": "medium",
+    "trials": 1,
+    "init_start": 0,
+    "seed": 42
+  },
+  "execution": {
+    "control_interface": "move_by",
+    "h": 5,
+    "k": 5,
+    "max_motion_steps": 200,
+    "max_steps": 500
+  },
+  "policy": {
+    "inference_timeout": 1200
+  },
+  "observation": {
+    "profile": "control",
+    "max_images": 256,
+    "max_context_chars": 2000000,
+    "demo": true,
+    "demo_path": "../../../outputs/teachers/ood-teacher/trajectory.json",
+    "demo_mode": "ood",
+    "demo_content": "full",
+    "demo_image_max_side": 128
+  },
+  "output": {
+    "directory": "../../../outputs/{timestamp}-oneshot-ood",
+    "record_trajectory": true
+  },
+  "llm": {
+    "model": "gpt-6-astra",
+    "backend": "responses",
+    "env_file": "../../../credentials.env",
+    "max_output_tokens": 65536,
+    "max_attempts": 2,
+    "augmentations": {
+      "memory": {
+        "history_length": 0
+      },
+      "reasoning": {
+        "enabled": true,
+        "effort": "medium"
+      }
+    }
+  }
+}

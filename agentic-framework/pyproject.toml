@@ -1,0 +1,37 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+[project]
+name = "agentic-framework"
+version = "0.1.0"
+description = "Model-independent robot policies on Inspect Robots"
+license = "MIT AND Apache-2.0 AND BSD-3-Clause"
+license-files = [
+    "LICENSE",
+    "src/agentic_framework/_vendor/inspect_robots_agent/LICENSE",
+    "src/agentic_framework/_vendor/openpi_client/LICENSE",
+    "src/agentic_framework/_vendor/openpi_client/LICENSE.msgpack-numpy",
+]
+requires-python = ">=3.11"
+dependencies = ["inspect-robots==0.0.0", "numpy>=1.24", "httpx>=0.27", "pillow>=10", "pyyaml>=6", "websockets>=11", "msgpack>=1", "json-numpy>=2.1.0", "imageio>=2", "imageio-ffmpeg>=0.5", "python-dotenv>=1.2"]
+[project.scripts]
+agentic-framework = "agentic_framework.harness.run:main"
+[tool.hatch.build.targets.wheel]
+packages = ["src/agentic_framework"]
+[tool.hatch.build.targets.wheel.force-include]
+"configs" = "agentic_framework/configuration/data"
+"source-manifest.json" = "agentic_framework/source-manifest.json"
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]
+[tool.ruff.per-file-target-version]
+"src/agentic_framework/environments/libero/worker.py" = "py38"
+"src/agentic_framework/environments/libero/privilege.py" = "py38"
+"src/agentic_framework/environments/libero/trajectory_state.py" = "py38"
+"src/agentic_framework/environments/privilege.py" = "py38"
+
+[tool.ruff.lint.per-file-ignores]
+# Preserve pinned upstream source bytes for provenance checks.
+"src/agentic_framework/_vendor/inspect_robots_agent/tools.py" = ["I001"]

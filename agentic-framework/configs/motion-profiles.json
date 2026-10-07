@@ -1,0 +1,140 @@
+{
+  "schema_version": 5,
+  "units": [
+    "m",
+    "m",
+    "m",
+    "rad",
+    "rad",
+    "rad"
+  ],
+  "semantics": "Agent control uses only the two explicit operational bounds: shared XYZ translation and shared XYZ rotation. validation_limits stores separate, unscaled per-axis calibration ceilings used only to reject invalid profiles. These ceilings are conservative local measurements, not established global physical maxima. Each operational component must stay within both its calibration ceiling and motion_limit_fraction times that ceiling. move_by multiplies the validated operational bounds by H; move_by_chunk uses them directly. single_step_pose_limit and measured_single_step_pose_limit at the profile root are resolved compatibility views only. Native target scales remain separate from measured motion. No arrival, speed or stability guarantee is implied.",
+  "profiles": [
+    {
+      "id": "maniskill-droid-ee-30hz",
+      "match": {
+        "environment": [
+          "maniskill"
+        ],
+        "embodiment": [
+          "maniskill-franka-droid",
+          "maniskill-ditto-franka-droid"
+        ],
+        "control_mode": "pd_ee_delta_pose",
+        "control_hz": 30,
+        "frame": "base",
+        "rotation": "euler_xyz"
+      },
+      "native_target_pose_scale": [
+        0.1,
+        0.1,
+        0.1,
+        0.1,
+        0.1,
+        0.1
+      ],
+      "task_scope": "All tasks using this matched robot/controller/frequency. No task-specific dynamics are inferred.",
+      "provenance": {
+        "kind": "local_measured_operational_envelope",
+        "method": "Three nearby settled configurations, both signs of every pose axis, full normalized axis command for one environment control step; 20 zero-pose settling steps before each sample. Reset before each sample. Other axes zero; gripper open. No model calls.",
+        "measurement_date_utc": "2026-09-23",
+        "selection": "Minimum directed axis response over both signs and three settled configurations, rounded down to nearest 0.001 m or 0.001 rad. Native pose_sign is included when determining directed response.",
+        "sample_count": 36,
+        "source_versions": {
+          "mani-skill": "3.0.1",
+          "sapien": "3.0.3",
+          "torch": "2.11.0+cu128",
+          "numpy": "2.4.6",
+          "gymnasium": "1.3.0"
+        },
+        "source_urls": [
+          "https://github.com/allenai/molmoact2",
+          "https://github.com/mani-skill/ManiSkill/blob/main/docs/source/user_guide/concepts/controllers.md"
+        ],
+        "samples_sha256": "ea1e3f9f2b6d42da6dca95e12200311a18436e421a19f7275d29bce764c24dfa",
+        "scope": "Three nearby settled configurations in one task, single-axis input, open gripper. A conservative local measurement, not a global maximum or guaranteed collision-free reachability bound. Combined-axis, contact, load, posture and momentum effects were not bounded.",
+        "command_tracking": "Full native normalized input produced the measured delta. The native target scale remains separate; commanding a target equal to this envelope does not imply reaching it in one tick."
+      },
+      "availability": "available",
+      "motion_limit_fraction": 0.75,
+      "motion_limit_rationale": "Operational pose increments use conservative shared translation and rotation limits below the per-axis calibration ceilings. motion_limit_fraction is a ceiling, not a measured global capability guarantee.",
+      "single_step_translation_limit": 0.012,
+      "single_step_rotation_limit": 0.015,
+      "validation_limits": {
+        "basis": "measured_local_envelope",
+        "single_step_pose_limit": [
+          0.022,
+          0.018,
+          0.016,
+          0.027,
+          0.026,
+          0.028
+        ],
+        "global_physical_maximum_established": false
+      }
+    },
+    {
+      "id": "libero-panda-osc-20hz",
+      "match": {
+        "environment": [
+          "libero"
+        ],
+        "embodiment": [
+          "libero"
+        ],
+        "control_mode": "osc_pose",
+        "control_hz": 20,
+        "frame": "world",
+        "rotation": "axis_angle"
+      },
+      "native_target_pose_scale": [
+        0.05,
+        0.05,
+        0.05,
+        0.5,
+        0.5,
+        0.5
+      ],
+      "task_scope": "All tasks using this matched robot/controller/frequency. No task-specific dynamics are inferred.",
+      "provenance": {
+        "kind": "local_measured_operational_envelope",
+        "method": "Three nearby settled configurations, both signs of every pose axis, full normalized axis command for one environment control step; 20 zero-pose settling steps before each sample. Reset before each sample. Other axes zero; gripper open. No model calls.",
+        "measurement_date_utc": "2026-09-23",
+        "selection": "Minimum directed axis response over both signs and three settled configurations, rounded down to nearest 0.001 m or 0.001 rad. Native pose_sign is included when determining directed response.",
+        "sample_count": 36,
+        "source_versions": {
+          "numpy": "1.22.4",
+          "torch": "1.11.0+cu113",
+          "robosuite": "1.4.1",
+          "mujoco": "3.2.3",
+          "libero": null,
+          "bddl": "1.0.1"
+        },
+        "source_urls": [
+          "https://github.com/Lifelong-Robot-Learning/LIBERO",
+          "https://github.com/ARISE-Initiative/robosuite/blob/master/robosuite/controllers/parts/arm/osc.py"
+        ],
+        "samples_sha256": "0385e792fe48096a125a6ab36d1483beb64c4a4d1249c1c8e87c644b17c3a761",
+        "scope": "Three nearby settled configurations in one task, single-axis input, open gripper. A conservative local measurement, not a global maximum or guaranteed collision-free reachability bound. Combined-axis, contact, load, posture and momentum effects were not bounded.",
+        "command_tracking": "Full native normalized input produced the measured delta. The native target scale remains separate; commanding a target equal to this envelope does not imply reaching it in one tick."
+      },
+      "availability": "available",
+      "motion_limit_fraction": 0.75,
+      "motion_limit_rationale": "Operational pose increments use conservative shared translation and rotation limits below the per-axis calibration ceilings. motion_limit_fraction is a ceiling, not a measured global capability guarantee.",
+      "single_step_translation_limit": 0.003,
+      "single_step_rotation_limit": 0.015,
+      "validation_limits": {
+        "basis": "measured_local_envelope",
+        "single_step_pose_limit": [
+          0.004,
+          0.005,
+          0.005,
+          0.046,
+          0.021,
+          0.025
+        ],
+        "global_physical_maximum_established": false
+      }
+    }
+  ]
+}

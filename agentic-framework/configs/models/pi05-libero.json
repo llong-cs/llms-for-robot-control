@@ -1,0 +1,68 @@
+{
+  "id": "pi05-libero",
+  "label": "\u03c00.5-LIBERO",
+  "aliases": [
+    "pi0.5-libero"
+  ],
+  "family": "openpi",
+  "adapter": "libero_osc",
+  "defaults": {
+    "h": 10,
+    "k": 5,
+    "control_hz": 20,
+    "max_steps": 220,
+    "inference_timeout": 240
+  },
+  "environment": {
+    "benchmark": "libero",
+    "control_mode": "eef_delta_pose",
+    "observation_profile": "openpi_matched"
+  },
+  "transport": {
+    "kind": "websocket",
+    "host": "127.0.0.1",
+    "port": 8017
+  },
+  "model": {
+    "checkpoint": "models/openpi/openpi-assets/checkpoints/pi05_libero",
+    "expected_metadata": {
+      "openpi_commit": "215abfb217dbac7d5f1273282331b9b1866c0479",
+      "model_config": "pi05_libero",
+      "checkpoint": "gs://openpi-assets/checkpoints/pi05_libero",
+      "action_horizon": 10
+    },
+    "config_name": "pi05_libero",
+    "optional_metadata": {
+      "status": "loaded",
+      "replan_steps": 5
+    },
+    "norm_stats_path": "assets/physical-intelligence/libero/norm_stats.json",
+    "pi05": true
+  },
+  "server": {
+    "script": "models/serve_openpi.py",
+    "environment": "envs/agentic-framework-openpi",
+    "source": "third_party/openpi",
+    "checkpoint_marker": "VLA_SOURCE.json",
+    "gpus": 1,
+    "source_files": [
+      "src/openpi/training/config.py",
+      "src/openpi/policies/policy_config.py",
+      "src/openpi/policies/policy.py",
+      "src/openpi/policies/libero_policy.py",
+      "src/openpi/models/pi0.py",
+      "src/openpi/models/pi0_config.py",
+      "src/openpi/transforms.py",
+      "src/openpi/serving/websocket_policy_server.py",
+      "packages/openpi-client/src/openpi_client/image_tools.py",
+      "packages/openpi-client/src/openpi_client/msgpack_numpy.py",
+      "examples/libero/main.py",
+      "scripts/serve_policy.py"
+    ],
+    "metadata": {
+      "profile": "pi05-libero",
+      "model_action_dim": 32,
+      "output_action_dim": 7
+    }
+  }
+}
