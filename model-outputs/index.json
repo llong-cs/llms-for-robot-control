@@ -499,6 +499,88 @@
       "trace": "model-outputs/collaboration-astra-student-failure.json",
       "turnCount": 90,
       "timeAlignment": "verified"
+    },
+    "media/icl-id-successful-teacher.mp4": {
+      "status": "available",
+      "trace": "model-outputs/icl-id-successful-teacher.json",
+      "turnCount": 80,
+      "timeAlignment": "verified"
+    },
+    "media/icl-id-successful-student-success.mp4": {
+      "status": "available",
+      "trace": "model-outputs/icl-id-successful-student-success.json",
+      "turnCount": 25,
+      "timeAlignment": "verified"
+    },
+    "media/icl-id-successful-student-failure.mp4": {
+      "status": "available",
+      "trace": "model-outputs/icl-id-successful-student-failure.json",
+      "turnCount": 90,
+      "timeAlignment": "verified"
+    },
+    "media/icl-id-successful-obs-student-success.mp4": {
+      "status": "available",
+      "trace": "model-outputs/icl-id-successful-obs-student-success.json",
+      "turnCount": 26,
+      "timeAlignment": "verified"
+    },
+    "media/icl-id-successful-obs-student-failure.mp4": {
+      "status": "available",
+      "trace": "model-outputs/icl-id-successful-obs-student-failure.json",
+      "turnCount": 90,
+      "timeAlignment": "verified"
+    },
+    "media/icl-id-failed-teacher.mp4": {
+      "status": "available",
+      "trace": "model-outputs/icl-id-failed-teacher.json",
+      "turnCount": 90,
+      "timeAlignment": "verified"
+    },
+    "media/icl-id-failed-student-success.mp4": {
+      "status": "available",
+      "trace": "model-outputs/icl-id-failed-student-success.json",
+      "turnCount": 61,
+      "timeAlignment": "verified"
+    },
+    "media/icl-id-failed-student-failure.mp4": {
+      "status": "available",
+      "trace": "model-outputs/icl-id-failed-student-failure.json",
+      "turnCount": 90,
+      "timeAlignment": "verified"
+    },
+    "media/icl-ood-teacher.mp4": {
+      "status": "available",
+      "trace": "model-outputs/icl-ood-teacher.json",
+      "turnCount": 35,
+      "timeAlignment": "verified"
+    },
+    "media/icl-ood-student-failure.mp4": {
+      "status": "available",
+      "trace": "model-outputs/icl-ood-student-failure.json",
+      "turnCount": 90,
+      "timeAlignment": "verified"
+    },
+    "media/icl-ood-scripted-teacher.mp4": {
+      "status": "unavailable",
+      "reason": "This teacher is an authored script, with no model inference. Its commands and observations were supplied to the student, but they are not Astra model outputs."
+    },
+    "media/icl-ood-scripted-student-failure.mp4": {
+      "status": "available",
+      "trace": "model-outputs/icl-ood-scripted-student-failure.json",
+      "turnCount": 89,
+      "timeAlignment": "verified"
+    },
+    "media/icl-id-failed-more-teacher.mp4": {
+      "status": "available",
+      "trace": "model-outputs/icl-id-failed-more-teacher.json",
+      "turnCount": 60,
+      "timeAlignment": "verified"
+    },
+    "media/icl-id-failed-more-student-failure.mp4": {
+      "status": "available",
+      "trace": "model-outputs/icl-id-failed-more-student-failure.json",
+      "turnCount": 90,
+      "timeAlignment": "verified"
     }
   }
 }

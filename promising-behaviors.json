@@ -21,47 +21,44 @@
       "chartTableId": "promising-behaviors",
       "variant": "online-adaptation",
       "title": "Online adaptation",
-      "context": "Task 00 · Slanted board · Hard · Seed 42",
-      "description": "Astra changes how it grasps the board after its initial approach fails to work.",
+      "context": "",
+      "description": "Examples of Astra adjusting its behavior during an ongoing interaction.",
       "clips": [
         {
           "id": "online-adaptation",
-          "label": "Online adaptation",
+          "label": "Example 1",
           "mp4": "media/online-adaptation.mp4",
           "webm": "media/online-adaptation.webm",
-          "poster": "media/online-adaptation.jpg"
-        }
-      ]
-    },
-    {
-      "chartTableId": "promising-behaviors",
-      "variant": "fine-adjustments",
-      "title": "Coordinated fine adjustments",
-      "context": "Task 02 · Precision insertion · Hard · Seed 43",
-      "description": "Astra combines very small adjustments to the object's position with repeated downward pressure, continuing this coordinated motion until the object is successfully inserted.",
-      "clips": [
+          "poster": "media/online-adaptation.jpg",
+          "context": "Task 00 · Slanted board · Hard · Seed 42",
+          "description": "Astra changes how it grasps the board after its initial approach fails to work."
+        },
         {
           "id": "fine-adjustments",
-          "label": "Coordinated fine adjustments",
+          "label": "Example 2",
           "mp4": "media/fine-adjustments.mp4",
           "webm": "media/fine-adjustments.webm",
-          "poster": "media/fine-adjustments.jpg"
-        }
-      ]
-    },
-    {
-      "chartTableId": "promising-behaviors",
-      "variant": "incremental-progress",
-      "title": "Incremental progress",
-      "context": "Task 05 · Ring release · Medium · Seed 42",
-      "description": "It works the ring free from the bridge bit by bit, making progress through a series of small pulls.",
-      "clips": [
+          "poster": "media/fine-adjustments.jpg",
+          "context": "Task 02 · Precision insertion · Hard · Seed 43",
+          "description": "Astra combines very small adjustments to the object's position with repeated downward pressure, continuing this coordinated motion until the object is successfully inserted."
+        },
         {
           "id": "incremental-progress",
-          "label": "Incremental progress",
+          "label": "Example 3",
           "mp4": "media/incremental-progress.mp4",
           "webm": "media/incremental-progress.webm",
-          "poster": "media/incremental-progress.jpg"
+          "poster": "media/incremental-progress.jpg",
+          "context": "Task 05 · Ring release · Medium · Seed 42",
+          "description": "It works the ring free from the bridge bit by bit, making progress through a series of small pulls."
+        },
+        {
+          "id": "physical-understanding",
+          "label": "Example 4",
+          "mp4": "media/physical-understanding.mp4",
+          "webm": "media/physical-understanding.webm",
+          "poster": "media/physical-understanding.jpg",
+          "context": "Task 01 · Odd-object grasping · Easy · Seed 50",
+          "description": "It moves to stop a rolling ball and then grasps it, suggesting some ability to handle a changing physical scene."
         }
       ]
     },
@@ -94,22 +91,6 @@
           "mp4": "media/tool-use.mp4",
           "webm": "media/tool-use.webm",
           "poster": "media/tool-use.jpg"
-        }
-      ]
-    },
-    {
-      "chartTableId": "promising-behaviors",
-      "variant": "physical-understanding",
-      "title": "Physical or world understanding",
-      "context": "Task 01 · Odd-object grasping · Easy · Seed 50",
-      "description": "It moves to stop a rolling ball and then grasps it, suggesting some ability to handle a changing physical scene.",
-      "clips": [
-        {
-          "id": "physical-understanding",
-          "label": "Physical or world understanding",
-          "mp4": "media/physical-understanding.mp4",
-          "webm": "media/physical-understanding.webm",
-          "poster": "media/physical-understanding.jpg"
         }
       ]
     },

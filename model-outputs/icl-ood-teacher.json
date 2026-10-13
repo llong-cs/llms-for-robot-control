@@ -1,0 +1,549 @@
+{
+  "schemaVersion": 1,
+  "clip": "media/icl-ood-teacher.mp4",
+  "source": {
+    "runName": "20261010T021238-759766Z-astra-dropeverythinginbox-teacher",
+    "sceneId": "maniskill-DroidPutEverythingInBox-v1-seed000042",
+    "model": "openai/gpt-6-astra",
+    "trajectory": "20261010T021238-759766Z-astra-dropeverythinginbox-teacher/evaluation/DroidPutEverythingInBox-v1-task0000-init0000/evals/maniskill-DroidPutEverythingInBox-v1-seed000042/trajectory.json",
+    "trajectorySha256": "8aecf9e1917a5471eaa2ee7401d89436e8242f27dbcde3c8b226b2aa8633b91c",
+    "sourceVideoSha256": "64e5dab01c435baca435f2cc37bdb7c663d132fdad09f8f055ba2eebbf47eb4f",
+    "publishedVideoSha256": "64e5dab01c435baca435f2cc37bdb7c663d132fdad09f8f055ba2eebbf47eb4f",
+    "sourceMaxSteps": 300,
+    "clipStepLimit": null,
+    "finalControlStep": 171,
+    "trimmed": false,
+    "totalTurnCount": 35,
+    "omittedTurnCount": 0,
+    "timeAlignment": "verified",
+    "fps": 30.0,
+    "timeMapping": "observationStep / fps; reset frame is step 0; model latency is not included"
+  },
+  "turns": [
+    {
+      "turn": 1,
+      "observationStep": 0,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_FIYiJ8tUVDRfg1gTbhFuWmef",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dy\":0.06},\"note\":\"I see a ball and a small green piece outside the box. I’m shifting sideways toward the ball and checking how the wrist view lines up with the gripper.\"}"
+        }
+      ],
+      "timeSeconds": 0.0,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 2,
+      "observationStep": 5,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_XdgvfHHvAj5NKnBRBDZN8wIC",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dy\":0.06,\"dz\":-0.045},\"note\":\"The sideways move brought the small green piece closer to the gripper, while the ball moved farther away. I’ll pick up the green piece first, moving toward it and lowering partway.\"}"
+        }
+      ],
+      "timeSeconds": 0.16666666666666666,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 3,
+      "observationStep": 10,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_Ejt8sIbcn5FSPOjJcgPEFXQp",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dy\":0.055,\"dz\":-0.045},\"note\":\"The green piece is still to the right of the finger gap. I’m bringing the gap over it and lowering further while keeping the fingers open.\"}"
+        }
+      ],
+      "timeSeconds": 0.3333333333333333,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 4,
+      "observationStep": 15,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_n42fvHBeTEoqNgYippbtuNOr",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dx\":-0.035,\"dy\":0.032,\"dz\":-0.035},\"note\":\"The green piece is near the gap but slightly offset toward the front and right. I’m making a smaller diagonal approach to center it at finger height.\"}"
+        }
+      ],
+      "timeSeconds": 0.5,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 5,
+      "observationStep": 20,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_s3HckeKA3erkRxTh3tYJW2IK",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dx\":0.06,\"dy\":0.02},\"note\":\"The piece slipped below the wrist camera’s visible gap, and the external view shows the fingers beside it rather than over it. I’m correcting the fore-aft alignment without descending further.\"}"
+        }
+      ],
+      "timeSeconds": 0.6666666666666666,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 6,
+      "observationStep": 25,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_kMaTEJvLdeUs9oyB3IJsjEp4",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dx\":0.012,\"dy\":0.005,\"dz\":-0.035},\"note\":\"The green piece is now visible between the open fingers. I’m making a small centering correction and lowering the fingers around its sides.\"}"
+        }
+      ],
+      "timeSeconds": 0.8333333333333334,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 7,
+      "observationStep": 30,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_Vzx3UNlmhkJ3ICbfneYCux6a",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dx\":0.018,\"dy\":0.008},\"note\":\"The fingers are at the piece’s height, but the piece remains a little off-center in the wrist view. I’m sliding the open gripper slightly to center the contacts before closing.\"}"
+        }
+      ],
+      "timeSeconds": 1.0,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 8,
+      "observationStep": 35,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_WuuH8PwsAMkVVUYCrlZgCuJR",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"gripper\":0.81},\"note\":\"The green piece is centered between the fingers at contact height. I’m closing the gripper around it, then I’ll check whether it lifts with the hand.\"}"
+        }
+      ],
+      "timeSeconds": 1.1666666666666667,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 9,
+      "observationStep": 40,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_zJlzEawb2SpGytB4pxwLjcW7",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dz\":0.045},\"note\":\"The fingers closed fully, so I’m not yet confident they caught the piece. I’m lifting a short distance to test whether the object follows.\"}"
+        }
+      ],
+      "timeSeconds": 1.3333333333333333,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 10,
+      "observationStep": 45,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_omVkem745YURDjYZgbJyVaDQ",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"gripper\":0,\"dx\":0.025,\"dy\":-0.008,\"dz\":-0.06},\"note\":\"The piece stayed on the table, so the first grasp missed. I’m reopening and repositioning slightly farther forward and lower to place the finger pads alongside it.\"}"
+        }
+      ],
+      "timeSeconds": 1.5,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 11,
+      "observationStep": 50,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_i1pZBkMYCtDoS2S2Qpww0rMm",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dx\":0.023,\"dy\":0.01,\"dz\":-0.018},\"note\":\"The green piece is between the open jaws, but its center is still behind the closing pads. I’m making a final short forward and downward adjustment.\"}"
+        }
+      ],
+      "timeSeconds": 1.6666666666666667,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 12,
+      "observationStep": 55,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_NBSBUNv29bWIw9xxVwddnWwJ",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"gripper\":0.81},\"note\":\"The piece now spans the finger-pad area, and the hand is near the table surface. I’m closing for another grasp attempt.\"}"
+        }
+      ],
+      "timeSeconds": 1.8333333333333333,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 13,
+      "observationStep": 60,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_G9OXZ5tIeM4uxj9aHWuBP4Zc",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dz\":0.025,\"gripper\":0.81},\"note\":\"The fingers have barely closed, suggesting contact is limiting them near the tabletop. I’m raising the hand slightly while maintaining the closing target to clear the surface and test the hold.\"}"
+        }
+      ],
+      "timeSeconds": 2.0,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 14,
+      "observationStep": 65,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_LAVTwPyNVtRh7kaGvG391EkN",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dz\":0.06},\"note\":\"The fingers now contact the green piece on both sides. I’m lifting vertically to verify a secure grasp and clear the box wall.\"}"
+        }
+      ],
+      "timeSeconds": 2.1666666666666665,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 15,
+      "observationStep": 70,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_6Wh2FLdWhHPdBkeBVr3Ehqpo",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dy\":-0.06,\"dz\":0.05,\"dx\":0.025},\"note\":\"The green piece rose with the gripper, confirming the grasp. I’m lifting it above the rim and moving toward the box opening.\"}"
+        }
+      ],
+      "timeSeconds": 2.3333333333333335,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 16,
+      "observationStep": 75,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_MZ6irKpHBpooaaG1gsdTI4sm",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dy\":-0.06,\"dx\":0.02},\"note\":\"The piece is held above the near side of the box, but not over its interior yet. I’m continuing sideways toward the center of the opening.\"}"
+        }
+      ],
+      "timeSeconds": 2.5,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 17,
+      "observationStep": 80,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_1dgjrJ9Siv2lJCuPspqESwPG",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dy\":-0.06,\"dx\":0.035,\"gripper\":0.81},\"note\":\"The piece is still secure but is above the edge of the opening. I’m moving it farther inward while reinforcing the closed-gripper target.\"}"
+        }
+      ],
+      "timeSeconds": 2.6666666666666665,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 18,
+      "observationStep": 85,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_jtlRG9fyIkCtBQCiaaolDyF4",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dx\":0.06,\"dy\":-0.035,\"gripper\":0.81},\"note\":\"The box interior is ahead of the held piece in the wrist view. I’m moving forward toward its center before releasing.\"}"
+        }
+      ],
+      "timeSeconds": 2.8333333333333335,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 19,
+      "observationStep": 90,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_K0VNChDe9Gn0Fc5ivMheZKrb",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dx\":-0.06,\"gripper\":0.81},\"note\":\"The last forward motion moved the box away from the grasp point in the wrist view. I’m reversing that direction to bring the held piece over the opening.\"}"
+        }
+      ],
+      "timeSeconds": 3.0,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 20,
+      "observationStep": 95,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_cRV8YfBubsYdI6vEGPRzl6PI",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dx\":-0.06,\"gripper\":0.81},\"note\":\"The box opening is moving toward the grasp point as intended. I’m continuing in that direction with the piece held above the rim.\"}"
+        }
+      ],
+      "timeSeconds": 3.1666666666666665,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 21,
+      "observationStep": 100,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_4jzszEHOiznYShWCEySm5DNi",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dx\":-0.04,\"dz\":-0.025,\"gripper\":0.81},\"note\":\"The piece is now over the box footprint. I’m shifting a little farther into the opening and lowering it for a short drop.\"}"
+        }
+      ],
+      "timeSeconds": 3.3333333333333335,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 22,
+      "observationStep": 105,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_rMy56w6CNRcUBeDlmkooVOpW",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"gripper\":0},\"note\":\"The held green piece is centered safely inside the box walls. I’m opening the fingers to release it into the box.\"}"
+        }
+      ],
+      "timeSeconds": 3.5,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 23,
+      "observationStep": 110,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_M7NOkqgrnAiqENtbzj7CKfIv",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dy\":-0.06,\"dz\":0.03},\"note\":\"The green piece is resting inside the box. I’m moving toward the remaining round green object outside the box while keeping the fingers above the rim.\"}"
+        }
+      ],
+      "timeSeconds": 3.6666666666666665,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 24,
+      "observationStep": 115,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_5kTu5q2a74vYhnSMetXdyh6u",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dy\":-0.06},\"note\":\"The round green object is visible to the left of the box in the wrist view. I’m continuing laterally toward it with the gripper open.\"}"
+        }
+      ],
+      "timeSeconds": 3.8333333333333335,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 25,
+      "observationStep": 120,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_at8stmn6q1V8KMExnh6nAxRm",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dy\":-0.06,\"dz\":-0.035},\"note\":\"The ball is still left of the finger gap. I’m approaching it laterally and lowering partway toward grasp height.\"}"
+        }
+      ],
+      "timeSeconds": 4.0,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 26,
+      "observationStep": 125,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_pj6PiTq7uKMm9NPyQUxpWGxC",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dy\":-0.06,\"dx\":-0.015,\"dz\":-0.025},\"note\":\"The ball is approaching the open gap but remains left of center. I’m correcting the alignment and descending gradually.\"}"
+        }
+      ],
+      "timeSeconds": 4.166666666666667,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 27,
+      "observationStep": 130,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_Ab09tSGvZ3mRlRql3847Yg1x",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dy\":-0.04,\"dz\":-0.025},\"note\":\"The ball is partly between the fingers but left of the grasp center. I’m making a smaller sideways correction and lowering to place the pads around its sides.\"}"
+        }
+      ],
+      "timeSeconds": 4.333333333333333,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 28,
+      "observationStep": 135,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_JhFQbOfGTRmqpDSNgExz6bbg",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dz\":-0.035},\"note\":\"The ball is now centered in the open finger gap. I’m lowering straight down so the pads can grasp its sides rather than its top.\"}"
+        }
+      ],
+      "timeSeconds": 4.5,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 29,
+      "observationStep": 140,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_5bNVv0mIOuLf8lw65Ay7B2sY",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"gripper\":0.81},\"note\":\"The open pads now flank the ball at grasp height. I’m closing the gripper around it before testing a lift.\"}"
+        }
+      ],
+      "timeSeconds": 4.666666666666667,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 30,
+      "observationStep": 145,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_e7o196jGrmkELDGpTHroIExX",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dz\":0.06,\"gripper\":0.81},\"note\":\"The fingers have contacted the ball without fully closing. I’m lifting vertically to check that it follows and clears the tabletop.\"}"
+        }
+      ],
+      "timeSeconds": 4.833333333333333,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 31,
+      "observationStep": 150,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_A93HMDMsinJtV2wUhjFh2LR5",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dz\":0.045,\"dy\":0.035},\"note\":\"The ball rose with the gripper, confirming the grasp. I’m lifting it above the box rim and beginning the return toward the opening.\"}"
+        }
+      ],
+      "timeSeconds": 5.0,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 32,
+      "observationStep": 155,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_YdR28yRm60OUVdEFl2X46qmP",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dy\":0.06,\"gripper\":0.81},\"note\":\"The ball remains between the fingers above the tabletop. I’m maintaining closing pressure while carrying it toward the box.\"}"
+        }
+      ],
+      "timeSeconds": 5.166666666666667,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 33,
+      "observationStep": 160,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_2Rz1rpwJRyocH03noFJnx3Zl",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dy\":0.06,\"gripper\":0.81},\"note\":\"The ball is following the sideways motion securely. I’m continuing over the box opening at the same height.\"}"
+        }
+      ],
+      "timeSeconds": 5.333333333333333,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 34,
+      "observationStep": 165,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_XxgimzhlbgMEGWT2X4KdLpbS",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dy\":0.06,\"dx\":0.015,\"gripper\":0.81},\"note\":\"The ball is over the near side of the box but still close to its edge. I’m moving it farther inside before releasing.\"}"
+        }
+      ],
+      "timeSeconds": 5.5,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 35,
+      "observationStep": 170,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_14nxnfs9yunmXUgjlYkhyaW1",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dx\":-0.035,\"dy\":0.03,\"dz\":-0.025,\"gripper\":0.81},\"note\":\"The ball is above the opening, with the green block already inside. I’m centering the ball and lowering slightly to reduce the drop.\"}"
+        }
+      ],
+      "timeSeconds": 5.666666666666667,
+      "outcome": "plan",
+      "attempt": 1
+    }
+  ]
+}

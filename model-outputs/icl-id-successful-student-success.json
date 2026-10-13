@@ -1,0 +1,399 @@
+{
+  "schemaVersion": 1,
+  "clip": "media/icl-id-successful-student-success.mp4",
+  "source": {
+    "runName": "20261009T211107-642254Z-astra-id-successful",
+    "sceneId": "vlmvla-00-slanted_board-xhard-seed000042",
+    "model": "openai/gpt-6-astra",
+    "trajectory": "20261009T211107-642254Z-astra-id-successful/evaluation/vlmvla-00-slanted_board-xhard-seed000042/evals/vlmvla-00-slanted_board-xhard-seed000042/trajectory.json",
+    "trajectorySha256": "87d070bcbd5d0b88e401c6d01b646fd837c099ec927ac42f5c5475597f61864f",
+    "sourceVideoSha256": "04407942320a536d4307caeddcf041be0eba56fcdec441c5ec2f2db90dc1eb66",
+    "publishedVideoSha256": "04407942320a536d4307caeddcf041be0eba56fcdec441c5ec2f2db90dc1eb66",
+    "sourceMaxSteps": 450,
+    "clipStepLimit": null,
+    "finalControlStep": 122,
+    "trimmed": false,
+    "totalTurnCount": 25,
+    "omittedTurnCount": 0,
+    "timeAlignment": "verified",
+    "fps": 30.0,
+    "timeMapping": "observationStep / fps; reset frame is step 0; model latency is not included"
+  },
+  "turns": [
+    {
+      "turn": 1,
+      "observationStep": 0,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_CaCMySyJFX9FvV4HOWPEpPSN",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dy\":0.06,\"dz\":0.05,\"rz\":0.075,\"ry\":-0.04,\"gripper\":0},\"note\":\"The blue free end is left of the open gripper and above the gray holder. I will move toward it with extra clearance while beginning to align the jaws across the board.\"}"
+        }
+      ],
+      "timeSeconds": 0.0,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 2,
+      "observationStep": 5,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_qqM7G6K9XM7wS93FE3jPr912",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dy\":0.06,\"rz\":0.075,\"ry\":-0.04,\"gripper\":0},\"note\":\"The blue board is off to the side of the open fingers and still seated in the gray holder. I will move toward the exposed end while beginning to align the jaws across it.\"}"
+        }
+      ],
+      "timeSeconds": 0.16666666666666666,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 3,
+      "observationStep": 10,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_PtaM21p5WWrAezj7CWKs4wnb",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"rz\":0.075,\"ry\":-0.075,\"gripper\":0},\"note\":\"The open gripper is above the exposed blue end, but the jaws are diagonal to the board. I will turn and tilt the hand while staying clear so the pads can approach opposing sides.\"}"
+        }
+      ],
+      "timeSeconds": 0.3333333333333333,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 4,
+      "observationStep": 15,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_bABjv2zUzMUxSqIN40wYHRVs",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"rz\":0.075,\"ry\":-0.075,\"gripper\":0},\"note\":\"The blue free end is beside the open pads, but it crosses the opening diagonally. I will rotate and tilt the hand while clear of the board to align the pads with opposing edges.\"}"
+        }
+      ],
+      "timeSeconds": 0.5,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 5,
+      "observationStep": 20,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_dVhn94dUgXcaJjV88SrIf6nt",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"rz\":0.075,\"ry\":-0.075,\"gripper\":0},\"note\":\"The open fingers are above the exposed blue end, but the board is diagonal across the jaw opening. I will turn and tilt the hand while clear of contact to align the pads with opposite edges.\"}"
+        }
+      ],
+      "timeSeconds": 0.6666666666666666,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 6,
+      "observationStep": 25,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_IDU6KOn8ScbbO96JQsdgLxrx",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"rz\":0.075,\"ry\":-0.075,\"gripper\":0},\"note\":\"The open fingers are above the blue board, but the board crosses the gap diagonally. I will rotate and tilt the hand while clear of contact to align the pads with opposing edges.\"}"
+        }
+      ],
+      "timeSeconds": 0.8333333333333334,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 7,
+      "observationStep": 30,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_BThllBMgpWlPKfU5HsSAz7AI",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"rz\":0.075,\"ry\":-0.05,\"gripper\":0},\"note\":\"The blue board is still seated, and its exposed end lies diagonally across the open jaws. I will rotate and tilt the hand while clear of contact to align the pads with opposing edges.\"}"
+        }
+      ],
+      "timeSeconds": 1.0,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 8,
+      "observationStep": 35,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_zlUTxf30Rsyd7lkJDdWLbysi",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"rz\":0.075,\"gripper\":0},\"note\":\"The blue board is still seated, and its exposed end is diagonal to the open jaws. I will rotate the hand while staying above it to align the pads with opposing edges.\"}"
+        }
+      ],
+      "timeSeconds": 1.1666666666666667,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 9,
+      "observationStep": 40,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_9yAzcwSFwKhfANbS3f9YeTtn",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"rz\":0.075,\"gripper\":0},\"note\":\"The blue free end is visible between the open fingers, but it is diagonal to the pads. I will rotate the open hand to align the opposing contacts before descending.\"}"
+        }
+      ],
+      "timeSeconds": 1.3333333333333333,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 10,
+      "observationStep": 45,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_LJ34qUWnHoAnl7sSi40rO2p4",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"rz\":0.075,\"dz\":-0.015,\"gripper\":0},\"note\":\"The blue end is visible between the open fingers, but its edges are diagonal to the pads. I will turn the jaws slightly and lower a short distance toward the exposed section.\"}"
+        }
+      ],
+      "timeSeconds": 1.5,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 11,
+      "observationStep": 50,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_7PYSsOTPDUwryLm6Kbnw0KdM",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"rz\":0.075,\"gripper\":0},\"note\":\"The blue free end is visible between the open fingers, but lies diagonally across their contact line. I will turn the jaws toward a square pinch while keeping them open.\"}"
+        }
+      ],
+      "timeSeconds": 1.6666666666666667,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 12,
+      "observationStep": 55,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_r6LTkNcptaQk4cUoLx4qJSvB",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"rz\":0.075,\"dz\":-0.015,\"gripper\":0},\"note\":\"The exposed blue board lies between the open fingers but is diagonal to their contact surfaces. I will turn the jaws toward its edges and lower slightly while keeping them open.\"}"
+        }
+      ],
+      "timeSeconds": 1.8333333333333333,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 13,
+      "observationStep": 60,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_qkqeshZnMeQ0LUC6RohqV2Po",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"rz\":0.075,\"gripper\":0},\"note\":\"The blue free end is between the open fingers but diagonal to the pads. I will rotate the hand slightly to align the opposing contacts before lowering onto it.\"}"
+        }
+      ],
+      "timeSeconds": 2.0,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 14,
+      "observationStep": 65,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_hpvNjIHZ7v8a90tcVzgWvpJU",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"rz\":0.075,\"dz\":-0.008,\"gripper\":0},\"note\":\"The exposed blue board is between the open fingers but diagonal to the pads. I will rotate the jaws slightly and lower them a little to improve overlap with its edges.\"}"
+        }
+      ],
+      "timeSeconds": 2.1666666666666665,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 15,
+      "observationStep": 70,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_ZCGcSbW96tJfHEojaJbG5Ohz",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"rz\":0.075,\"dz\":-0.008,\"dx\":0.005,\"dy\":0.005,\"gripper\":0},\"note\":\"The blue free end is inside the open jaw span but angled across the pads. I will turn the jaws toward its edges and lower slightly for better pad overlap.\"}"
+        }
+      ],
+      "timeSeconds": 2.3333333333333335,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 16,
+      "observationStep": 75,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_6ZiXfNnqi8Ro5qKoRguAQUzc",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"rz\":0.075,\"dz\":-0.008,\"gripper\":0},\"note\":\"The blue free end is between the open jaws, but its edge is still diagonal to the pads. I will turn the jaws slightly and lower them a little for better overlap with the board.\"}"
+        }
+      ],
+      "timeSeconds": 2.5,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 17,
+      "observationStep": 80,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_ovbEqWMzl0Xf0tpQyckmA3bJ",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"rz\":0.075,\"gripper\":0},\"note\":\"The blue free end lies between the open pads, but its edges are angled relative to them. I will turn the jaws slightly to improve opposing contact before closing.\"}"
+        }
+      ],
+      "timeSeconds": 2.6666666666666665,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 18,
+      "observationStep": 85,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_VwSXOICCCCG6dkPfh68AiJ1E",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"gripper\":0.81},\"note\":\"The exposed blue end lies between the open pads, clear of the gray holder. I will close the gripper here, then test whether the board follows a short pull.\"}"
+        }
+      ],
+      "timeSeconds": 2.8333333333333335,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 19,
+      "observationStep": 90,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_3clxrxArYeXi3YKRgB6Pdkir",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dx\":-0.02,\"dy\":-0.015,\"dz\":0.015,\"gripper\":0.81},\"note\":\"The pads appear to flank the exposed blue board, but a secure grip is not yet confirmed. I will maintain closing force and make a short outward-and-upward pull to check whether the board follows.\"}"
+        }
+      ],
+      "timeSeconds": 3.0,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 20,
+      "observationStep": 95,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_faMfdt55tXC9suB2pQH2PqTY",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dx\":-0.025,\"dy\":-0.018,\"dz\":0.017,\"gripper\":0.81},\"note\":\"The blue board lies between the pads and still extends into the gray slot. I will test the contact with a short outward-and-upward pull along its incline.\"}"
+        }
+      ],
+      "timeSeconds": 3.1666666666666665,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 21,
+      "observationStep": 100,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_tywhL3SkaQiQAMGo8D5pXDQ9",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dx\":-0.025,\"dy\":-0.018,\"dz\":0.017,\"gripper\":0.81},\"note\":\"The blue board lies between the pads and still extends into the gray slot. I will make a short outward-and-upward pull along its incline, checking that the board follows the hand.\"}"
+        }
+      ],
+      "timeSeconds": 3.3333333333333335,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 22,
+      "observationStep": 105,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_ZEWiP2prPfcSOmUHxE0KQWvY",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dx\":-0.025,\"dy\":-0.018,\"dz\":0.017,\"gripper\":0.81},\"note\":\"The blue board lies between the pads and still enters the gray slot. I will test a short outward pull along its incline while keeping the jaws closed.\"}"
+        }
+      ],
+      "timeSeconds": 3.5,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 23,
+      "observationStep": 110,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_haR1p6GQUebOu6fjVDIyQJ3j",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dx\":-0.035,\"dy\":-0.025,\"dz\":0.024,\"gripper\":0.81},\"note\":\"The blue board is between the pads and extends from the slanted holder. I will make a short outward-and-upward pull along its incline, checking that the board follows.\"}"
+        }
+      ],
+      "timeSeconds": 3.6666666666666665,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 24,
+      "observationStep": 115,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_EqW6PZIoUoghOx7fZyK7ee6H",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dx\":-0.04,\"dy\":-0.03,\"dz\":0.027,\"gripper\":0.81},\"note\":\"The blue board extends from the slot to the closed pads, with its inner end still inside the holder. I will pull a short distance outward and upward along its incline, checking that it follows the hand.\"}"
+        }
+      ],
+      "timeSeconds": 3.8333333333333335,
+      "outcome": "plan",
+      "attempt": 1
+    },
+    {
+      "turn": 25,
+      "observationStep": 120,
+      "toolCalls": [
+        {
+          "type": "function_call",
+          "call_id": "call_JfMyGx2GYA7MW93eSs0U2TDF",
+          "name": "move_by",
+          "arguments": "{\"deltas\":{\"dx\":-0.035,\"dy\":-0.025,\"dz\":0.024},\"note\":\"The blue board is between the pads, with its far end still meeting the gray slot. I will pull a short distance outward and upward along its incline, checking that it follows the hand.\"}"
+        }
+      ],
+      "timeSeconds": 4.0,
+      "outcome": "plan",
+      "attempt": 1
+    }
+  ]
+}

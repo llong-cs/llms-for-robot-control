@@ -326,6 +326,13 @@ video {
 .control-table-caption { padding: 0 14px 12px; color: #454c42; font-size: 13px; font-weight: 600; text-align: left; }
 .experiment-table tbody th { font-weight: 500; }
 .experiment-table .chart-row-active { background: #f3f3ee; }
+#memory-one-shot h4 { margin: 28px 0 12px; }
+.one-shot-results-table { min-width: 600px; }
+.one-shot-results-table th:first-child { width: 34%; white-space: normal; }
+.one-shot-results-table :is(th, td):nth-child(2) { text-align: left; }
+.one-shot-results-table td:last-child { white-space: nowrap; }
+.memory-distance-figure > a { display: block; }
+.memory-distance-figure img { display: block; width: 100%; height: auto; }
 .trajectory-error-table { min-width: 0; }
 .trajectory-error-table th:first-child { white-space: normal; }
 .trajectory-error-table td { white-space: nowrap; }

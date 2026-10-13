@@ -55,6 +55,220 @@
           "poster": "media/dropteacher.jpg"
         }
       ]
+    },
+    {
+      "chartTableId": "article-demos",
+      "variant": "icl-id-successful",
+      "title": "Successful same-task demonstration",
+      "context": "Students: task 0 / xhard",
+      "description": "Full interaction transcript. The student's online history remained off.",
+      "clips": [
+        {
+          "id": "icl-id-successful-teacher",
+          "label": "Successful teacher · Seed 56",
+          "mp4": "media/icl-id-successful-teacher.mp4",
+          "webm": "media/icl-id-successful-teacher.webm",
+          "poster": "media/icl-id-successful-teacher.jpg",
+          "durationSeconds": 12.9,
+          "success": true
+        },
+        {
+          "id": "icl-id-successful-student-success",
+          "label": "Student · Success · Seed 42",
+          "mp4": "media/icl-id-successful-student-success.mp4",
+          "webm": "media/icl-id-successful-student-success.webm",
+          "poster": "media/icl-id-successful-student-success.jpg",
+          "durationSeconds": 4.1,
+          "success": true
+        },
+        {
+          "id": "icl-id-successful-student-failure",
+          "label": "Student · Failure · Seed 44",
+          "mp4": "media/icl-id-successful-student-failure.mp4",
+          "webm": "media/icl-id-successful-student-failure.webm",
+          "poster": "media/icl-id-successful-student-failure.jpg",
+          "durationSeconds": 15.033333,
+          "success": false
+        }
+      ]
+    },
+    {
+      "chartTableId": "article-demos",
+      "variant": "icl-id-successful-obs",
+      "title": "Successful demonstration without action outputs",
+      "context": "Students: task 0 / xhard",
+      "description": "Only observations and robot states from the teacher were supplied to the student; teacher action outputs were withheld. The student's online history remained off.",
+      "clips": [
+        {
+          "id": "icl-id-successful-teacher",
+          "label": "Teacher · Only observations and states supplied · Seed 56",
+          "mp4": "media/icl-id-successful-teacher.mp4",
+          "webm": "media/icl-id-successful-teacher.webm",
+          "poster": "media/icl-id-successful-teacher.jpg",
+          "durationSeconds": 12.9,
+          "success": true
+        },
+        {
+          "id": "icl-id-successful-obs-student-success",
+          "label": "Student · Success · Seed 42",
+          "mp4": "media/icl-id-successful-obs-student-success.mp4",
+          "webm": "media/icl-id-successful-obs-student-success.webm",
+          "poster": "media/icl-id-successful-obs-student-success.jpg",
+          "durationSeconds": 4.233333,
+          "success": true
+        },
+        {
+          "id": "icl-id-successful-obs-student-failure",
+          "label": "Student · Failure · Seed 43",
+          "mp4": "media/icl-id-successful-obs-student-failure.mp4",
+          "webm": "media/icl-id-successful-obs-student-failure.webm",
+          "poster": "media/icl-id-successful-obs-student-failure.jpg",
+          "durationSeconds": 15.033333,
+          "success": false
+        }
+      ]
+    },
+    {
+      "chartTableId": "article-demos",
+      "variant": "icl-id-failed",
+      "title": "Failed same-task demonstration",
+      "context": "Students: task 0 / xhard",
+      "description": "Full interaction transcript. The student's online history remained off.",
+      "clips": [
+        {
+          "id": "icl-id-failed-teacher",
+          "label": "Failed teacher · Seed 52",
+          "mp4": "media/icl-id-failed-teacher.mp4",
+          "webm": "media/icl-id-failed-teacher.webm",
+          "poster": "media/icl-id-failed-teacher.jpg",
+          "durationSeconds": 14.9,
+          "success": false
+        },
+        {
+          "id": "icl-id-failed-student-success",
+          "label": "Student · Success · Seed 42",
+          "mp4": "media/icl-id-failed-student-success.mp4",
+          "webm": "media/icl-id-failed-student-success.webm",
+          "poster": "media/icl-id-failed-student-success.jpg",
+          "durationSeconds": 10.066667,
+          "success": true
+        },
+        {
+          "id": "icl-id-failed-student-failure",
+          "label": "Student · Failure · Seed 44",
+          "mp4": "media/icl-id-failed-student-failure.mp4",
+          "webm": "media/icl-id-failed-student-failure.webm",
+          "poster": "media/icl-id-failed-student-failure.jpg",
+          "durationSeconds": 15.033333,
+          "success": false
+        }
+      ]
+    },
+    {
+      "chartTableId": "article-demos",
+      "variant": "icl-ood",
+      "title": "A demonstration from another task",
+      "context": "Students: task 0 / xhard",
+      "description": "Full interaction transcript from a different task. The student's online history remained off.",
+      "clips": [
+        {
+          "id": "icl-ood-teacher",
+          "label": "Teacher · Different task",
+          "mp4": "media/icl-ood-teacher.mp4",
+          "webm": "media/icl-ood-teacher.webm",
+          "poster": "media/icl-ood-teacher.jpg",
+          "durationSeconds": 5.733333,
+          "success": true
+        },
+        {
+          "id": "icl-ood-student-failure",
+          "label": "Student · Failure · Seed 42",
+          "mp4": "media/icl-ood-student-failure.mp4",
+          "webm": "media/icl-ood-student-failure.webm",
+          "poster": "media/icl-ood-student-failure.jpg",
+          "durationSeconds": 14.9,
+          "success": false
+        }
+      ]
+    },
+    {
+      "chartTableId": "article-demos",
+      "variant": "icl-scripted",
+      "title": "Scripted motion demonstration",
+      "context": "Students: task 0 / xhard",
+      "description": "Authored commands, observations, and robot states. The student's online history remained off.",
+      "clips": [
+        {
+          "id": "icl-ood-scripted-teacher",
+          "label": "Scripted teacher · No model inference",
+          "mp4": "media/icl-ood-scripted-teacher.mp4",
+          "webm": "media/icl-ood-scripted-teacher.webm",
+          "poster": "media/icl-ood-scripted-teacher.jpg",
+          "durationSeconds": 23.933333,
+          "modelOutputs": "not-applicable"
+        },
+        {
+          "id": "icl-ood-scripted-student-failure",
+          "label": "Student · Failure · Seed 42",
+          "mp4": "media/icl-ood-scripted-student-failure.mp4",
+          "webm": "media/icl-ood-scripted-student-failure.webm",
+          "poster": "media/icl-ood-scripted-student-failure.jpg",
+          "durationSeconds": 14.733333,
+          "success": false
+        }
+      ]
+    },
+    {
+      "chartTableId": "article-demos",
+      "variant": "icl-id-failed-more",
+      "title": "Failed extraction excerpt",
+      "context": "Students: task 0 / xhard",
+      "description": "First 60 turns of a no-history, no-demonstration rollout. The student's online history remained off.",
+      "clips": [
+        {
+          "id": "icl-id-failed-more-teacher",
+          "label": "Failed teacher · First 60 turns · Seed 42",
+          "mp4": "media/icl-id-failed-more-teacher.mp4",
+          "webm": "media/icl-id-failed-more-teacher.webm",
+          "poster": "media/icl-id-failed-more-teacher.jpg",
+          "durationSeconds": 10.033333,
+          "success": false
+        },
+        {
+          "id": "icl-id-failed-more-student-failure",
+          "label": "Student · Failure · Seed 42",
+          "mp4": "media/icl-id-failed-more-student-failure.mp4",
+          "webm": "media/icl-id-failed-more-student-failure.webm",
+          "poster": "media/icl-id-failed-more-student-failure.jpg",
+          "durationSeconds": 14.9,
+          "success": false
+        }
+      ]
+    },
+    {
+      "chartTableId": "article-demos",
+      "variant": "icl-no-demo",
+      "title": "No-demonstration reference",
+      "context": "task 0 / xhard",
+      "description": "An earlier no-history rollout with a 900-execution-step budget. The first 60 turns later supplied the failed extraction excerpt.",
+      "clips": [
+        {
+          "id": "memory-mem-0-seed-42",
+          "seed": 42,
+          "task": "slanted_board",
+          "difficulty": "xhard",
+          "success": false,
+          "progress": 0.0,
+          "finalProgress": 0.0,
+          "steps": 900,
+          "selectionReason": "Lowest progress in this run",
+          "mp4": "media/chart-rollout-memory-mem-0-seed-42.mp4",
+          "webm": "media/chart-rollout-memory-mem-0-seed-42.webm",
+          "poster": "media/chart-rollout-memory-mem-0-seed-42.jpg",
+          "durationSeconds": 30.033333333333335,
+          "label": "No demonstration · Online history off · Seed 42"
+        }
+      ]
     }
   ]
 }

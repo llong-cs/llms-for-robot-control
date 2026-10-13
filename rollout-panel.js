@@ -22,6 +22,7 @@
     ["unlock ring", 5], ["ring release", 5],
   ]);
   let activeGroup = null;
+  let activeSummary = "";
   let activeClip = null;
   let returnFocus = null;
   let requestVersion = 0;
@@ -156,6 +157,17 @@
     return Number.isFinite(clip.durationSeconds) ? `Duration ${clip.durationSeconds.toFixed(1)} s` : "";
   }
 
+  function updateClipContext(clip, title) {
+    const mainSamples = resultTables.has(activeGroup.chartTableId);
+    const demo = ["failure-behaviors", "promising-behaviors", "article-demos"].includes(activeGroup.chartTableId);
+    const context = document.getElementById("rollout-context");
+    setDisplayLabel(context, contextWithoutTitle(clip.context ?? groupContext(activeGroup), title));
+    context.hidden = mainSamples || !context.textContent;
+    const scope = document.getElementById("rollout-scope");
+    setDisplayLabel(scope, demo ? clip.description ?? (activeSummary || activeGroup.description || "") : "");
+    scope.hidden = !scope.textContent || normalizedLabel(window.BlogMath.text(scope)) === normalizedLabel(title);
+  }
+
   function selectClip(clip, play = false) {
     if (activeClip && activeClip.id === clip.id) {
       if (play) player.play().catch(() => {});
@@ -167,6 +179,7 @@
     player.poster = clip.poster;
     const index = activeGroup.clips.findIndex((item) => item.id === clip.id);
     const title = window.BlogMath.text(document.getElementById("rollout-title"));
+    updateClipContext(clip, title);
     const selectedTitle = clipTitle(clip, index);
     player.setAttribute("aria-label", [...new Set([title, selectedTitle, outcome(clip)].filter(Boolean))].join(", "));
     // VP9 is supported by the embedded browser even when H.264 is unavailable.
@@ -203,6 +216,7 @@
 
   function populate(group, summary) {
     activeGroup = group;
+    activeSummary = summary;
     const mainSamples = resultTables.has(group.chartTableId);
     const failureDemo = group.chartTableId === "failure-behaviors";
     const demo = failureDemo || group.chartTableId === "promising-behaviors" || group.chartTableId === "article-demos";
@@ -211,12 +225,6 @@
     setDisplayLabel(document.getElementById("rollout-title"), title);
     panel.querySelector(".rollout-eyebrow").textContent = failureDemo ? "Failure examples" : group.chartTableId === "article-demos" ? "Demo" : demo ? "Promising behaviors" : mainSamples ? "Task samples" : "Rollout examples";
     const first = group.clips[0];
-    const context = document.getElementById("rollout-context");
-    setDisplayLabel(context, contextWithoutTitle(groupContext(group), title));
-    context.hidden = mainSamples || !context.textContent;
-    const scope = document.getElementById("rollout-scope");
-    setDisplayLabel(scope, demo ? summary || group.description || "" : "");
-    scope.hidden = !scope.textContent || normalizedLabel(window.BlogMath.text(scope)) === normalizedLabel(title);
     const listTitle = panel.querySelector(".rollout-list-title");
     listTitle.hidden = singleDemo;
     clipsList.hidden = singleDemo;
