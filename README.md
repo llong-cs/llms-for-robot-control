@@ -1,6 +1,6 @@
 # Ditto Bench: Robot Manipulation Benchmark and Agentic Framework
 
-![Blog](https://img.shields.io/badge/Blog-LLMs%20for%20Robot%20Control-blue?style=flat-square)
+<a href="https://llong-cs.github.io/llms-for-robot-control/"><img src="https://img.shields.io/badge/Blog-LLMs%20for%20Robot%20Control-blue?style=flat-square" alt="Blog: LLMs for Robot Control"></a>
 
 This repository includes Ditto Bench and a configurable **agentic framework for LLM robot control.**
 
