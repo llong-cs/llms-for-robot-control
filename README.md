@@ -1,12 +1,16 @@
-# LLM-agent for Robot Control
+# Ditto Bench: Robot Manipulation Benchmark and Agentic Framework
 
 ![Blog](https://img.shields.io/badge/Blog-LLMs%20for%20Robot%20Control-blue?style=flat-square)
 
-This repository provides a simple **agentic framework for LLM robot control** and **Ditto Bench**, a benchmark for studying motion and control through physically demanding manipulation tasks. It supports LLM policies and native **pi05** and **MolmoAct2** baselines on Ditto Bench, LIBERO and the official MolmoAct2-ManiSkill box task.
+This repository includes Ditto Bench and a configurable **agentic framework for LLM robot control.**
 
-The framework draws on [Inspect Robots](https://github.com/robocurve/inspect-robots), simplified for research and trajectory analysis. Its LLM integration primarily targets OpenAI-family models such as Astra; compatibility with other models is not guaranteed.
+**Ditto Bench** is a robot manipulation benchmark for evaluating the motion and control capabilities of large language models (LLMs) and vision-language-action (VLA) policies. It contains six physically demanding tasks with four difficulty levels in ManiSkill 3, covering contact, geometric constraints, precision and tool use.
+
+The agentic framework draws on [Inspect Robots](https://github.com/robocurve/inspect-robots), simplified for research and trajectory analysis. Its LLM integration primarily targets OpenAI-family models such as Astra; compatibility with other models is not guaranteed. The framework supports Ditto Bench, LIBERO and the official MolmoAct2-ManiSkill box task.
 
 ## What is included
+
+
 
 ### Ditto Bench
 
@@ -77,6 +81,8 @@ Start with [examples/offline.py](examples/offline.py) to see the policy/controll
 
 ## Quick start
 
+
+
 ### Environment
 
 Requires Linux, Python 3.11 and [uv](https://docs.astral.sh/uv/).
@@ -133,6 +139,8 @@ Runs write per-trial outcomes and an aggregate summary under `evaluation/`. With
 ```bash
 python tools/summarize.py outputs/run-a outputs/run-b --output-dir outputs/summary
 ```
+
+
 
 ## License
 
