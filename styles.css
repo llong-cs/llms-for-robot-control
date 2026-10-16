@@ -23,14 +23,15 @@ header { margin-bottom: 40px; }
 .project-name, .subtitle { color: #666; }
 .project-name { margin: 0 0 12px; font-size: 14px; }
 .subtitle { margin: 14px 0 0; }
-.article-byline { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 20px; margin: 18px 0 10px; font-size: 14px; }
+.article-byline { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; margin: 18px 0 10px; font-size: 14px; }
 .article-authors { display: flex; align-items: baseline; flex-wrap: wrap; gap: 10px; margin: 0; }
 .article-authors span { color: #aaa; }
-.article-byline time { color: #777; font-size: 13px; white-space: nowrap; }
-.article-date-links { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
-.github-link { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 4px; line-height: 1; }
+.article-date-links { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 20px; max-width: 100%; font-size: 13px; }
+.article-dates { display: flex; flex-wrap: wrap; gap: 2px 6px; color: #777; }
+.article-dates > span { white-space: nowrap; }
+.github-link { display: inline-flex; align-items: center; gap: 7px; min-height: 28px; border-radius: 4px; line-height: 1.5; }
 .github-link:hover { background: #f3f3ef; }
-.github-link img { display: block; width: 20px; height: 20px; }
+.github-link img { display: block; flex: none; width: 20px; height: 20px; }
 
 h1, h2, h3, h4 { line-height: 1.4; font-weight: 600; }
 h1 { margin: 0; font-size: 32px; }
