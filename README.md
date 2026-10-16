@@ -145,3 +145,15 @@ python tools/summarize.py outputs/run-a outputs/run-b --output-dir outputs/summa
 ## License
 
 Original code is licensed under [MIT](LICENSE). See [third-party notices](THIRD_PARTY_NOTICES.md) for bundled code and downloaded resources.
+
+## BibTeX
+
+```bibtex
+@misc{long2026astra,
+  title        = {{Astra in Robot Control}},
+  author       = {Long, Lin and Cho, Jaemin},
+  year         = {2026},
+  howpublished = {Blog post},
+  url          = {https://llong-cs.github.io/llms-for-robot-control/}
+}
+```
