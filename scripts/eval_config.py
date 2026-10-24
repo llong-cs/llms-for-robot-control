@@ -27,8 +27,7 @@ _GROUP_FIELDS = {
         "metadata": str, "seed": int,
     },
     "llm": {
-        "model": str, "backend": str, "base_url": str, "api_key_env": str, "env_file": str,
-        "backend_options": dict, "max_output_tokens": int,
+        "model": str, "max_output_tokens": int,
         "supported_efforts": str, "reasoning_mode": str, "max_response_chars": int,
         "max_attempts": int, "augmentations": dict,
     },
@@ -46,8 +45,7 @@ _NULLABLE = frozenset({
     "run.preview_dx", "run.repeat_id", "environment.suite", "environment.seed",
     "environment.category", "environment.python", "execution.max_steps",
     "policy.family", "policy.model_profile", "policy.host", "policy.port",
-    "policy.url", "policy.metadata", "policy.seed", "llm.base_url",
-    "llm.api_key_env", "llm.env_file", "llm.max_output_tokens",
+    "policy.url", "policy.metadata", "policy.seed", "llm.max_output_tokens",
     "llm.supported_efforts", "llm.reasoning_mode",
     "observation.demo_path", "output.directory",
 })
@@ -77,8 +75,19 @@ _PATH_FIELDS = (
     ("output", "directory"), ("observation", "demo_path"),
     ("environment", "python"), ("environment", "molmoact2_source"),
     ("environment", "maniskill_assets"), ("policy", "metadata"),
-    ("llm", "env_file"),
 )
+# The optional, launcher-only "paths" group locates resources outside the checkout. Each key
+# names one resource (None: a single path); a map is keyed by simulator or model family, or by
+# model profile ID (an empty tuple; the launcher checks IDs against the registry), so one site
+# file serves every config.
+_PATH_KEYS = {
+    "framework_python": None, "simulator_python": ("maniskill", "libero"),
+    "server_python": ("molmoact2", "openpi"), "checkpoints": (), "sources": ("molmoact2", "openpi"),
+    "droid_assets": None, "maniskill_asset_dir": None, "ditto_asset_dir": None,
+    "libero_config": None, "openpi_data_home": None, "cache_root": None, "outputs_root": None,
+}
+# Resolving a venv's bin/python symlink selects its base interpreter and loses the venv.
+_INTERPRETER_KEYS = frozenset({"framework_python", "simulator_python", "server_python"})
 
 
 def _unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
@@ -146,17 +155,79 @@ def _profile_is_path(value: str) -> bool:
     return value.endswith(".json") or value.startswith(("/", "./", "../", "~"))
 
 
+def _path_value(value: Any, field: str, base: Path, *, interpreter: bool, where: str) -> str:
+    """Validate one paths entry and make it absolute against the file that contains it."""
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(f"{field} must be a nonempty path string{where}")
+    return _resolve_path(value, base, follow_symlinks=not interpreter)
+
+
+def _load_paths(value: Any, base: Path) -> tuple[dict[str, Any], str | None]:
+    """Read the paths group, inline or from the JSON file it names.
+
+    Args:
+        value: The group: an object, or a path to a JSON file holding one. A relative file
+            path resolves against ``base``.
+        base: Directory of the experiment file.
+
+    Returns:
+        The entries with absolute values, and the site file (``None`` when inline). Relative
+        values resolve against the file that contains them and ``~`` expands; interpreter
+        symlinks are kept, other symlinks are resolved.
+
+    Raises:
+        ValueError: The value, the file, a key or an entry is invalid, or the file is unreadable.
+    """
+    site = None
+    if isinstance(value, str):
+        site = Path(_resolve_path(value, base))
+        try:
+            value = json.loads(site.read_text(encoding="utf-8"), object_pairs_hook=_unique_object,
+                               parse_constant=_reject_constant)
+        except OSError as exc:
+            raise ValueError(f"Cannot read the paths file {site}: {exc.strerror or exc}") from None
+        except ValueError as exc:
+            raise ValueError(f"Invalid paths file {site}: {exc}") from None
+        if not isinstance(value, dict):
+            raise ValueError(f"The paths file {site} must hold a JSON object")
+        base = site.parent
+    elif not isinstance(value, dict):
+        raise ValueError("paths must be a JSON object or a path to a JSON file holding one")
+    where = f" (in {site})" if site else ""
+    entries: dict[str, Any] = {}
+    for key, item in value.items():
+        field = f"paths.{key}"
+        if key not in _PATH_KEYS:
+            raise ValueError(f"Unknown configuration field: {field}{where}")
+        names = _PATH_KEYS[key]
+        interpreter = key in _INTERPRETER_KEYS
+        if names is None:
+            entries[key] = _path_value(item, field, base, interpreter=interpreter, where=where)
+            continue
+        if not isinstance(item, dict):
+            raise ValueError(f"{field} must be a JSON object{where}")
+        entries[key] = {}
+        for name, path in item.items():
+            if names and name not in names:
+                raise ValueError(f"Unknown configuration field: {field}.{name}{where}")
+            entries[key][name] = _path_value(path, f"{field}.{name}", base,
+                                             interpreter=interpreter, where=where)
+    return entries, None if site is None else str(site)
+
+
 def load_experiment(path: Path) -> dict[str, Any]:
     """Read an experiment file and separate launcher settings from framework groups.
 
     Args:
         path: JSON file to read. Relative file-valued settings resolve against its
-            containing directory; credential files are never opened by this function.
+            containing directory.
 
     Returns:
         A dictionary containing ``launcher``, ``framework``, and the absolute ``path``.
-        Only explicitly supplied settings are returned. Framework semantic validation
-        remains the responsibility of the framework configuration parser.
+        Only explicitly supplied settings are returned: a ``paths`` group adds ``paths``
+        (absolute entries) and ``paths_file`` (its site file, or ``None`` when inline).
+        Framework semantic validation remains the responsibility of the framework
+        configuration parser.
 
     Raises:
         ValueError: The JSON structure, field names, or value types are invalid, or a
@@ -168,7 +239,7 @@ def load_experiment(path: Path) -> dict[str, Any]:
                           object_pairs_hook=_unique_object, parse_constant=_reject_constant)
     if not isinstance(document, dict):
         raise ValueError("Experiment configuration must be a JSON object")
-    unknown = set(document) - (_GROUP_FIELDS.keys() | {"evaluation"})
+    unknown = set(document) - (_GROUP_FIELDS.keys() | {"evaluation", "paths"})
     if unknown:
         raise ValueError(f"Unknown experiment configuration groups: {sorted(unknown)}")
     launcher = copy.deepcopy(document.get("evaluation", {}))
@@ -197,7 +268,8 @@ def load_experiment(path: Path) -> dict[str, Any]:
         _check_type(argument, str, f"evaluation.server_args[{index}]")
         if "\x00" in argument:
             raise ValueError(f"evaluation.server_args[{index}] must not contain NUL")
-    framework = copy.deepcopy({key: value for key, value in document.items() if key != "evaluation"})
+    framework = copy.deepcopy({key: value for key, value in document.items()
+                               if key not in ("evaluation", "paths")})
     for group, fields in framework.items():
         _check_type(fields, dict, group)
         for name, value in fields.items():
@@ -220,12 +292,8 @@ def load_experiment(path: Path) -> dict[str, Any]:
         if value is not None:
             # Resolving a venv's bin/python symlink selects its base interpreter
             # and loses the isolated simulator's site-packages.
-            # Credential symlinks must reach the send-time permission checks intact.
             framework[group][name] = _resolve_path(
-                value, resolved.parent,
-                follow_symlinks=(group, name) not in {
-                    ("environment", "python"), ("llm", "env_file"),
-                },
+                value, resolved.parent, follow_symlinks=(group, name) != ("environment", "python"),
             )
     profile = framework.get("policy", {}).get("model_profile")
     if profile is not None and (_profile_is_path(profile) or "/" in profile):
@@ -233,7 +301,11 @@ def load_experiment(path: Path) -> dict[str, Any]:
     model = launcher.get("model")
     if model is not None and _profile_is_path(model):
         launcher["model"] = _resolve_path(model, resolved.parent)
-    return {"launcher": launcher, "framework": framework, "path": str(resolved)}
+    loaded = {"launcher": launcher, "framework": framework, "path": str(resolved)}
+    if "paths" in document:
+        paths, site = _load_paths(document["paths"], resolved.parent)
+        loaded.update(paths=paths, paths_file=site)
+    return loaded
 
 
 def infer_bench(framework: dict[str, Any]) -> str | None:

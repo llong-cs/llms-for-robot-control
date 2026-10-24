@@ -2,7 +2,7 @@
 
 Inspired by [Inspect Robots](https://github.com/robocurve/inspect-robots), this framework simplifies its rollout interfaces for research into LLM robot control. It connects LLM motion tools and native pi05/MolmoAct2 policies to Ditto Bench, LIBERO and the official MolmoAct2-ManiSkill box task.
 
-The LLM path is primarily adapted for OpenAI-family models such as Astra through OpenAI Responses; compatibility with other models is not guaranteed.
+The LLM path is primarily adapted for OpenAI-family models such as Astra through OpenAI Responses. The model string also selects Anthropic Messages or a local OpenAI-compatible Chat Completions server ([model routing](../docs/USAGE.md#model-routing-and-api-keys)); compatibility with other models is not guaranteed.
 
 ## Policy and execution
 
@@ -30,7 +30,7 @@ Trajectory recording collects camera frames, robot/scene states, actions, model 
 | Module | Responsibility |
 | --- | --- |
 | [harness](src/agentic_framework/harness) | Policy lifecycle, context construction, motion execution, demonstrations and trajectory recording |
-| [models](src/agentic_framework/models) | OpenAI Responses requests, native model clients and action adapters |
+| [models](src/agentic_framework/models) | LLM provider routing and wire protocols (Responses, Messages, Chat Completions), native model clients and action adapters |
 | [environments](src/agentic_framework/environments) | Isolated ManiSkill/LIBERO workers, embodiment contracts and observation projection |
 | [configuration](src/agentic_framework/configuration) | Configuration parsing, model/embodiment profiles and motion settings |
 | [observability](src/agentic_framework/observability) | Model-request records, progress reporting and videos |

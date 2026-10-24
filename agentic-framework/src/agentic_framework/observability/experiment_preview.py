@@ -88,6 +88,14 @@ def _resources(config):
     return resources
 
 
+def _route_line(route):
+    """Describe the LLM route by names only; a preview reads no key or endpoint variable."""
+    key = (f"its key comes from `{route['api_key_env']}`" if route.get("api_key_env")
+           else "it sends no key")
+    return (f"LLM route: `{route['selector']}` uses {route['protocol']} at "
+            f"`{route['endpoint']}`; {key}, which a preview never reads.")
+
+
 def write_experiment_preview(output, config, scenes, results=(), *, trial_budgets=None):
     """Write/update a browsable index, including partial exports after a failure."""
     output = Path(output)
@@ -132,7 +140,7 @@ def write_experiment_preview(output, config, scenes, results=(), *, trial_budget
         "configuration": config["configuration"],
         "execution": {"schedule": config["schedule"], **config["effective_control"]},
         "model": config.get("model_profile_definition")
-        or {"family": "llm", "backend": config["backend"], "model": config["model"]},
+        or {"family": "llm", "model": config["model"], "llm_route": config["llm_route"]},
         "provenance": {
             "source_file_count": len(config["source_sha256"]),
             "dependency_source": config["dependency_source"],
@@ -167,6 +175,7 @@ def write_experiment_preview(output, config, scenes, results=(), *, trial_budget
         "[Task manifest](manifest.json) · [Structured preview](preview.json)",
         "",
         f"Policy: `{config['policy_family']}`; input mode: `{report['preview_kind']}`.",
+        *([] if native or not config.get("llm_route") else [_route_line(config["llm_route"])]),
         f"Control: H={config['h']}, K={config['k']}, {hz:g} Hz; interface `{config['effective_control']['interface']}`.",
         f"Trials exported: {report['exported_trials']}/{len(items)}; failed: {report['failed_trials']}; "
         f"discarded: {report['discarded_trials']}.",

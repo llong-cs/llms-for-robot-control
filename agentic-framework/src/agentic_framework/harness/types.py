@@ -81,7 +81,7 @@ DISCARDED_STATUS = "discarded"
 
 @dataclass(frozen=True)
 class MemoryConfig:
-    """Nonpositive disables memory; positive selects an API window or a Codex dialogue."""
+    """Nonpositive disables memory; positive selects an API decision window."""
 
     history_length: int = 2
 
@@ -135,7 +135,7 @@ class AugmentationConfig:
                 if name == "memory" and set(fields[name]) - {"history_length"}:
                     raise ValueError(
                         "memory now accepts only history_length; remove selective history flags. "
-                        "Use history_length<=0 to disable history; positive values select an API window or enable a persistent Codex dialogue."
+                        "Use history_length<=0 to disable history; positive values select an API decision window."
                     )
                 fields[name] = config(**fields[name])
         return cls(**fields)
@@ -310,14 +310,16 @@ class ExecutionFeedback:
 
 
 @dataclass(frozen=True)
-class ModelRequest:
+class AgentContext:
+    """Everything the policy supplies for one model call."""
+
     request_id: str
     instructions: str
     text: str
     images: Mapping[str, np.ndarray]
     tools: tuple[Mapping[str, Any], ...] = ()
     reasoning_effort: str = "low"
-    # Current observation only; backends own API windows or the Codex conversation.
+    # Current observation only; agents own the API decision window.
     messages: tuple[Mapping[str, Any], ...] = ()
     history_length: int = 2
     tool_results: tuple[Mapping[str, Any], ...] = ()
@@ -325,7 +327,9 @@ class ModelRequest:
 
 
 @dataclass(frozen=True)
-class ModelReply:
+class AgentOutput:
+    """One model call's native tool calls, usage and audit metadata."""
+
     payload: Mapping[str, Any]
     usage: Mapping[str, int] = field(default_factory=dict)
     metadata: Mapping[str, Any] = field(default_factory=dict)
@@ -336,8 +340,46 @@ class ModelReply:
     response_text: str = ""
 
 
-class ModelBackend(Protocol):
-    def generate(self, request: ModelRequest) -> ModelReply: ...
+@dataclass(frozen=True)
+class ToolCall:
+    """One parsed native tool call; raw_arguments keeps the model's exact JSON text."""
+
+    call_id: str
+    name: str
+    arguments: Mapping[str, Any]
+    raw_arguments: str
+
+    def record(self) -> dict:
+        """Return the canonical function_call record this call was parsed from."""
+        return {
+            "type": "function_call",
+            "call_id": self.call_id,
+            "name": self.name,
+            "arguments": self.raw_arguments,
+        }
+
+
+class AgentModel(Protocol):
+    """A language model behind the policy; generate() sends one request and never retries.
+
+    The policy also uses these optional members when present (looked up with getattr):
+
+    - ``model``: the model ID recorded in the policy config;
+    - ``route``: the resolved route record (names only), whose canonical ``selector``
+      trajectory metadata records as the model;
+    - ``reset()``: start a new rollout without earlier history;
+    - ``record_tool_results(results)``: archive terminal tool results without a request;
+    - ``end_rollout()``: return usage reported after the last reply, or None;
+    - ``is_offline_preview``: replies are scripted previews, not model calls.
+
+    A request preview needs ``request_recorder`` plus ``prepare_http_request(context)``
+    or ``prepare_request(context)`` to record the exact request without sending it.
+    The context preview (OfflinePreviewAgent) also requires ``model``, ``reset()``,
+    ``record_tool_results()`` and ``accept_reply(context, output)``, which commits a
+    scripted reply to history, on the model it wraps.
+    """
+
+    def generate(self, context: AgentContext) -> AgentOutput: ...
     def close(self) -> None: ...
 
 

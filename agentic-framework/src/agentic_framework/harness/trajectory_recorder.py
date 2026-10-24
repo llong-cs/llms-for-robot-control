@@ -17,6 +17,7 @@ import numpy as np
 from PIL import Image
 
 from agentic_framework.common.io import plain, write_json
+from agentic_framework.common.redaction import redacted
 from agentic_framework.environments.recording_state import (
     recording_state_catalog,
     validate_recording_state,
@@ -35,7 +36,6 @@ from agentic_framework.harness.trajectory_telemetry import (
     utc_now,
 )
 from agentic_framework.harness.types import DISCARDED_STATUS, MAX_ATTEMPTS_TERMINATION
-from agentic_framework.models.llm.backend import _redacted
 
 
 class TrajectoryRecorder:
@@ -65,7 +65,7 @@ class TrajectoryRecorder:
             "event_count": 0,
             "decision_timings": [],
             "usage_adjustments": [],
-            "metadata": _redacted(plain(metadata)),
+            "metadata": redacted(plain(metadata)),
             "turns": [],
             "outcome": {"oracle_success": False, "complete": False},
         }
@@ -109,7 +109,7 @@ class TrajectoryRecorder:
                  "at": utc_now(), "wall_time_s": time.monotonic() - self._started,
                  **fields}
         with self.events_path.open("a") as stream:
-            stream.write(json.dumps(_redacted(plain(event)), ensure_ascii=False, allow_nan=False) + "\n")
+            stream.write(json.dumps(redacted(plain(event)), ensure_ascii=False, allow_nan=False) + "\n")
         self.document["event_count"] += 1
 
     def inference_started(self, *, request_id, logical_decision_id, observation_step,
@@ -159,7 +159,7 @@ class TrajectoryRecorder:
         self.flush()
 
     def update_metadata(self, **metadata):
-        self.document["metadata"].update(_redacted(plain(metadata)))
+        self.document["metadata"].update(redacted(plain(metadata)))
         self.flush()
 
     def _image(self, frame):
@@ -361,7 +361,7 @@ class TrajectoryRecorder:
         self._latest_task_evaluation = evaluation
         if step == 0:
             self._initial_task_evaluation = copy.deepcopy(evaluation)
-        payload = json.dumps(_redacted(row), ensure_ascii=False, allow_nan=False)
+        payload = json.dumps(redacted(row), ensure_ascii=False, allow_nan=False)
         with self.steps_path.open("a") as stream:
             stream.write(payload + "\n")
         self.document["step_count"] += 1
@@ -398,13 +398,13 @@ class TrajectoryRecorder:
             self.flush()
 
     def record_native_inference(self, event, *, request, observation):
-        value = _redacted(plain(event))
+        value = redacted(plain(event))
         request_id = value["request_id"]
         turn = {
             "kind": "native", "request_id": request_id, "logical_decision_id": request_id,
             "observation_step": value["observation_step"], "attempt": 1,
             "request_wall_s": value.get("request_wall_s"), "elapsed_s": value.get("elapsed_s"),
-            "request": _redacted(self._request_value(request)),
+            "request": redacted(self._request_value(request)),
             "observation": {"instruction": observation.instruction, **self._measured_state(observation)},
             "model_output": {key: item for key, item in value.items() if key != "telemetry"},
             "telemetry": value.get("telemetry", {}),
@@ -461,7 +461,7 @@ class TrajectoryRecorder:
             "retry_wait_s": entry.get("retry_wait_s", 0.0),
             "request_wall_s": entry.get("request_wall_s"),
             "elapsed_s": entry.get("elapsed_s"),
-            "telemetry": _redacted(plain(entry.get("telemetry", {}))),
+            "telemetry": redacted(plain(entry.get("telemetry", {}))),
             "observation": self.snapshot(context, observation, step_budget=entry.get("step_budget")),
             "request": {
                 "text": entry["context_text"],
@@ -469,7 +469,7 @@ class TrajectoryRecorder:
                 "tool_results": entry["tool_results"],
                 "reasoning_effort": entry["reasoning_requested"],
             },
-            "model_output": _redacted(plain(output)),
+            "model_output": redacted(plain(output)),
             "tool_results": [],
             "executed_actions": [],
         }
@@ -498,7 +498,7 @@ class TrajectoryRecorder:
                 continue
             existing = turn["tool_results"]
             existing[:] = [r for r in existing if r["call_id"] != result["call_id"]]
-            existing.append(_redacted(plain(result)))
+            existing.append(redacted(plain(result)))
 
     def action(self, t, action):
         # Controller meta carries the plan ID; keep applied low-level actions.

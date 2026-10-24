@@ -46,55 +46,50 @@ def create_policy(args, schedule, augmentation, directory, action_spec=None):
         DEFAULT_DEMO_IMAGE_MAX_SIDE,
     )
     from agentic_framework.harness.policy import LLMMotionPolicy
-    from agentic_framework.models.llm.backend import CodexBackend, ResponsesBackend
+    from agentic_framework.models.llm.providers import resolve
 
-    if getattr(args, "reasoning_mode", None) is not None and args.backend == "codex":
-        raise ValueError("reasoning_mode is not supported by Codex")
-    if args.backend == "responses":
-        from agentic_framework.observability.api_audit import APIRequestRecorder
-
-        common = dict(
-            model=args.model,
-            base_url=args.base_url,
-            timeout_s=args.inference_timeout,
-            max_response_chars=args.max_response_chars,
-            max_output_tokens=args.max_output_tokens,
-            reasoning_mode=getattr(args, "reasoning_mode", None),
-            supported_efforts=tuple(
-                x.strip() for x in args.supported_efforts.split(",") if x.strip()
-            )
-            if args.supported_efforts is not None
-            else None,
-            log_dir=directory / "model",
-            request_recorder=APIRequestRecorder(
-                directory / "model/api-requests",
-                mode="preview" if args.mode == "preview" else "live",
-                auth_env=args.api_key_env,
-            ),
-        )
-        backend = ResponsesBackend(
-            **common, api_key_env=args.api_key_env, env_file=args.env_file
-        )
-    elif args.backend == "codex":
-        backend = CodexBackend(
-            model=args.model,
-            log_dir=directory / "model",
-            timeout_s=args.inference_timeout,
-            max_response_chars=args.max_response_chars,
-        )
+    # The model string selects the provider: endpoint, key variable and wire model ID.
+    route = resolve(args.model)
+    # One shared wire implementation per protocol; provider modules only declare data.
+    if route.protocol == "messages":
+        from agentic_framework.models.llm.messages import MessagesAgent as agent_class
+    elif route.protocol == "chat_completions":
+        from agentic_framework.models.llm.chat import ChatAgent as agent_class
     else:
-        from agentic_framework.models.llm.extensions import load_backend_extension
+        from agentic_framework.models.llm.responses import ResponsesAgent as agent_class
+    from agentic_framework.observability.api_audit import APIRequestRecorder
 
-        backend = load_backend_extension(args.backend).create(args, directory)
-    if args.mode == "preview":
-        from agentic_framework.harness.preview import CodexRequestRecorder, OfflinePreviewBackend
+    provider, capabilities = route.spec, route.capabilities
+    efforts = (
+        tuple(x.strip() for x in args.supported_efforts.split(",") if x.strip())
+        if args.supported_efforts is not None
+        else None
+    )
+    agent = agent_class(
+        route,
+        timeout_s=args.inference_timeout,
+        max_response_chars=args.max_response_chars,
+        max_output_tokens=capabilities.max_output_tokens
+        if args.max_output_tokens is None
+        else args.max_output_tokens,
+        reasoning_mode=getattr(args, "reasoning_mode", None),
+        supported_efforts=efforts,
+        log_dir=directory / "model",
+        request_recorder=APIRequestRecorder(
+            directory / "model/api-requests",
+            mode="preview" if args.mode == "preview" else "live",
+            protocol=route.protocol,
+            auth_env=route.api_key_env,
+            auth_scheme=provider.auth_scheme,
+            auth_required=provider.key_required,
+        ),
+    )
+    if args.mode == "preview" and args.preview_context:
+        from agentic_framework.harness.preview import OfflinePreviewAgent
 
-        if args.backend == "codex":
-            backend.request_recorder = CodexRequestRecorder(directory / "model/codex-requests")
-        if args.preview_context:
-            backend = OfflinePreviewBackend(backend, motion_delta=args.preview_dx or 0.0)
+        agent = OfflinePreviewAgent(agent, motion_delta=args.preview_dx or 0.0)
     return LLMMotionPolicy(
-        backend,
+        agent,
         schedule,
         action_spec=action_spec,
         augmentation=augmentation,

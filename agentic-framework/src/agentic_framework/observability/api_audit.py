@@ -1,7 +1,7 @@
 """Local, fail-closed HTTP request archives inspired by Inspect Robots wire capture.
 
-The already-built Responses or Messages request is the source of truth. This boundary does
-not construct prompts, manage context, inspect credentials, or send requests.
+The already-built Responses, Messages or Chat Completions request is the source of truth. This
+boundary does not construct prompts, manage context, inspect credentials, or send requests.
 """
 
 from __future__ import annotations
@@ -17,12 +17,12 @@ import re
 import stat
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any
+from typing import Any, Mapping
 
 import httpx
 from PIL import Image
 
-from agentic_framework.harness.types import ModelRequest
+from agentic_framework.harness.types import AgentContext
 
 _SEQUENCE = re.compile(r"^(\d{6,})-")
 _ENV_NAME = re.compile(r"[A-Za-z_][A-Za-z0-9_]*\Z")
@@ -92,7 +92,8 @@ def _exclusive_root(directory: Path):
 def _safe_headers(request: httpx.Request) -> dict[str, str]:
     # Do not iterate arbitrary headers, or read Authorization/Cookie values.
     safe = {}
-    for name in ("content-type", "accept", "content-length", "anthropic-version"):
+    for name in ("content-type", "accept", "content-length", "anthropic-version",
+                 "anthropic-beta"):
         value = request.headers.get(name)
         if value is None:
             continue
@@ -100,6 +101,8 @@ def _safe_headers(request: httpx.Request) -> dict[str, str]:
             allowed = re.fullmatch(r"[0-9]+", value) is not None
         elif name == "anthropic-version":
             allowed = re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", value) is not None
+        elif name == "anthropic-beta":
+            allowed = re.fullmatch(r"[a-z0-9-]+(,\s*[a-z0-9-]+)*", value) is not None
         elif name == "content-type":
             allowed = (
                 re.fullmatch(r"application/json(?:\s*;\s*charset=utf-8)?", value, re.IGNORECASE)
@@ -112,7 +115,7 @@ def _safe_headers(request: httpx.Request) -> dict[str, str]:
     return safe
 
 
-def _body(raw: bytes) -> dict[str, Any]:
+def _body(raw: bytes, protocol: str | None = None) -> dict[str, Any]:
     def reject_constant(_):
         raise ValueError("The request archive requires finite JSON values")
 
@@ -125,6 +128,10 @@ def _body(raw: bytes) -> dict[str, Any]:
         return result
 
     body = json.loads(raw, parse_constant=reject_constant, object_pairs_hook=unique_object)
+    if protocol == "chat_completions":
+        # A Chat body also has messages[]; it is never validated as a Messages body.
+        _validate_chat(body)
+        return body
     if isinstance(body, dict) and "messages" in body:
         if "input" in body:
             raise ValueError("Request archive rejects mixed Responses and Messages payloads")
@@ -226,6 +233,29 @@ def _validate_messages(body):
         _validate_message_content(message.get("content"))
 
 
+def _validate_chat(body):
+    """Check the parts the archive reads: user text and inline images."""
+    if not isinstance(body, dict) or not isinstance(body.get("messages"), list):
+        raise ValueError("Request recording requires Chat Completions messages[]")
+    for message in body["messages"]:
+        if not isinstance(message, dict):
+            raise ValueError("Chat messages must be objects")
+        content = message.get("content")
+        if message.get("role") != "user" or not isinstance(content, list):
+            continue
+        for part in content:
+            if not isinstance(part, dict) or part.get("type") not in {"text", "image_url"}:
+                raise ValueError("Unsupported Chat user content part for request archive")
+            if part["type"] == "text" and not isinstance(part.get("text"), str):
+                raise ValueError("Chat text parts require string text")
+            image = part.get("image_url")
+            if part["type"] == "image_url" and not (
+                isinstance(image, dict) and isinstance(image.get("url"), str)
+                and _IMAGE_URL.fullmatch(image["url"])
+            ):
+                raise ValueError("Only inline base64 images can be archived; no URLs are fetched")
+
+
 def _message_parts(content, prefix):
     if not isinstance(content, list):
         return
@@ -285,8 +315,43 @@ def _messages_images(body, directory):
     return images
 
 
-def _images(body: dict[str, Any], directory: Path) -> list[dict[str, Any]]:
-    if "messages" in body:
+def _chat_images(body, directory):
+    images = []
+    for message_index, message in enumerate(body["messages"]):
+        content = message.get("content")
+        if message["role"] != "user" or not isinstance(content, list):
+            continue
+        label = None
+        for part_index, part in enumerate(content):
+            if part["type"] == "text":
+                match = re.fullmatch(r"Camera:\s*(.*?)\s*", part["text"], re.DOTALL)
+                if match:
+                    label = match.group(1)
+                continue
+            match = _IMAGE_URL.fullmatch(part["image_url"]["url"])
+            images.append(_write_image(match.group(2), match.group(1), directory, len(images) + 1, {
+                "message_index": message_index,
+                "part_index": part_index,
+                "camera_label": label,
+            }))
+            label = None
+    return images
+
+
+def _protocol(body: dict[str, Any], protocol: str | None) -> str:
+    """The wire a body belongs to: the declared protocol, else recognized by its keys."""
+    if protocol is not None:
+        return protocol
+    return "messages" if "messages" in body else "responses"
+
+
+def _images(
+    body: dict[str, Any], directory: Path, protocol: str | None = None
+) -> list[dict[str, Any]]:
+    wire = _protocol(body, protocol)
+    if wire == "chat_completions":
+        return _chat_images(body, directory)
+    if wire == "messages":
         return _messages_images(body, directory)
     images = []
     for input_index, message in enumerate(body["input"]):
@@ -334,7 +399,7 @@ def _readable_messages(body, manifest, directory):
         "## Request identity\n", _fence(manifest["request_id"]),
         "## HTTP target\n", _fence(f"{manifest['method']} {manifest['url']}"),
         "Authentication placeholder (header value is never inspected or stored):\n",
-        _fence(f"Authorization: Bearer ${{{manifest['auth_env']}}}"),
+        _fence(_auth_placeholder(manifest)),
         "Recorded safe headers:\n", _fence(_json(manifest["safe_headers"]), "json"),
         "## Effective payload settings\n", _fence(_json(settings), "json"),
         "Fields absent above were omitted from the actual HTTP body.\n",
@@ -365,8 +430,67 @@ def _readable_messages(body, manifest, directory):
     return "\n".join(lines)
 
 
+def _readable_chat(body, manifest, directory):
+    view = copy.deepcopy(body)
+    image_lookup = {(x["message_index"], x["part_index"]): x for x in manifest["images"]}
+    settings = {key: value for key, value in body.items() if key not in {"messages", "tools"}}
+    lines = [
+        f"# HTTP request {manifest['sequence']:06d}\n",
+        f"Mode: **{manifest['mode']}**. Recorded before any send. This recorder performs no network I/O; "
+        "a live archive does not by itself prove that a request was sent.\n",
+        "This document is a **readable view, not the exact HTTP body**. Images below are decoded "
+        "PNG views. The complete original body, including image data URLs, is preserved byte for "
+        "byte in " + _link(directory / "request.body.json", "request.body.json") + ".\n",
+        "## Request identity\n", _fence(manifest["request_id"]),
+        "## HTTP target\n", _fence(f"{manifest['method']} {manifest['url']}"),
+        "Authentication placeholder (header value is never inspected or stored):\n",
+        _fence(_auth_placeholder(manifest)),
+        "Recorded safe headers:\n", _fence(_json(manifest["safe_headers"]), "json"),
+        "## Effective payload settings\n", _fence(_json(settings), "json"),
+        "Fields absent above were omitted from the actual HTTP body.\n",
+        "## Complete messages in actual payload order\n",
+    ]
+    for index, message in enumerate(body["messages"]):
+        lines += [
+            f"### Message {index} ({message['role']})\n",
+            _fence(_json({key: value for key, value in message.items() if key != "content"}),
+                   "json"),
+        ]
+        content = message.get("content")
+        if not isinstance(content, list):
+            lines += [_fence(content if isinstance(content, str) else _json(content))]
+            continue
+        for part_index, part in enumerate(content):
+            if part["type"] == "text":
+                lines += [f"Text part {part_index}:\n", _fence(part["text"])]
+                continue
+            image = image_lookup[index, part_index]
+            lines += [f"Image {image['order']} (part {part_index}):\n"]
+            if image["camera_label"] is not None:
+                lines += ["Camera label:\n", _fence(image["camera_label"])]
+            lines += ["!" + _link(Path(image["path"]), f"Image {image['order']}") + "\n"]
+            view["messages"][index]["content"][part_index]["image_url"]["url"] = (
+                "PNG VIEW ONLY; original image data is in request.body.json: " + image["path"]
+            )
+    lines += [
+        "## Complete native function tools\n", _fence(_json(body.get("tools", [])), "json"),
+        "## Full parsed payload view\n",
+        "Only image data URLs are replaced below by references to PNG views. For exact bytes, use "
+        + _link(directory / "request.body.json", "request.body.json") + "; "
+        + _link(directory / "request.json", "request.json")
+        + " contains the full pretty-printed body with the original image data URLs.\n",
+        _fence(_json(view), "json"),
+        "## Integrity\n", _fence("HTTP body SHA-256: " + manifest["body_sha256"]),
+        _link(directory / "manifest.json", "Full image and request manifest") + "\n",
+    ]
+    return "\n".join(lines)
+
+
 def _readable(body: dict[str, Any], manifest: dict[str, Any], directory: Path) -> str:
-    if "messages" in body:
+    wire = _protocol(body, manifest.get("protocol"))
+    if wire == "chat_completions":
+        return _readable_chat(body, manifest, directory)
+    if wire == "messages":
         return _readable_messages(body, manifest, directory)
     image_lookup = {(x["input_index"], x["part_index"]): x for x in manifest["images"]}
     settings = {
@@ -395,7 +519,7 @@ def _readable(body: dict[str, Any], manifest: dict[str, Any], directory: Path) -
         "## HTTP target\n",
         _fence(f"{manifest['method']} {manifest['url']}"),
         "Authentication placeholder (header value is never inspected or stored):\n",
-        _fence(f"Authorization: Bearer ${{{manifest['auth_env']}}}"),
+        _fence(_auth_placeholder(manifest)),
         "Recorded safe headers:\n",
         _fence(_json(manifest["safe_headers"]), "json"),
         "## Effective payload settings\n",
@@ -452,33 +576,58 @@ def _readable(body: dict[str, Any], manifest: dict[str, Any], directory: Path) -
     return "\n".join(lines)
 
 
+def _auth_placeholder(manifest: Mapping[str, Any]) -> str:
+    """Show the authentication header by variable name; its value is never read."""
+    scheme, variable = manifest.get("auth_scheme", "bearer"), manifest["auth_env"]
+    if scheme is None:
+        return "(no authentication header)"
+    header = (f"x-api-key: ${{{variable}}}" if scheme == "x-api-key"
+              else f"Authorization: Bearer ${{{variable}}}")
+    if manifest.get("auth_required", True):
+        return header
+    return f"{header}\n(sent only when {variable} is set; otherwise no authentication header)"
+
+
 class APIRequestRecorder:
     """Archive one built HTTP request locally before a paid POST may proceed.
 
     Each call reserves a new sequence directory, including after partial failure.
     Any error propagates to the caller. Neither preview nor live mode sends HTTP,
     reads an API key, changes request bytes, or adds conversation state.
+
+    The URL and the body are archived as sent (manifest version 2); the authentication
+    header only by its variable name. With ``protocol``, the body is validated, imaged and
+    rendered as that wire's payload rather than recognized by its keys (a Chat Completions
+    body has ``messages`` too). ``auth_required=False`` marks an optional key, whose header
+    is sent only when its variable is set.
     """
 
-    def __init__(self, directory, *, mode="live", auth_env="OPENAI_API_KEY"):
+    def __init__(self, directory, *, mode="live", auth_env="OPENAI_API_KEY", auth_scheme="bearer",
+                 protocol=None, auth_required=True):
         if mode not in {"live", "preview"}:
             raise ValueError("Request archive mode must be live or preview")
-        if not isinstance(auth_env, str) or not _ENV_NAME.fullmatch(auth_env):
+        if auth_env is not None and (not isinstance(auth_env, str)
+                                     or not _ENV_NAME.fullmatch(auth_env)):
             raise ValueError("auth_env must be an environment variable name, not a credential")
         self.directory = Path(directory).expanduser().resolve()
         self.mode = mode
+        self.protocol = protocol
         self.auth_env = auth_env
+        self.auth_scheme = auth_scheme
+        # An optional key: the header is sent only when its variable is set.
+        self.auth_required = auth_required
 
-    def __call__(self, model_request: ModelRequest, request: httpx.Request) -> dict[str, Any]:
+    def __call__(self, model_request: AgentContext, request: httpx.Request) -> dict[str, Any]:
         if not isinstance(model_request.request_id, str) or not model_request.request_id:
             raise ValueError("Request recording requires a nonempty string request_id")
         if request.url.username or request.url.password or request.url.query:
             raise ValueError("Request archive URLs must not contain user info or query parameters")
         if request.url.scheme not in {"http", "https"}:
             raise ValueError("Request recording requires an HTTP(S) target")
+        url = str(request.url)
         # Access only already-buffered bytes. Reading a stream here would mutate it.
         raw = request.content
-        body = _body(raw)
+        body = _body(raw, self.protocol)
         headers = _safe_headers(request)
         slug = _slug(model_request.request_id)
         with _exclusive_root(self.directory):
@@ -497,16 +646,19 @@ class APIRequestRecorder:
             directory.mkdir(mode=0o700)
             _write_new(directory / "request.body.json", raw)
             _write_new(directory / "request.json", (_json(body) + "\n").encode("utf-8"))
-            images = _images(body, directory)
+            images = _images(body, directory, self.protocol)
             manifest = {
-                "version": 1,
+                "version": 2,
                 "sequence": sequence,
                 "request_id": model_request.request_id,
                 "mode": self.mode,
+                "protocol": self.protocol,
                 "phase": "before_send",
                 "method": request.method,
-                "url": str(request.url),
+                "url": url,
                 "auth_env": self.auth_env,
+                "auth_scheme": self.auth_scheme,
+                "auth_required": self.auth_required,
                 "auth_value_recorded": False,
                 "safe_headers": headers,
                 "body_bytes": len(raw),
@@ -533,7 +685,7 @@ class APIRequestRecorder:
                 "request_id": model_request.request_id,
                 "phase": "before_send",
                 "method": request.method,
-                "url": str(request.url),
+                "url": url,
                 "image_count": len(images),
                 **metadata,
             }

@@ -9,16 +9,32 @@ __pycache__/
 dist/
 build/
 
-# Local transports and private credential files are never part of the release.
-/local/
-/local-extensions/
+# Private credential files are never part of the release.
 credentials.env
 credentials.env.*
-!/credentials.env.example
-/envs/
-/data/
-/outputs/
-/models/
-/cache/
-/third_party/
-/.config/
+
+# Project-local resources. No trailing slash, so a symlink to an external directory is ignored too.
+/envs
+/data
+/outputs
+/models
+/cache
+/third_party
+/.config
+
+# Private LLM provider modules and their tests stay local.
+/agentic-framework/src/agentic_framework/models/llm/providers/private_*.py
+/agentic-framework/tests/private
+
+# Local development material.
+/local
+/analysis
+/webpage
+/overleaf
+/configs/dev
+/scratch
+/.claude
+/CLAUDE.md
+/AGENTS.md
+/MERGE_PLAN.md
+/AGENT_INTERFACE_DESIGN.md

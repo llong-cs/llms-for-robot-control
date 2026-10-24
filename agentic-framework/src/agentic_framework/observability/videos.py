@@ -28,6 +28,7 @@ from inspect_robots._video import (
 )
 from inspect_robots.frames import _safe
 
+from agentic_framework.common.environment import without_credentials
 from agentic_framework.common.project import project_root
 from agentic_framework.harness.types import MAX_ATTEMPTS_TERMINATION
 
@@ -58,6 +59,7 @@ def _find_ffmpeg() -> str:
         try:
             result = subprocess.run(
                 [executable, "-hide_banner", "-encoders"],
+                env=without_credentials(os.environ),
                 capture_output=True,
                 text=True,
                 timeout=10,
@@ -90,7 +92,7 @@ def _evaluation_root(path: Path) -> Path:
 def _final_logs_in(scope: Path) -> list[tuple[Path, dict[str, Any]]]:
     logs = []
     for path in sorted(scope.rglob("*.json")):
-        if {"frames", "wire", "actions", "transcripts", "codex"}.intersection(
+        if {"frames", "wire", "actions", "transcripts"}.intersection(
             path.relative_to(scope).parts
         ):
             continue

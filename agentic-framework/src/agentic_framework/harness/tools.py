@@ -19,6 +19,7 @@ from agentic_framework.harness.types import (
     MotionPlan,
     ScheduleConfig,
     Stop,
+    ToolCall,
 )
 from agentic_framework.harness.upstream_adapter import upstream_tool_fields
 
@@ -598,18 +599,18 @@ def _chunk_steps(args: dict, h: int, *, notes: bool, spec: ActionSpec | None = N
     ]
 
 
-def decode_tool_calls(
+def parse_tool_call(
     calls,
     config: ScheduleConfig,
     *,
-    plan_id: str,
-    observation_step: int,
     notes: bool = True,
-    reflection: bool = True,
     action_tools: str = "move_by",
     spec: ActionSpec | None = None,
-):
-    """Validate one native call and its entire plan before any action can execute."""
+) -> ToolCall:
+    """Parse exactly one enabled native call; move_by_chunk needs exactly H values.
+
+    Motion bounds and stop-tool fields are checked by to_plan.
+    """
     if not isinstance(calls, Sequence) or isinstance(calls, (str, bytes)) or len(calls) != 1:
         raise ValueError("respond with exactly one native robot tool call")
     call = calls[0]
@@ -625,19 +626,62 @@ def decode_tool_calls(
     if not isinstance(call.get("arguments"), str):
         raise ValueError("native tool arguments must be a JSON string")
     args = _args(call["arguments"])
-    if name == expected_motion:
+    if name == expected_motion and config.control_interface != "move_by":
+        _chunk_steps(args, config.h, notes=notes, spec=spec)
+    return ToolCall(call["call_id"], name, args, call["arguments"])
+
+
+def to_plan(
+    call: ToolCall,
+    config: ScheduleConfig,
+    *,
+    plan_id: str,
+    observation_step: int,
+    notes: bool = True,
+    reflection: bool = True,
+    action_tools: str = "move_by",
+    spec: ActionSpec | None = None,
+) -> MotionPlan | Stop:
+    """Validate a parsed call's entire plan, including bounds, before any action can execute."""
+    args = dict(call.arguments)
+    if call.name == motion_tool_name(config):
         steps = [args] if config.control_interface == "move_by" else _chunk_steps(args, config.h, notes=notes, spec=spec)
         payload = {
             "decision": "replace",
             "commands": [{"name": "move_by", "arguments": step} for step in steps],
         }
     else:
-        key = "summary" if name == "done" else "reason"
+        key = "summary" if call.name == "done" else "reason"
         if set(args) != {key, "hindsight"}:
-            raise ValueError(f"{name} requires only {key} and hindsight")
-        payload = {"decision": name, "commands": [], **args}
+            raise ValueError(f"{call.name} requires only {key} and hindsight")
+        payload = {"decision": call.name, "commands": [], **args}
     return decode(
         payload,
+        config,
+        plan_id=plan_id,
+        observation_step=observation_step,
+        notes=notes,
+        reflection=reflection,
+        action_tools=action_tools,
+        spec=spec,
+    )
+
+
+def decode_tool_calls(
+    calls,
+    config: ScheduleConfig,
+    *,
+    plan_id: str,
+    observation_step: int,
+    notes: bool = True,
+    reflection: bool = True,
+    action_tools: str = "move_by",
+    spec: ActionSpec | None = None,
+):
+    """Validate one native call and its entire plan before any action can execute."""
+    call = parse_tool_call(calls, config, notes=notes, action_tools=action_tools, spec=spec)
+    return to_plan(
+        call,
         config,
         plan_id=plan_id,
         observation_step=observation_step,

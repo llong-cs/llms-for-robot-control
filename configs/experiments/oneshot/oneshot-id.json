@@ -36,9 +36,7 @@
     "record_trajectory": true
   },
   "llm": {
-    "model": "gpt-6-astra",
-    "backend": "responses",
-    "env_file": "../../../credentials.env",
+    "model": "openai/gpt-6-astra",
     "max_output_tokens": 65536,
     "max_attempts": 2,
     "augmentations": {

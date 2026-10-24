@@ -1,0 +1,207 @@
+{
+  "method": "POST",
+  "url": "https://api.openai.com/v1/responses",
+  "headers": {
+    "accept": "*/*",
+    "connection": "keep-alive",
+    "content-type": "application/json",
+    "host": "api.openai.com"
+  },
+  "body": {
+    "model": "gpt-wire-test",
+    "instructions": "Choose the next robot action from the supplied observations, proprioception, instructions and tool results. Invoke only the provided move_by, done or give_up robot tools. Do not use shell commands, files, browsing, image-editing tools, or delegation. Judge progress from the actual tool execution result and the next observation. Acceptance of a target does not establish arrival, a grasp or task success.\n\nROBOT CONTROL INSTRUCTIONS:\nYou are controlling a simulated robot embodiment named 'libero' through tool calls. Each observation gives you the current proprioceptive state and camera images. Work toward the user's goal in small, deliberate motions; re-check each new observation before choosing the next motion.\nEvery move_by call must include a note: in one or two sentences, say what you observe in the current observation and why you chose this motion. The user reads these notes to follow what you see and decide, so write them for a human reader.\nInvoke exactly one robot tool per turn: move_by, done or give_up. Follow the move_by tool definition for argument format and execution semantics.\nGenerated calls may be only partly executed and their targets may remain unmet. At every inference, compare the current eef_pos, eef_quat and images with earlier observations and tool calls to infer how far the motion progressed before deciding what to do next. Never assume previous commands achieved their targets. Any unexecuted actions from the previous response are discarded at the next turn. Choose new actions from the current observation and measured state.\nFor grasping, choose a reachable local contact region and approach angle, considering its size relative to the gripper's opening range using according to your observations. Check lateral alignment, finger orientation and contact height in the available views.\nChoose when to close from the current observation and intended finger contacts. If alignment needs visual confirmation, inspect a fresh observation before closing. Use small motions near contact so the next observation can guide corrections.\nA closing command or narrow finger gap alone does not establish a grasp; pay attention to whether the object actually follows as the gripper moves. The gripper may take multiple steps to fully close/open.\nYou can always swtich angle/orientation to obtain a clear view.\nWhen the goal is achieved call done; if it cannot be achieved call give_up. Calling done stops the trial but cannot declare success; the benchmark scorer judges success independently.\nEach observation's step_budget reports steps_remaining out of max_steps physical control steps; the trial fails if the task is not accomplished before the steps run out.\nNote what you are learning about this rig and task as you go: done and give_up ask what you wish you had known from the start.\n\nEmbodiment notes:\nLIBERO Franka Panda, 20 Hz. Actions [dx,dy,dz,rx,ry,rz,gripper] use end-effector displacements in WORLD coordinates: translation in meters and rotation as an axis-angle vector in radians. Mode-specific ranges are given in the move_by definition. +z moves upward; use observed state and camera motion to establish x/y directions. The adapter converts these physical units to normalized OSC inputs.\nThe gripper is a numeric command: negative opens, positive closes, and 0/omission holds the gripper driver's current target; it does not repeat the previous opening/closing command.\neef_pos is the controlled end-effector position in WORLD meters. eef_quat is [x,y,z,w]; gripper_width is finger separation in meters; joint_pos contains arm joint angles in radians.\nInitialization applies an open gripper command during the 10 settling steps; use the observed finger state for its actual opening.\nagentview is the external camera; robot0_eye_in_hand is the wrist camera. Both RGB images use the reference LIBERO evaluator's 180-degree orientation correction.\nInfer objects and contacts visually from the supplied observations.",
+    "input": [
+      {
+        "role": "user",
+        "content": [
+          {
+            "type": "input_text",
+            "text": "{\"instruction\":\"Lift the red cube.\",\"current_observation\":{\"state\":{\"eef_pos\":[0.1,-0.2,0.305],\"eef_quat\":[0.0,0.0,0.0,1.0],\"gripper_width\":[0.04]},\"step_budget\":{\"steps_remaining\":35,\"max_steps\":40},\"images\":[\"current/agentview\",\"current/robot0_eye_in_hand\"]}}"
+          },
+          {
+            "type": "input_text",
+            "text": "Camera: current/agentview"
+          },
+          {
+            "type": "input_image",
+            "image_url": "png-pixels-sha256:cb7f5c490be13a8f867f66c31d41a5c3295ec1a861a51ec0753278513ea8112f"
+          },
+          {
+            "type": "input_text",
+            "text": "Camera: current/robot0_eye_in_hand"
+          },
+          {
+            "type": "input_image",
+            "image_url": "png-pixels-sha256:ea7cfbafcd976da24539e23f3621ac0ac862092dd87cb5b63cecff0e520710e4"
+          }
+        ]
+      },
+      {
+        "type": "reasoning",
+        "id": "rs_2a",
+        "summary": [],
+        "encrypted_content": "opaque-reasoning-2a"
+      },
+      {
+        "type": "function_call",
+        "id": "fc_call_2a",
+        "call_id": "call_2a",
+        "name": "move_by",
+        "arguments": "{\"deltas\": {\"dz\": 0.001}}",
+        "status": "completed"
+      },
+      {
+        "type": "function_call_output",
+        "call_id": "call_2a",
+        "output": "{\"status\": \"rejected\", \"executed\": false, \"error\": \"motion note is required by this configuration\"}"
+      },
+      {
+        "role": "user",
+        "content": [
+          {
+            "type": "input_text",
+            "text": "{\"instruction\":\"Lift the red cube.\",\"current_observation\":{\"state\":{\"eef_pos\":[0.1,-0.2,0.305],\"eef_quat\":[0.0,0.0,0.0,1.0],\"gripper_width\":[0.04]},\"step_budget\":{\"steps_remaining\":35,\"max_steps\":40},\"images\":[\"current/agentview\",\"current/robot0_eye_in_hand\"]}}"
+          },
+          {
+            "type": "input_text",
+            "text": "Camera: current/agentview"
+          },
+          {
+            "type": "input_image",
+            "image_url": "png-pixels-sha256:cb7f5c490be13a8f867f66c31d41a5c3295ec1a861a51ec0753278513ea8112f"
+          },
+          {
+            "type": "input_text",
+            "text": "Camera: current/robot0_eye_in_hand"
+          },
+          {
+            "type": "input_image",
+            "image_url": "png-pixels-sha256:ea7cfbafcd976da24539e23f3621ac0ac862092dd87cb5b63cecff0e520710e4"
+          },
+          {
+            "type": "input_text",
+            "text": "\nYour previous response failed validation: motion note is required by this configuration\nMake one corrected native tool call for this unchanged observation."
+          }
+        ]
+      }
+    ],
+    "store": false,
+    "include": [
+      "reasoning.encrypted_content"
+    ],
+    "tools": [
+      {
+        "type": "function",
+        "name": "move_by",
+        "description": "Move BY the given displacement per dimension. The executor freezes the target from the measured pose at this call's start. After every physical step it observes and corrects the remaining position and orientation error toward that SAME target; it does not add the original displacement again. The framework passes the full remaining pose error without framework clipping; the native controller retains its own input clipping and adjustments. Joint and actuator limits still apply, and target reachability is not guaranteed. Unnamed pose dimensions are held at their start targets. Bounds below describe the total target offset, not one-step travel, a fixed execution duration, or a guaranteed path. To hold the current pose, use deltas {\"dx\": 0} and omit gripper; this advances at least one control step and checks the held pose. Pose offsets and an explicit gripper value may share one move_by; both are applied together from its first control step. Use separate calls only when you intend separate motions. Bounds for each component: translation (dx/dy/dz): [-0.005, 0.005] m, rotation (rx/ry/rz): [-0.05, 0.05] rad, gripper: [-1, 1].",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "deltas": {
+              "type": "object",
+              "description": "Map of dimension name to value. Valid names: dx, dy, dz, rx, ry, rz, gripper. Use finite numeric values and omit unneeded dimensions.",
+              "properties": {
+                "dx": {
+                  "type": "number",
+                  "minimum": -0.005,
+                  "maximum": 0.005
+                },
+                "dy": {
+                  "type": "number",
+                  "minimum": -0.005,
+                  "maximum": 0.005
+                },
+                "dz": {
+                  "type": "number",
+                  "minimum": -0.005,
+                  "maximum": 0.005
+                },
+                "rx": {
+                  "type": "number",
+                  "minimum": -0.05,
+                  "maximum": 0.05
+                },
+                "ry": {
+                  "type": "number",
+                  "minimum": -0.05,
+                  "maximum": 0.05
+                },
+                "rz": {
+                  "type": "number",
+                  "minimum": -0.05,
+                  "maximum": 0.05
+                },
+                "gripper": {
+                  "type": "number",
+                  "minimum": -1.0,
+                  "maximum": 1.0
+                }
+              },
+              "additionalProperties": false,
+              "minProperties": 1
+            },
+            "note": {
+              "type": "string",
+              "description": "What you observe right now in the observation (images, if any, and state), and why you chose this motion. The user reads these notes live and in the saved transcript to follow what you see and what you decide. Write for them, in one or two plain sentences."
+            }
+          },
+          "required": [
+            "deltas",
+            "note"
+          ],
+          "additionalProperties": false
+        },
+        "strict": false
+      },
+      {
+        "type": "function",
+        "name": "done",
+        "description": "Declare the task finished. The trial ends; a scorer judges success.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "summary": {
+              "type": "string"
+            },
+            "hindsight": {
+              "type": "string",
+              "description": "What do you know now that you wish you had known at the start of this episode? Concrete, transferable facts about this rig, task, or embodiment (camera mounting and extrinsics, table and base geometry, gripper axis and offsets, controller behavior, metric scale), written as advice to a future agent attempting the same task. Say 'none' if nothing qualifies."
+            }
+          },
+          "required": [
+            "summary",
+            "hindsight"
+          ]
+        },
+        "strict": false
+      },
+      {
+        "type": "function",
+        "name": "give_up",
+        "description": "Stop trying; the task cannot be completed. The trial ends.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "reason": {
+              "type": "string"
+            },
+            "hindsight": {
+              "type": "string",
+              "description": "What do you know now that you wish you had known at the start of this episode? Concrete, transferable facts about this rig, task, or embodiment (camera mounting and extrinsics, table and base geometry, gripper axis and offsets, controller behavior, metric scale), written as advice to a future agent attempting the same task. Say 'none' if nothing qualifies."
+            }
+          },
+          "required": [
+            "reason",
+            "hindsight"
+          ]
+        },
+        "strict": false
+      }
+    ],
+    "tool_choice": "required",
+    "parallel_tool_calls": false,
+    "reasoning": {
+      "effort": "low"
+    }
+  }
+}

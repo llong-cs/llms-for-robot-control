@@ -13,9 +13,15 @@ license-files = [
     "src/agentic_framework/_vendor/openpi_client/LICENSE.msgpack-numpy",
 ]
 requires-python = ">=3.11"
-dependencies = ["inspect-robots==0.0.0", "numpy>=1.24", "httpx>=0.27", "pillow>=10", "pyyaml>=6", "websockets>=11", "msgpack>=1", "json-numpy>=2.1.0", "imageio>=2", "imageio-ffmpeg>=0.5", "python-dotenv>=1.2"]
+dependencies = ["inspect-robots==0.0.0", "numpy>=1.24", "httpx>=0.27", "pillow>=10", "pyyaml>=6", "websockets>=11", "msgpack>=1", "json-numpy>=2.1.0", "imageio>=2", "imageio-ffmpeg>=0.5"]
+[project.optional-dependencies]
+test = ["pytest==9.1.1"]
 [project.scripts]
 agentic-framework = "agentic_framework.harness.run:main"
+[tool.hatch.build]
+# Private provider modules and their tests are gitignored by the repository root, whose
+# anchored patterns hatchling does not apply here; exclude them from every build explicitly.
+exclude = ["src/agentic_framework/models/llm/providers/private_*.py", "tests/private"]
 [tool.hatch.build.targets.wheel]
 packages = ["src/agentic_framework"]
 [tool.hatch.build.targets.wheel.force-include]
@@ -26,6 +32,8 @@ target-version = "py311"
 line-length = 100
 [tool.ruff.lint]
 select = ["E4", "E7", "E9", "F", "I"]
+[tool.ruff.lint.isort]
+known-first-party = ["agentic_framework"]
 [tool.ruff.per-file-target-version]
 "src/agentic_framework/environments/libero/worker.py" = "py38"
 "src/agentic_framework/environments/libero/privilege.py" = "py38"

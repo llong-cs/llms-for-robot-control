@@ -22,7 +22,7 @@ def nonnegative(value):
 
 
 def usage_receipt(usage, *, source="legacy_backend_usage", scope="request"):
-    """Fallback for mock/Codex backends; never treat absent counts as zeros."""
+    """Fallback for backends without request telemetry; never treat absent counts as zeros."""
     usage = usage if isinstance(usage, dict) else {}
     result = {key: value if type(value := usage.get(key)) is int and value >= 0 else None
               for key in TOKEN_FIELDS}
@@ -75,12 +75,6 @@ def llm_receipt(entry, *, model):
     return receipt
 
 
-def _conversation_restarted(turn):
-    output = turn.get("model_output")
-    backend = output.get("backend") if isinstance(output, dict) else None
-    return isinstance(backend, dict) and backend.get("conversation_restarted") is True
-
-
 def summarize_requests(turns, adjustments=()):
     """Count all physical requests, with per-field missingness and cost currencies."""
     telemetries = [turn.get("telemetry") or {} for turn in turns]
@@ -118,8 +112,6 @@ def summarize_requests(turns, adjustments=()):
         "internal_retry_requests": sum(turn.get("retry_reason") == "internal" for turn in turns),
         # Wall time waited before resends (transport and internal).
         "retry_wait_s": sum(turn.get("retry_wait_s") or 0.0 for turn in turns),
-        # Requests that began a new native thread after a failure lost the conversation.
-        "conversation_restarts": sum(_conversation_restarted(turn) for turn in turns),
         "statuses": dict(Counter(item.get("status", "unknown") for item in telemetries)),
         "inference_wall_s_known": sum(durations) if durations else None,
         "requests_with_latency": len(durations), "usage": usage,

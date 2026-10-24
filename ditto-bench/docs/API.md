@@ -14,7 +14,7 @@ Direct Gym RGB observations contain ManiSkill sensor data and robot state, inclu
 
 Direct `pd_joint_pos` actions contain seven absolute arm joint positions followed by the gripper joint target. Framework agents instead request bounded TCP pose increments; native VLA profiles use their own action adapters.
 
-Defaults are 150 Hz physics and 30 Hz control; native VLA profiles may select another control frequency. One model decision can cover multiple control steps. Simulation pauses during inference.
+Defaults are 150 Hz physics and 30 Hz control; native VLA profiles set their own control frequency, 15 Hz for the DROID profiles. One model decision can cover multiple control steps. Simulation pauses during inference.
 
 ## Step results
 

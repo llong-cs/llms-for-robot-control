@@ -18,7 +18,7 @@ def project_root() -> Path:
 
 
 def project_path(value: str | Path, *, base: Path | None = None) -> Path:
-    """Anchor relative paths while preserving interpreter and credential symlinks."""
+    """Anchor relative paths while preserving interpreter symlinks."""
     path = Path(value).expanduser()
     return Path(os.path.abspath(path if path.is_absolute() else (base or project_root()) / path))
 

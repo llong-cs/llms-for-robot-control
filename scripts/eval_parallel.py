@@ -265,6 +265,9 @@ def _job_launch(plan, job, worker):
     directory = root / "jobs" / job["id"]
     target = root / "evaluation" / job["id"]
     config = copy.deepcopy(plan["resolved"])
+    # Launcher provenance: the framework parser accepts only its own groups, so run_parallel
+    # writes it to the job's paths.json instead.
+    config.pop("paths", None)
     config.setdefault("environment", {}).update(
         suite=job["suite"], task_ids=str(job["task_id"]), trials=1,
         init_start=job["init_start"], difficulty=job["difficulty"],
@@ -331,6 +334,27 @@ def _stop_evaluator(process):
                            f"{EVALUATOR_REAP_S}s after SIGKILL") from None
 
 
+def _sends_llm_requests(plan):
+    """Only a live LLM evaluator keeps model credentials and provider endpoints."""
+    return (plan.get("model_profile") is None
+            and plan["resolved"].get("run", {}).get("mode") == "agent")
+
+
+def evaluator_environment(plan, env):
+    """Strip every credential; a live LLM evaluator gets back only its route's variables.
+
+    So an evaluator never holds the keys of other providers or services, and neither do the
+    tools it starts (ffmpeg, git).
+    """
+    stripped = w.without_credentials(env)
+    if _sends_llm_requests(plan):
+        route = plan.get("llm_route") or {}
+        for name in (route.get("api_key_env"), route.get("base_url_env")):
+            if name is not None and name in env:
+                stripped[name] = env[name]
+    return stripped
+
+
 def _run_job(plan, job, worker, stop_event):
     from scripts.eval_resources import device_environment
 
@@ -354,7 +378,9 @@ def _run_job(plan, job, worker, stop_event):
     try:
         if stop_event.is_set():
             raise EvaluationCancelled("Evaluation stopped before this trial started")
-        env = device_environment(w.child_environment(), worker["devices"])
+        # Simulator workers inherit the resource variables; paths entries override the shell.
+        env = evaluator_environment(plan, device_environment(
+            w.child_environment(overrides=plan.get("path_environment")), worker["devices"]))
         env["PYTHONUNBUFFERED"] = "1"
         if progress is not None:
             progress.event(worker, f"Starting task {job['task_id']} ({job['difficulty']}, init {job['init_start']}); "
@@ -591,7 +617,9 @@ def run_parallel(plan, *, server_timeout=900):
         _write(root / "pool-plan.json", pool)
         _write(root / "eval-config.json", plan["config"])
         _write(root / "eval-plan.json", public_plan(plan))
-        _write(root / "resolved-config.json", plan["resolved"])
+        # A framework --config: the launcher's paths provenance is in eval-plan.json instead.
+        _write(root / "resolved-config.json",
+               {group: value for group, value in plan["resolved"].items() if group != "paths"})
         # Once every trial has finished, only teardown remains and the outcome is fixed.
         countdown = _Countdown(len(plan["jobs"]))
         current = dict(plan, _parallel_server_timeout=server_timeout, _progress=progress,
@@ -618,9 +646,12 @@ def run_parallel(plan, *, server_timeout=900):
             outcome = None
             try:
                 _write(root / "eval-status.json", status)
+                provenance = plan["resolved"].get("paths")
                 for identifier, config in configs.items():
                     directory = root / "jobs" / identifier
                     _write(directory / "config.json", config)
+                    if provenance is not None:
+                        _write(directory / "paths.json", provenance)
                     (directory / "eval.log").touch()
                     _write(directory / "status.json", states[identifier])
                 server = plan.get("server")
@@ -734,7 +765,7 @@ def _shutdown(plan, status, states, *, outcome, signals, stop_event, executor, f
             status["error"] = (
                 f"Every trial ({len(jobs)}) was discarded: a decision failed all max_attempts "
                 "attempts in each. Every HTTP error, including a provider rejection (wrong key, "
-                "model id or parameters), and every internal exception inside the backend "
+                "model id or parameters), and every internal exception inside the agent "
                 "call is resent, so a misconfigured provider or a recurring framework error "
                 "ends here; check the recorded model errors in the job trajectories"
             )

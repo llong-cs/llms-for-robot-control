@@ -10,6 +10,8 @@ import re
 from collections.abc import Mapping
 from typing import Any
 
+from agentic_framework.common.redaction import scrub
+
 _TOKEN_FIELDS = (
     "input_tokens", "output_tokens", "total_tokens", "cached_input_tokens",
     "cache_creation_input_tokens", "uncached_input_tokens", "reasoning_tokens",
@@ -25,6 +27,9 @@ _RATE_HEADERS = frozenset(
     for kind in ("limit", "remaining", "reset", "requests", "tokens", "input-tokens", "output-tokens")
     for suffix in ("requests", "tokens", "limit", "remaining", "reset")
 )
+# The block a Messages 400 names, and the clause of a preserved-thinking prefix mismatch.
+_MESSAGES_PATH = re.compile(r"\bmessages\.[0-9]+\.content\.[0-9]+\b")
+_BINDING_MISMATCH = "bound to a different conversation"
 _SECRET = re.compile(r"(^|[_-])(authorization|api[_-]?key|access[_-]?token|refresh[_-]?token|password|secret|credentials?|cookie|signature)($|[_-])", re.I)
 
 
@@ -37,8 +42,7 @@ def _safe(value: Any, depth=0):
     if isinstance(value, float):
         return value if math.isfinite(value) else "[non-finite]"
     if isinstance(value, str):
-        value = re.sub(r"(?i)Bearer\s+[^\s\"']+", "Bearer [redacted]", value)
-        value = re.sub(r"\bsk-[A-Za-z0-9_-]{8,}", "[redacted]", value)
+        value = scrub(value)
         return value[:2048] + ("[truncated]" if len(value) > 2048 else "")
     if isinstance(value, Mapping):
         return {str(key): "[redacted]" if _SECRET.search(str(key)) else _safe(item, depth + 1)
@@ -80,15 +84,20 @@ def canonical_usage(raw: Any, protocol: str, source="response.usage") -> dict:
         result.update(availability="invalid", issues=["usage is not an object"])
         return result
 
-    def count(path, target):
+    def count(path, target, nullable=False):
         value = raw
         for key in path.split("."):
+            if value is None and nullable:
+                # A null details object, like a null count, reports nothing.
+                return
             if not isinstance(value, Mapping):
                 issues.append(f"{path}: token details are not an object")
                 return
             if key not in value:
                 return
             value = value[key]
+        if value is None and nullable:
+            return
         if type(value) is not int or value < 0:
             issues.append(f"{path}: expected nonnegative integer")
             return
@@ -97,10 +106,27 @@ def canonical_usage(raw: Any, protocol: str, source="response.usage") -> dict:
 
     count("output_tokens", "output_tokens")
     count("total_tokens", "total_tokens")
-    if protocol == "messages":
+    if protocol == "chat_completions":
+        # prompt_tokens is the whole prompt; cached tokens are a subset. Servers may send null
+        # details objects.
+        count("prompt_tokens", "input_tokens")
+        count("completion_tokens", "output_tokens")
+        count("prompt_tokens_details.cached_tokens", "cached_input_tokens", nullable=True)
+        count("completion_tokens_details.reasoning_tokens", "reasoning_tokens", nullable=True)
+        if result["input_tokens"] is not None and result["cached_input_tokens"] is not None:
+            if result["cached_input_tokens"] > result["input_tokens"]:
+                issues.append("cached_input_tokens exceeds input_tokens")
+                result["cached_input_tokens"] = None
+            else:
+                result["uncached_input_tokens"] = (
+                    result["input_tokens"] - result["cached_input_tokens"])
+                result["field_sources"]["uncached_input_tokens"] = (
+                    "difference:input_tokens-cached_input_tokens")
+    elif protocol == "messages":
+        # Messages input_tokens excludes cache reads and writes; the total prompt is the sum.
         count("input_tokens", "uncached_input_tokens")
-        count("cache_read_input_tokens", "cached_input_tokens")
-        count("cache_creation_input_tokens", "cache_creation_input_tokens")
+        count("cache_read_input_tokens", "cached_input_tokens", nullable=True)
+        count("cache_creation_input_tokens", "cache_creation_input_tokens", nullable=True)
         components = ("uncached_input_tokens", "cached_input_tokens", "cache_creation_input_tokens")
         if all(result[key] is not None for key in components):
             result["input_tokens"] = sum(result[key] for key in components)
@@ -236,6 +262,17 @@ def observe_response_json(telemetry, data, *, source="response"):
                     field: _safe(details[field]) for field in ("type", "category", "reason")
                     if isinstance(details.get(field), str)
                 }
+        choices = data.get("choices")
+        if isinstance(choices, list) and choices and isinstance(choices[0], Mapping):
+            # Chat Completions: the first choice's finish reason, or a refusal it carries.
+            reason = choices[0].get("finish_reason")
+            if isinstance(reason, str):
+                telemetry["response"]["finish_reason"] = _safe(reason)
+            message = choices[0].get("message")
+            if isinstance(message, Mapping) and isinstance(message.get("refusal"), str) and (
+                message["refusal"]
+            ):
+                telemetry["response"]["finish_reason"] = "refusal"
         output = data.get("output")
         if isinstance(output, list) and any(
             isinstance(item, Mapping) and isinstance(item.get("content"), list)
@@ -246,9 +283,19 @@ def observe_response_json(telemetry, data, *, source="response"):
             telemetry["response"]["finish_reason"] = "refusal"
         error = data.get("error")
         if isinstance(error, Mapping):
-            telemetry["response"]["error"] = {key: _safe(error[key]) for key in ("type", "code")
-                                               if isinstance(error.get(key), str)}
-        if "output" in data or "content" in data or not isinstance(data.get("result"), Mapping):
+            record = {key: _safe(error[key]) for key in ("type", "code")
+                      if isinstance(error.get(key), str)}
+            message = error.get("message")
+            if telemetry["protocol"] == "messages" and isinstance(message, str):
+                # Diagnose a rejected thinking replay without storing the message text.
+                path = _MESSAGES_PATH.search(message)
+                if path is not None:
+                    record["path"] = path.group(0)
+                record["binding_mismatch"] = _BINDING_MISMATCH in message
+            telemetry["response"]["error"] = record
+        if any(key in data for key in ("output", "content", "choices")) or not isinstance(
+            data.get("result"), Mapping
+        ):
             return
         data, source = data["result"], source + ".result"
 
@@ -256,7 +303,7 @@ def observe_response_json(telemetry, data, *, source="response"):
 def attach_exception_telemetry(exc, metadata, usage):
     """Preserve exception identity (including cancellation) while carrying audit data."""
     telemetry = metadata["telemetry"]
-    # The same rule as backend.failure_kind: any non-Exception BaseException cancels.
+    # The same rule as errors.failure_kind: any non-Exception BaseException cancels.
     cancelled = not isinstance(exc, Exception) or type(exc).__name__ == "CancelledError"
     telemetry["error"] = {"type": type(exc).__name__, "cancelled": cancelled}
     if telemetry["transport"]["outcome"] == "in_flight":

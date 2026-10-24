@@ -7,6 +7,7 @@ from dataclasses import replace
 from pathlib import Path
 
 import agentic_framework.environments.maniskill.embodiment as upstream
+from agentic_framework.common.environment import without_credentials
 from agentic_framework.common.paths import FRAMEWORK_ROOT
 
 from ditto.catalog import SUITE_ID, TASK_BY_ID
@@ -53,10 +54,8 @@ class SuiteEmbodiment(upstream.ManiSkillEmbodiment):
             return
         worker = Path(__file__).with_name("worker.py")
         package_src = Path(__file__).resolve().parents[2]
-        env = os.environ.copy()
-        for name in list(env):
-            if name.endswith(("_API_KEY", "_API_TOKEN")):
-                env.pop(name, None)
+        # No model credentials or provider endpoints are needed inside the simulator process.
+        env = without_credentials(os.environ)
         env.update({
             "PYTHONDONTWRITEBYTECODE": "1", "OMP_NUM_THREADS": "1",
             "OPENBLAS_NUM_THREADS": "1", "MKL_NUM_THREADS": "1",

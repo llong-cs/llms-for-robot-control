@@ -10,6 +10,32 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 FRAMEWORK = ROOT / "agentic-framework"
 SUITE = ROOT / "ditto-bench"
+# Resource variables of child processes and their defaults below the project root. A value
+# the shell already sets is kept, unless the experiment's paths group sets it.
+RESOURCE_DEFAULTS = {
+    "HF_HOME": "cache/huggingface",
+    "TORCH_HOME": "cache/torch",
+    "UV_CACHE_DIR": "cache/uv",
+    "PIP_CACHE_DIR": "cache/pip",
+    "MS_ASSET_DIR": "data/maniskill",
+    "LIBERO_CONFIG_PATH": ".config/libero",
+    "UV_PYTHON_INSTALL_DIR": "cache/python",
+    "OPENPI_DATA_HOME": "models/openpi",
+}
+# The variable each single-path paths key sets; cache_root sets every cache variable below it.
+PATH_VARIABLES = {
+    "maniskill_asset_dir": "MS_ASSET_DIR",
+    "ditto_asset_dir": "DITTO_ASSET_DIR",
+    "libero_config": "LIBERO_CONFIG_PATH",
+    "openpi_data_home": "OPENPI_DATA_HOME",
+}
+CACHE_VARIABLES = {
+    "HF_HOME": "huggingface",
+    "TORCH_HOME": "torch",
+    "UV_CACHE_DIR": "uv",
+    "PIP_CACHE_DIR": "pip",
+    "UV_PYTHON_INSTALL_DIR": "python",
+}
 
 def registry():
     if str(FRAMEWORK / "src") not in sys.path:
@@ -17,6 +43,16 @@ def registry():
     from agentic_framework.configuration.profiles import list_model_profiles
 
     return list_model_profiles()
+
+
+
+def without_credentials(env):
+    """Return env without model credentials and every registered provider's variables."""
+    if str(FRAMEWORK / "src") not in sys.path:
+        sys.path.insert(0, str(FRAMEWORK / "src"))
+    from agentic_framework.common.environment import without_credentials as strip
+
+    return strip(env)
 
 
 
@@ -41,13 +77,32 @@ def environment(name):
 
 
 
-def run_output(kind, model):
+def run_output(kind, model, root=None):
+    """Return a new timestamped run directory below root, by default the project outputs/."""
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S-%fZ")
-    return workspace_home() / "outputs" / f"{stamp}-{kind}-{model}"
+    return Path(root or workspace_home() / "outputs") / f"{stamp}-{kind}-{model}"
 
 
 
-def child_environment(gpu=None):
+def path_environment(paths):
+    """Return the child-process variables that an experiment's paths group assigns."""
+    paths = paths or {}
+    env = {name: paths[key] for key, name in PATH_VARIABLES.items() if key in paths}
+    if "cache_root" in paths:
+        env.update({name: str(Path(paths["cache_root"]) / relative)
+                    for name, relative in CACHE_VARIABLES.items()})
+    return env
+
+
+
+def child_environment(gpu=None, overrides=None, *, defaults=True):
+    """Return the environment of a launched child process.
+
+    Resource variables keep a value set in the shell, else get their project default;
+    ``overrides`` (from :func:`path_environment`) are assigned outright, so a paths group takes
+    precedence over the shell. ``defaults=False`` leaves unset resource variables unset, so the
+    launcher re-executed with this environment still sees which ones the shell set.
+    """
     home = workspace_home()
     env = os.environ.copy()
     # Use the two canonical source trees regardless of old editable installations.
@@ -64,17 +119,10 @@ def child_environment(gpu=None):
     env["PYTHONDONTWRITEBYTECODE"] = "1"
     env["DITTO_FRAMEWORK_ROOT"] = str(FRAMEWORK)
     env["AGENTIC_PROJECT_ROOT"] = str(home)
-    for key, relative in {
-        "HF_HOME": "cache/huggingface",
-        "TORCH_HOME": "cache/torch",
-        "UV_CACHE_DIR": "cache/uv",
-        "PIP_CACHE_DIR": "cache/pip",
-        "MS_ASSET_DIR": "data/maniskill",
-        "LIBERO_CONFIG_PATH": ".config/libero",
-        "UV_PYTHON_INSTALL_DIR": "cache/python",
-        "OPENPI_DATA_HOME": "models/openpi",
-    }.items():
-        env.setdefault(key, str(home / relative))
+    if defaults:
+        for key, relative in RESOURCE_DEFAULTS.items():
+            env.setdefault(key, str(home / relative))
+    env.update(overrides or {})
     if gpu is not None:
         env["CUDA_VISIBLE_DEVICES"] = gpu
     return env
@@ -99,12 +147,15 @@ def gpu_ids(value):
 
 
 
-def command(args, extra):
-    """Build a native server command without loading a checkpoint."""
+def command(args, extra, overrides=None):
+    """Build a native server command without loading a checkpoint.
+
+    ``overrides`` are resource variables assigned outright, as in :func:`child_environment`.
+    """
     key, spec = resolve_model(args.model)
     candidate = Path(args.model).expanduser()
     model_selector = str(candidate.resolve()) if candidate.is_file() else args.model
-    env = child_environment()
+    env = child_environment(overrides=overrides)
     if args.command == "serve":
         server, transport = spec["server"], spec["transport"]
         if not args.check_only:
@@ -114,7 +165,7 @@ def command(args, extra):
                 )
             if len(gpu_ids(args.gpu)) != server["gpus"]:
                 raise ValueError(f"{key} requires {server['gpus']} GPU(s) in this launcher")
-            env = child_environment(args.gpu)
+            env = child_environment(args.gpu, overrides)
         output = checked_output(args.output_dir or run_output("server", key))
         from agentic_framework.configuration.profiles import profile_path
         cmd = [str(args.python or profile_path(server["environment"]) / "bin/python")]
@@ -137,6 +188,8 @@ def command(args, extra):
         if args.check_only:
             cmd += ["--check-only"]
         env.pop("PYTHONPATH", None)
+        # A native model server sends no LLM requests.
+        env = without_credentials(env)
         if spec["family"] == "openpi":
             env.setdefault("XLA_PYTHON_CLIENT_MEM_FRACTION", "0.35")
     else:

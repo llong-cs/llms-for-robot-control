@@ -25,6 +25,7 @@ from inspect_robots.spaces import (
 )
 from inspect_robots.types import Action, Observation, StepResult
 
+from agentic_framework.common.environment import without_credentials
 from agentic_framework.common.project import environment_python, project_path
 from agentic_framework.environments.libero.embodiment import LiberoEmbodiment, SimulatorError
 from agentic_framework.environments.privilege import (
@@ -155,9 +156,8 @@ class ManiSkillEmbodiment(LiberoEmbodiment):
             return
         if not (self.source_root / "sim_eval/robots/franka_droid.py").is_file():
             raise FileNotFoundError(f"Official MolmoAct2 source missing: {self.source_root}")
-        env = os.environ.copy()
-        for name in ("OPENAI_API_KEY", "ANTHROPIC_API_KEY", "GOOGLE_API_KEY"):
-            env.pop(name, None)
+        # No model credentials or provider endpoints are needed inside the simulator process.
+        env = without_credentials(os.environ)
         env.update({
             "PYTHONDONTWRITEBYTECODE": "1", "OMP_NUM_THREADS": "1",
             "OPENBLAS_NUM_THREADS": "1", "MKL_NUM_THREADS": "1",

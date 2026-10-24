@@ -127,9 +127,7 @@ pydantic==2.13.5
 pydantic-core==2.46.5
     # via pydantic
 python-dotenv==1.2.3
-    # via
-    #   -r agentic-framework/requirements-molmoact2.in
-    #   uvicorn
+    # via uvicorn
 pyyaml==6.0.3
     # via
     #   accelerate

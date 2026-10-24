@@ -18,6 +18,7 @@ from inspect_robots.errors import PolicyError, PolicyStop
 from inspect_robots.policy import PolicyBase, PolicyConfig, PolicyInfo
 
 from agentic_framework.common.io import plain, write_json
+from agentic_framework.common.redaction import redacted
 from agentic_framework.harness.context import ContextBuilder, _feedback, _step, context_messages
 from agentic_framework.harness.demonstration import (
     DEFAULT_DEMO_CONTENT,
@@ -25,23 +26,27 @@ from agentic_framework.harness.demonstration import (
     DEFAULT_DEMO_MODE,
     repair_feedback,
 )
-from agentic_framework.harness.tools import decode_tool_calls, instructions, native_tool_schemas
+from agentic_framework.harness.tools import (
+    instructions,
+    native_tool_schemas,
+    parse_tool_call,
+    to_plan,
+)
 from agentic_framework.harness.trajectory_telemetry import llm_receipt, utc_now
 from agentic_framework.harness.types import (
     CHUNK_TARGET_REFERENCE,
     MAX_ATTEMPTS_TERMINATION,
     ActionSpec,
+    AgentContext,
     AugmentationConfig,
-    ModelRequest,
     MotionPlan,
     ScheduleConfig,
     Stop,
     pack_plan,
 )
-from agentic_framework.models.llm.backend import (
+from agentic_framework.models.llm.errors import (
     RESENT_FAILURE_KINDS,
     BackendFormatError,
-    _redacted,
     failure_kind,
 )
 from agentic_framework.observability.progress import request_progress
@@ -102,7 +107,7 @@ class LLMMotionPolicy(PolicyBase):
 
     def __init__(
         self,
-        backend,
+        agent,
         schedule=None,
         *,
         action_spec,
@@ -126,7 +131,7 @@ class LLMMotionPolicy(PolicyBase):
         if motion_plan_validator is not None and not callable(motion_plan_validator):
             raise TypeError("motion_plan_validator must be callable or None")
         self.motion_plan_validator = motion_plan_validator
-        self.backend = backend
+        self.agent = agent
         self.schedule = schedule or ScheduleConfig()
         self.augmentation = augmentation or AugmentationConfig()
         if not isinstance(self.augmentation, AugmentationConfig):
@@ -174,7 +179,7 @@ class LLMMotionPolicy(PolicyBase):
                 None if self.schedule.k == -1
                 else self.schedule.k * self.schedule.motion_time_scale
             ),
-            model=getattr(backend, "model", type(backend).__name__),
+            model=getattr(agent, "model", type(agent).__name__),
             h=self.schedule.h,
             k=self.schedule.k,
             motion_time_scale=self.schedule.motion_time_scale,
@@ -295,7 +300,7 @@ class LLMMotionPolicy(PolicyBase):
 
     def reset(self, scene):
         self._end_rollout()
-        reset = getattr(self.backend, "reset", None)
+        reset = getattr(self.agent, "reset", None)
         if reset is not None:
             reset()
         self._pending_call = None
@@ -325,11 +330,23 @@ class LLMMotionPolicy(PolicyBase):
             schedule["chunk_target_reference"] = CHUNK_TARGET_REFERENCE
         return schedule
 
+    def _model_label(self):
+        """The recorded model: a routed agent's canonical selector, else the agent's model.
+
+        The wire model ID alone is ambiguous: two providers may serve the same ID.
+        """
+        route = getattr(self.agent, "route", None)
+        return route["selector"] if route else self.config.model
+
     def _recording_metadata(self):
+        # A routed agent is recorded by its canonical selector and route (names only).
+        route = getattr(self.agent, "route", None)
         return {
             "scene_id": self._scene_id, "scene": self._recording_scene,
             "embodiment": self._embodiment_name, "policy_family": "llm",
-            "model": self.config.model, "augmentation": asdict(self.augmentation),
+            "model": self._model_label(),
+            **({"llm_route": dict(route)} if route else {}),
+            "augmentation": asdict(self.augmentation),
             "observation_profile": self.context.observation_profile,
             "demo_mode": self.context.demo_mode,
             "demo_content": self.context.demo_content,
@@ -353,7 +370,7 @@ class LLMMotionPolicy(PolicyBase):
         # Telemetry lives outside model_output; recorded backend metadata is audit only.
         if isinstance(entry.get("backend"), dict):
             entry["backend"].pop("telemetry", None)
-        entry = _redacted(plain(entry))
+        entry = redacted(plain(entry))
         self.decisions.append(entry)
         if self.trajectory_recorder is not None:
             self.trajectory_recorder.append(entry, self._recording_observation, self.context, self._tool_results)
@@ -377,7 +394,7 @@ class LLMMotionPolicy(PolicyBase):
             raise ValueError("a model request requires at least one remaining policy control step")
         return {"steps_remaining": remaining, "max_steps": max_steps}
 
-    def prepare_request(self, observation, status=None, *, request_id=None) -> ModelRequest:
+    def prepare_request(self, observation, status=None, *, request_id=None) -> AgentContext:
         """Preview the next request without accepting a decision or spending a call.
 
         Bind and reset the policy as for execution first. Context selection is
@@ -400,13 +417,13 @@ class LLMMotionPolicy(PolicyBase):
 
     def _request_from_snapshot(
         self, text, images, *, request_id, validation_error=None, decision_id=None
-    ) -> ModelRequest:
+    ) -> AgentContext:
         messages = context_messages(text, images)
         if validation_error:
             repair = repair_feedback(validation_error)
             text += repair
             messages[-1]["content"].append({"type": "text", "text": repair})
-        return ModelRequest(
+        return AgentContext(
             request_id,
             self._instructions,
             text,
@@ -542,7 +559,7 @@ class LLMMotionPolicy(PolicyBase):
                          request_wall_s=call_start - self._trial_started)
             try:
                 with request_progress(getattr(self, "runtime_progress", None)):
-                    reply = self.backend.generate(request)
+                    reply = self.agent.generate(request)
                 backend_call_elapsed = time.monotonic() - call_start
                 entry["request_finished_at"] = utc_now()
                 self._tool_results.clear()
@@ -573,8 +590,8 @@ class LLMMotionPolicy(PolicyBase):
             except BaseException as exc:
                 backend_call_elapsed = time.monotonic() - call_start
                 entry["request_finished_at"] = utc_now()
-                # Configuration errors (local setup found before sending, or a
-                # Codex isolation breach) and cancellation end the trial at once.
+                # Configuration errors (local setup found before sending) and
+                # cancellation end the trial at once.
                 # Every transport/provider failure (any HTTP status) and internal
                 # exception is resent as the next attempt; the provider may
                 # already have billed it.
@@ -588,16 +605,16 @@ class LLMMotionPolicy(PolicyBase):
                     backend=_exception_mapping(exc, "metadata"),
                     elapsed_s=backend_call_elapsed,
                 )
-                recorded = True
                 try:
                     self._append(entry)
                 except BaseException as recording_error:
-                    # A failed audit write must not turn cancellation or the
-                    # original model failure into a different rollout outcome,
-                    # and an unrecorded failed attempt is never retried.
+                    # An unrecorded failed attempt is never resent. A resendable
+                    # failure then ends the trial with the recording error;
+                    # cancellation and configuration errors keep their outcome.
+                    if kind in RESENT_FAILURE_KINDS:
+                        raise recording_error from exc
                     self._note_recording_error(exc, recording_error)
-                    recorded = False
-                if kind not in RESENT_FAILURE_KINDS or not recorded:
+                if kind not in RESENT_FAILURE_KINDS:
                     raise
                 # No model output exists, so the resent request carries no
                 # rejection receipt; pending tool results stay undelivered.
@@ -623,8 +640,15 @@ class LLMMotionPolicy(PolicyBase):
                 entry["response_text"] = reply.response_text
             self.usage.update({k: v for k, v in reply.usage.items() if type(v) is int})
             try:
-                result = decode_tool_calls(
+                call = parse_tool_call(
                     reply.tool_calls,
+                    self.schedule,
+                    notes=self.notes,
+                    action_tools=self.action_tools,
+                    spec=self.spec,
+                )
+                result = to_plan(
+                    call,
                     self.schedule,
                     plan_id=request_id,
                     observation_step=step,
@@ -646,7 +670,7 @@ class LLMMotionPolicy(PolicyBase):
                 retry_wait_s, retry_wait_source = 0.0, None
                 continue
             except BaseException as exc:
-                # Not a format failure (e.g. a failed simulator preflight). The backend
+                # Not a format failure (e.g. a failed simulator preflight). The agent
                 # has already accepted this reply, so it is not resent; record the
                 # billed reply before the trial ends.
                 entry.update(error=f"{type(exc).__name__}: {exc}", error_kind=failure_kind(exc))
@@ -657,13 +681,12 @@ class LLMMotionPolicy(PolicyBase):
                 raise
             entry["outcome"] = "stop" if isinstance(result, Stop) else "plan"
             self._append(entry)
-            call = reply.tool_calls[0]
             if isinstance(result, MotionPlan):
-                self._pending_call = {"call_id": call["call_id"], "plan_id": result.plan_id}
+                self._pending_call = {"call_id": call.call_id, "plan_id": result.plan_id}
             else:
                 self._tool_results.append(
                     self._tool_result(
-                        call["call_id"],
+                        call.call_id,
                         {
                             "status": "stopped",
                             "tool": result.name,
@@ -759,18 +782,18 @@ class LLMMotionPolicy(PolicyBase):
                 terminal = [r for r in self._tool_results if json.loads(r["output"]).get("status") != "accepted"]
                 self.trajectory_recorder.results(terminal)
                 self.trajectory_recorder.flush()
-            record = getattr(self.backend, "record_tool_results", None)
+            record = getattr(self.agent, "record_tool_results", None)
             if record is not None:
                 record(tuple(self._tool_results))
             self._tool_results.clear()
-        end = getattr(self.backend, "end_rollout", None)
+        end = getattr(self.agent, "end_rollout", None)
         if end is not None:
             final_usage = end()
             if isinstance(final_usage, dict):
                 self.usage.update({k: v for k, v in final_usage.items() if type(v) is int})
                 if final_usage and self.trajectory_recorder is not None:
                     self.trajectory_recorder.record_usage_adjustment(
-                        final_usage, source=type(self.backend).__name__ + ".end_rollout",
+                        final_usage, source=type(self.agent).__name__ + ".end_rollout",
                     )
 
     @staticmethod
@@ -804,7 +827,7 @@ class LLMMotionPolicy(PolicyBase):
         record.metadata["agentic"] = self.metrics()
 
     def metrics(self):
-        offline_preview = bool(getattr(self.backend, "is_offline_preview", False))
+        offline_preview = bool(getattr(self.agent, "is_offline_preview", False))
         decisions = [d for d in self.decisions if d["attempt"] == 1]
         intervals = [
             {
@@ -818,7 +841,7 @@ class LLMMotionPolicy(PolicyBase):
             for a, b in zip(decisions, decisions[1:])
         ]
         return {
-            "model": self.config.model,
+            "model": self._model_label(),
             "model_calls": 0 if offline_preview else self.calls,
             **(
                 {"scripted_requests": self.calls, "model_call_source": "scripted_preview"}
@@ -840,17 +863,8 @@ class LLMMotionPolicy(PolicyBase):
             "internal_failures": sum(d.get("error_kind") == "internal" for d in self.decisions),
             # Wall time waited before resends; never part of inference_wall_s.
             "retry_wait_s": sum(d.get("retry_wait_s", 0.0) for d in self.decisions),
-            # Requests that began a new native thread after a failure lost the
-            # rollout's conversation (Codex with memory): from there the episode
-            # continues without its earlier turns. An audit flag for memory ablations.
-            "conversation_restarts": sum(
-                d.get("backend", {}).get("conversation_restarted") is True for d in self.decisions
-            ),
             "configuration_failures": sum(
                 d.get("error_kind") == "configuration" for d in self.decisions
-            ),
-            "native_retry_notifications": sum(
-                d.get("backend", {}).get("native_retry_notifications", 0) for d in self.decisions
             ),
             "planning_calls": sum(d["kind"] == "plan" for d in decisions),
             "polling_calls": 0,
@@ -911,6 +925,6 @@ class LLMMotionPolicy(PolicyBase):
             try:
                 self._end_rollout()
             finally:
-                self.backend.close()
+                self.agent.close()
         finally:
             self._flush()

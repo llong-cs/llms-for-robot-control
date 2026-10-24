@@ -8,6 +8,9 @@ import json
 
 from agentic_framework.harness.demonstration import demonstration_image_names
 
+# Image block types of the Responses, Messages and Chat Completions wires.
+IMAGE_TYPES = ("input_image", "image", "image_url")
+
 
 def _entries(messages):
     """Find complete teacher payloads in uncoalesced encoded user observations."""
@@ -39,7 +42,7 @@ def _entries(messages):
                 name = label.get("text", "").removeprefix("Camera: ")
                 if name not in names or label.get("text") != f"Camera: {name}":
                     continue
-                if frame.get("type") not in ("input_image", "image") or name in frames:
+                if frame.get("type") not in IMAGE_TYPES or name in frames:
                     raise ValueError("Teacher frame must have exactly one labeled image block")
                 indices.extend((index, index + 1))
                 frames[name] = frame
@@ -53,18 +56,11 @@ def _entries(messages):
             yield message_index, text_index, payload, text[end:], indices, signature
 
 
-def demonstration_signature(messages):
-    """Identify the fixed teacher inputs for a persistent native session contract."""
-    return tuple(entry[-1] for entry in _entries(messages))
-
-
-def deduplicate_demonstrations(messages, *, omit_all=False):
+def deduplicate_demonstrations(messages):
     """Keep one copy of each identical teacher in a stateless API request.
 
     The first selected observation carries the reference, so window eviction
-    automatically moves it to the next retained observation. Native Codex tool
-    continuations use ``omit_all`` because their session already has this fixed
-    reference; fresh sessions and restarts must include it again.
+    automatically moves it to the next retained observation.
 
     Only teacher JSON and its explicitly referenced frame blocks are removed.
     Live images (even identical ones), state, repair feedback, tool exchanges and
@@ -74,7 +70,7 @@ def deduplicate_demonstrations(messages, *, omit_all=False):
     result = copy.deepcopy(messages)
     seen, remove = set(), {}
     for message_index, text_index, payload, suffix, indices, signature in _entries(messages):
-        duplicate = omit_all or signature in seen
+        duplicate = signature in seen
         seen.add(signature)
         if not duplicate:
             continue

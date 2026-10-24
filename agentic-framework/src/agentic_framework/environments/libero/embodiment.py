@@ -29,6 +29,7 @@ from inspect_robots.spaces import (
 )
 from inspect_robots.types import Action, Observation, StepResult
 
+from agentic_framework.common.environment import without_credentials
 from agentic_framework.common.project import environment_python, project_path, project_root
 from agentic_framework.environments.privilege import (
     LEGACY_PRIVILEGE_KEYS,
@@ -154,10 +155,8 @@ class LiberoEmbodiment(EmbodimentBase):
     def _start(self) -> None:
         if self._process is not None:
             return
-        env = os.environ.copy()
-        # No model credentials are needed inside the simulator process.
-        for name in ("OPENAI_API_KEY", "ANTHROPIC_API_KEY", "GOOGLE_API_KEY"):
-            env.pop(name, None)
+        # No model credentials or provider endpoints are needed inside the simulator process.
+        env = without_credentials(os.environ)
         renderer = self.worker_env.get("MUJOCO_GL", env.get("MUJOCO_GL", "osmesa"))
         defaults = {
             "MUJOCO_GL": renderer,

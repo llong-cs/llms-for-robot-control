@@ -53,18 +53,6 @@ def auto_motion_value(value):
     return asdict(AutoMotionConfig(**raw))
 
 
-def backend_options_value(value):
-    """Accept a JSON object containing the selected extension's options."""
-    try:
-        raw = json.loads(value) if isinstance(value, str) else value
-    except json.JSONDecodeError as exc:
-        raise argparse.ArgumentTypeError("backend_options must be a JSON object") from exc
-    if not isinstance(raw, dict) or any(not isinstance(key, str) for key in raw):
-        error = argparse.ArgumentTypeError if isinstance(value, str) else ValueError
-        raise error("backend_options must be a JSON object")
-    return dict(raw)
-
-
 GROUP_TITLES = {
     "run": "Run mode",
     "environment": "Environment and tasks",
@@ -116,11 +104,6 @@ FIELD_GROUPS = {
     "policy_seed": "policy",
     "inference_timeout": "policy",
     "model": "llm",
-    "backend": "llm",
-    "base_url": "llm",
-    "api_key_env": "llm",
-    "env_file": "llm",
-    "backend_options": "llm",
     "max_output_tokens": "llm",
     "supported_efforts": "llm",
     "reasoning_mode": "llm",
@@ -173,17 +156,22 @@ PARAMETER_HELP = {
         "max_attempts and errors never verify; native VLA policies never call done. "
         "0 disables it; the custom task suite uses 4 (120 steps at 30 Hz)."
     ),
-    "model": "Server-side LLM model ID; native VLA checkpoints are selected with model_profile.",
-    "backend": "LLM transport: Responses API, Codex conversation, or an installed backend extension.",
-    "base_url": "API endpoint; unset uses the selected backend's standard endpoint.",
-    "api_key_env": "Name of the environment variable containing the API key.",
-    "env_file": "Shared API credential dotenv path, read only when sending a request; null disables file loading for Responses.",
-    "backend_options": "JSON object with options for an installed backend extension; built-in backends require an empty object.",
+    "model": (
+        "LLM selector <provider>/<model>, for example openai/gpt-6-astra, "
+        "anthropic/claude-opus-5-5 or local/<served model>; gpt-* is short for openai/gpt-* "
+        "and claude-* for anthropic/claude-*, and agent or llm names the default. The provider "
+        "fixes the endpoint and reads its API key only from its environment variable (openai: "
+        "OPENAI_API_KEY, anthropic: ANTHROPIC_API_KEY, local: optional LOCAL_LLM_API_KEY). "
+        "Native VLA checkpoints are selected with model_profile."
+    ),
     "max_output_tokens": "Maximum output tokens per API request.",
     "preview_context": "Use scripted actions in LLM preview to export later context without model calls.",
     "preview_dx": "Scripted x displacement in meters for LLM preview-context.",
     "supported_efforts": "Comma-separated supported reasoning efforts for servers without capability discovery.",
-    "reasoning_mode": "Explicit API reasoning mode: standard or pro; unset omits mode. Codex does not support this option.",
+    "reasoning_mode": (
+        "Explicit Responses reasoning mode: standard or pro; unset omits mode. Providers "
+        "without it (anthropic, local) reject it."
+    ),
     "inference_timeout": "Request timeout in seconds for both LLM and native VLA models.",
     "max_response_chars": "Maximum response characters; exceeding the limit stops that response.",
     "max_attempts": (
@@ -191,20 +179,19 @@ PARAMETER_HELP = {
         "every accepted decision. A format failure, including a rejected motion preflight, "
         "is repaired with its validation error. A transport/provider failure (every non-200 "
         "HTTP status, including 400/401/403/404, timeout, connection or stream error, "
-        "refusal, incomplete response) or an unexpected exception inside the backend call "
+        "refusal, incomplete response) or an unexpected exception inside the agent call "
         "(building the wire request, sending it or parsing its response) resends the same "
         "request after an exponential backoff (or a longer 429/503 Retry-After); each "
         "consumes one attempt, and a resent request may already have been billed. Never "
-        "retried: cancellation, local configuration errors (for example missing credentials "
-        "or a missing Codex CLI) and a Codex host-tool isolation breach; any other exception "
-        "outside the backend call ends the trial. A decision that fails max_attempts times "
-        "ends the trial as max_attempts: it is discarded (status=discarded) and excluded "
-        "from all results. A misconfigured provider (wrong key, model id or parameters) "
-        "therefore discards every trial; the evaluation launcher then fails the run, "
-        "while this entry point exits 0, warns on stderr and reports discarded_trials in "
-        "summary.json."
+        "retried: cancellation and local configuration errors (for example missing "
+        "credentials); any other exception outside the agent call ends the trial. A "
+        "decision that fails max_attempts times ends the trial as max_attempts: it is "
+        "discarded (status=discarded) and excluded from all results. A misconfigured "
+        "provider (wrong key, model id or parameters) therefore discards every trial; the "
+        "evaluation launcher then fails the run, while this entry point exits 0, warns on "
+        "stderr and reports discarded_trials in summary.json."
     ),
-    "augmentations": "Grouped memory/reasoning JSON. history_length<=0 disables memory; positive N sets the API decision window or enables persistent Codex dialogue. Reasoning controls effort, notes and hindsight.",
+    "augmentations": "Grouped memory/reasoning JSON. history_length<=0 disables memory; positive N sets the API decision window. Reasoning controls effort, notes and hindsight.",
     "demo": "Include one fixed teacher demonstration with every current observation, independently of online history. demo_content selects observation/state sequences or complete LLM interactions.",
     "demo_path": "Finalized trajectory.json recorded with --record-trajectory, or a directory containing exactly one such trial. observations accepts agent and native VLA recordings; full requires a compatible LLM recording. Task success is not required; required when demo=true.",
     "demo_mode": "Teacher interpretation: ood learns embodiment behavior from observed motion and, when provided, actions; id also analyzes demonstrated successes, failures, and progress to improve task-specific actions. Does not enable privilege or assume teacher success.",
@@ -269,9 +256,6 @@ NULLABLE_FIELDS = frozenset(
         "policy_port",
         "policy_url",
         "policy_metadata",
-        "base_url",
-        "api_key_env",
-        "env_file",
         "max_output_tokens",
         "supported_efforts",
         "reasoning_mode",
@@ -332,20 +316,25 @@ class SettingsGroup:
 
 @dataclass(frozen=True)
 class RunConfiguration:
-    """Resolved groups; flat attribute access is restricted to declared parameters."""
+    """Resolved groups; flat attribute access is restricted to declared parameters.
+
+    ``llm_route`` is derived from ``llm.model`` for an LLM policy and is not configurable.
+    """
 
     groups: Mapping[str, SettingsGroup]
     config: Path | None = None
+    llm_route: Mapping[str, Any] | None = None
 
     @classmethod
-    def from_namespace(cls, args):
+    def from_namespace(cls, args, *, llm_route=None):
         fields = vars(args).copy()
         config = fields.pop("config", None)
         groups = {
             name: SettingsGroup(MappingProxyType(values))
             for name, values in group_config(fields).items()
         }
-        return cls(MappingProxyType(groups), config)
+        route = MappingProxyType(dict(llm_route)) if llm_route is not None else None
+        return cls(MappingProxyType(groups), config, route)
 
     def __getattr__(self, name):
         if name in self.groups:
@@ -361,13 +350,14 @@ class RunConfiguration:
         return group_config(self.flat())
 
 
-def parser():
-    from agentic_framework.models.llm.extensions import backend_names
+def runtime_defaults():
+    """Return the flat runtime defaults from configs/runtime-defaults.json."""
+    return flatten_config(json.loads((config_directory() / "runtime-defaults.json").read_text()))
 
-    defaults = flatten_config(
-        json.loads((config_directory() / "runtime-defaults.json").read_text())
-    )
-    for field in ("output_dir", "policy_metadata", "env_file", "demo_path",
+
+def parser():
+    defaults = runtime_defaults()
+    for field in ("output_dir", "policy_metadata", "demo_path",
                   "molmoact2_source", "maniskill_assets", "sim_python"):
         if defaults.get(field) is not None:
             defaults[field] = str(project_path(defaults[field]))
@@ -447,27 +437,6 @@ def parser():
         help=PARAMETER_HELP["done_verification_seconds"],
     )
     groups["llm"].add_argument("--model", default=defaults["model"], help=PARAMETER_HELP["model"])
-    groups["llm"].add_argument(
-        "--backend",
-        choices=backend_names(),
-        default=defaults["backend"],
-        help=PARAMETER_HELP["backend"],
-    )
-    groups["llm"].add_argument(
-        "--base-url", default=defaults["base_url"], help=PARAMETER_HELP["base_url"]
-    )
-    groups["llm"].add_argument(
-        "--api-key-env", default=defaults["api_key_env"], help=PARAMETER_HELP["api_key_env"]
-    )
-    groups["llm"].add_argument(
-        "--env-file", type=Path, default=defaults["env_file"], help=PARAMETER_HELP["env_file"]
-    )
-    groups["llm"].add_argument(
-        "--backend-options",
-        type=backend_options_value,
-        default=defaults["backend_options"],
-        help=PARAMETER_HELP["backend_options"],
-    )
     groups["llm"].add_argument(
         "--max-output-tokens",
         type=int,
@@ -687,7 +656,7 @@ def _validated(values, parser):
             valid = True
         elif action.type is execution_horizon:
             valid = type(value) is int and (value == -1 or value > 0)
-        elif action.type in (augmentation_value, auto_motion_value, backend_options_value):
+        elif action.type in (augmentation_value, auto_motion_value):
             value = action.type(value)
             valid = True
         else:
@@ -713,7 +682,7 @@ def parse_configuration(
     if preliminary.config:
         file_values = _validated(flatten_config(json.loads(preliminary.config.read_text())), p)
         config_base = preliminary.config.expanduser().absolute().parent
-        for field in ("output_dir", "policy_metadata", "env_file", "demo_path",
+        for field in ("output_dir", "policy_metadata", "demo_path",
                       "molmoact2_source", "maniskill_assets", "sim_python"):
             if file_values.get(field) is not None:
                 file_values[field] = str(project_path(file_values[field], base=config_base))
@@ -743,7 +712,7 @@ def parse_configuration(
     model_defaults = _validated(model_defaults, p)
     p.set_defaults(**(model_defaults | file_values))
     args = p.parse_args(argv)
-    for field in ("output_dir", "policy_metadata", "env_file", "demo_path"):
+    for field in ("output_dir", "policy_metadata", "demo_path"):
         if getattr(args, field) is not None:
             setattr(args, field, project_path(getattr(args, field), base=Path.cwd()))
     if args.policy_family is None:
@@ -765,17 +734,24 @@ def parse_configuration(
         if args.motion_time_scale != 1:
             raise ValueError("native model profiles require motion_time_scale=1 and retain their native action timing")
         validate_native_horizon(model, args.h)
-    if args.reasoning_mode is not None and args.backend == "codex":
-        raise ValueError("reasoning_mode is not supported by Codex")
-    if args.backend in ("responses", "codex"):
-        if args.backend_options:
-            raise ValueError("backend_options requires an installed backend extension")
-        args.base_url = args.base_url or "https://api.openai.com/v1"
-        args.api_key_env = args.api_key_env or "OPENAI_API_KEY"
-    else:
-        from agentic_framework.models.llm.extensions import load_backend_extension
+    llm_route = None
+    if model is None:
+        from agentic_framework.models.llm.providers import resolve
 
-        load_backend_extension(args.backend).configure(args)
+        # The model string alone selects the provider; record its canonical form.
+        route = resolve(args.model, default=runtime_defaults()["model"])
+        capabilities = route.capabilities
+        if args.reasoning_mode is not None and not capabilities.reasoning_mode:
+            raise ValueError(f"the {route.provider} provider does not support reasoning_mode")
+        if route.protocol == "messages" and args.max_output_tokens is None and (
+            capabilities.max_output_tokens is None
+        ):
+            raise ValueError(
+                f"{route.selector} uses the Messages protocol, which requires max_output_tokens; "
+                "set llm.max_output_tokens"
+            )
+        args.model = route.selector
+        llm_route = route.record()
     if args.demo and args.demo_path is None:
         raise ValueError("demo=true requires --demo-path")
     if args.demo_image_max_side < 0:
@@ -879,4 +855,4 @@ def parse_configuration(
         if value is not None:
             setattr(args, field, str(project_path(value, base=Path.cwd())))
 
-    return RunConfiguration.from_namespace(args)
+    return RunConfiguration.from_namespace(args, llm_route=llm_route)

@@ -1,0 +1,250 @@
+{
+  "method": "POST",
+  "url": "https://api.openai.com/v1/responses",
+  "headers": {
+    "accept": "*/*",
+    "connection": "keep-alive",
+    "content-type": "application/json",
+    "host": "api.openai.com"
+  },
+  "body": {
+    "model": "gpt-wire-test",
+    "instructions": "Choose the next robot action from the supplied observations, proprioception, instructions and tool results. Invoke only the provided move_by_chunk, done or give_up robot tools. Do not use shell commands, files, browsing, image-editing tools, or delegation. Judge progress from the actual tool execution result and the next observation. Acceptance of a target does not establish arrival, a grasp or task success.\n\nROBOT CONTROL INSTRUCTIONS:\nYou are controlling a simulated robot embodiment named 'libero' through tool calls. Each observation gives you the current proprioceptive state and camera images. Work toward the user's goal in small, deliberate motions; re-check each new observation before choosing the next motion.\nEvery move_by_chunk call must include a single note for the entire call: in one or two sentences, say what you observe in the current observation, what you intend to achieve through the entire sequence of 5 targets, and why you chose these motions. The user reads these notes to follow what you see and decide, so write them for a human reader.\nInvoke exactly one robot tool per turn: move_by_chunk, done or give_up. Follow the move_by_chunk tool definition for array format and execution semantics. Do not mix motion and stopping calls.\nGenerated calls may be only partly executed and their targets may remain unmet. At every inference, compare the current eef_pos, eef_quat and images with earlier observations and tool calls to infer how far the motion progressed before deciding what to do next. Never assume previous commands achieved their targets. Any unexecuted actions from the previous response are discarded at the next turn. Choose new actions from the current observation and measured state.\nFor grasping, choose a reachable local contact region and approach angle, considering its size relative to the gripper's opening range using according to your observations. Check lateral alignment, finger orientation and contact height in the available views.\nChoose when to close from the current observation and intended finger contacts. If alignment needs visual confirmation, inspect a fresh observation before closing. Use small motions near contact so the next observation can guide corrections.\nA closing command or narrow finger gap alone does not establish a grasp; pay attention to whether the object actually follows as the gripper moves. The gripper may take multiple steps to fully close/open.\nYou can always swtich angle/orientation to obtain a clear view.\nWhen the goal is achieved call done; if it cannot be achieved call give_up. Calling done stops the trial but cannot declare success; the benchmark scorer judges success independently.\nEach observation's step_budget reports steps_remaining out of max_steps physical control steps; the trial fails if the task is not accomplished before the steps run out.\nNote what you are learning about this rig and task as you go: done and give_up ask what you wish you had known from the start.\n\nEmbodiment notes:\nLIBERO Franka Panda, 20 Hz. Actions [dx,dy,dz,rx,ry,rz,gripper] use end-effector displacements in WORLD coordinates: translation in meters and rotation as an axis-angle vector in radians. Mode-specific ranges are given in the move_by_chunk definition. +z moves upward; use observed state and camera motion to establish x/y directions. The adapter converts these physical units to normalized OSC inputs.\nThe gripper is a numeric command: negative opens, positive closes, and 0/omission holds the gripper driver's current target; it does not repeat the previous opening/closing command.\neef_pos is the controlled end-effector position in WORLD meters. eef_quat is [x,y,z,w]; gripper_width is finger separation in meters; joint_pos contains arm joint angles in radians.\nInitialization applies an open gripper command during the 10 settling steps; use the observed finger state for its actual opening.\nagentview is the external camera; robot0_eye_in_hand is the wrist camera. Both RGB images use the reference LIBERO evaluator's 180-degree orientation correction.\nInfer objects and contacts visually from the supplied observations.",
+    "input": [
+      {
+        "role": "user",
+        "content": [
+          {
+            "type": "input_text",
+            "text": "{\"instruction\":\"Lift the red cube.\",\"current_observation\":{\"state\":{\"eef_pos\":[0.1,-0.2,0.3],\"eef_quat\":[0.0,0.0,0.0,1.0],\"gripper_width\":[0.04]},\"step_budget\":{\"steps_remaining\":40,\"max_steps\":40},\"images\":[\"current/agentview\",\"current/robot0_eye_in_hand\"]}}"
+          },
+          {
+            "type": "input_text",
+            "text": "Camera: current/agentview"
+          },
+          {
+            "type": "input_image",
+            "image_url": "png-pixels-sha256:4dbdc2b2b62cb00749785bc84202236dbc3777d74660611b8e58812f0cfde6c3"
+          },
+          {
+            "type": "input_text",
+            "text": "Camera: current/robot0_eye_in_hand"
+          },
+          {
+            "type": "input_image",
+            "image_url": "png-pixels-sha256:d2476e0247badddff720f989a130afe97d9d6f7ddcc17aa5a076782669b4a6aa"
+          }
+        ]
+      }
+    ],
+    "store": false,
+    "include": [
+      "reasoning.encrypted_content"
+    ],
+    "tools": [
+      {
+        "type": "function",
+        "name": "move_by_chunk",
+        "description": "Submit an ordered sequence in one move_by_chunk call. Supply an array of exactly 5 values for each requested dimension in deltas. At call acceptance, integrate all pose increments from the initial measured pose into a fixed absolute waypoint sequence. Each increment extends the previous planned waypoint using the embodiment's coordinate and rotation conventions. On each tick, correct from the current measured pose toward the next fixed waypoint through the native delta controller using the full remaining pose error without framework clipping. Each waypoint receives ONE control step (0.05 seconds) before advancing, even if it was not reached. Tracking error does not rebase the remaining waypoints. Zero pose increments repeat the previous planned waypoint (the initial pose at index zero), so they can continue correcting toward it. Pose and gripper values at the same array index act together. No extra tracking or gripper settling steps are added; use repeated zero pose increments or gripper commands across indices if more time is needed. Each pose increment must obey the per-dimension operational single-step limits below; these bounds apply to requested increments, not feedback corrections. The native controller retains its own input clipping and adjustments. Joint and actuator limits still apply; these bounds do not guarantee reachability or actual travel under inertia or contact. The entire chunk is validated before execution. Bounds for each component: translation (dx/dy/dz): [-0.001, 0.001] m, rotation (rx/ry/rz): [-0.01, 0.01] rad, gripper: [-1, 1].",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "deltas": {
+              "type": "object",
+              "description": "Dimension-to-array mapping. Matching indices form one pose increment and optional gripper command. Omitted pose dimensions contribute zero increment. Every index needs at least one numeric dimension.",
+              "properties": {
+                "dx": {
+                  "type": "array",
+                  "items": {
+                    "type": "number",
+                    "minimum": -0.001,
+                    "maximum": 0.001
+                  },
+                  "minItems": 5,
+                  "maxItems": 5
+                },
+                "dy": {
+                  "type": "array",
+                  "items": {
+                    "type": "number",
+                    "minimum": -0.001,
+                    "maximum": 0.001
+                  },
+                  "minItems": 5,
+                  "maxItems": 5
+                },
+                "dz": {
+                  "type": "array",
+                  "items": {
+                    "type": "number",
+                    "minimum": -0.001,
+                    "maximum": 0.001
+                  },
+                  "minItems": 5,
+                  "maxItems": 5
+                },
+                "rx": {
+                  "type": "array",
+                  "items": {
+                    "type": "number",
+                    "minimum": -0.01,
+                    "maximum": 0.01
+                  },
+                  "minItems": 5,
+                  "maxItems": 5
+                },
+                "ry": {
+                  "type": "array",
+                  "items": {
+                    "type": "number",
+                    "minimum": -0.01,
+                    "maximum": 0.01
+                  },
+                  "minItems": 5,
+                  "maxItems": 5
+                },
+                "rz": {
+                  "type": "array",
+                  "items": {
+                    "type": "number",
+                    "minimum": -0.01,
+                    "maximum": 0.01
+                  },
+                  "minItems": 5,
+                  "maxItems": 5
+                },
+                "gripper": {
+                  "type": "array",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "minItems": 5,
+                  "maxItems": 5,
+                  "description": "One gripper value per step; null omits the command for that step and holds the current driver target. Zero remains an explicit value."
+                }
+              },
+              "additionalProperties": false,
+              "minProperties": 1,
+              "anyOf": [
+                {
+                  "required": [
+                    "dx"
+                  ]
+                },
+                {
+                  "required": [
+                    "dy"
+                  ]
+                },
+                {
+                  "required": [
+                    "dz"
+                  ]
+                },
+                {
+                  "required": [
+                    "rx"
+                  ]
+                },
+                {
+                  "required": [
+                    "ry"
+                  ]
+                },
+                {
+                  "required": [
+                    "rz"
+                  ]
+                },
+                {
+                  "required": [
+                    "gripper"
+                  ],
+                  "properties": {
+                    "gripper": {
+                      "items": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "note": {
+              "type": "string",
+              "description": "In one or two sentences, explain what you observe, what the entire sequence of 5 targets is intended to achieve, and why you chose it.",
+              "minLength": 1,
+              "pattern": "\\S"
+            }
+          },
+          "required": [
+            "deltas",
+            "note"
+          ],
+          "additionalProperties": false
+        },
+        "strict": false
+      },
+      {
+        "type": "function",
+        "name": "done",
+        "description": "Declare the task finished. The trial ends; a scorer judges success.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "summary": {
+              "type": "string"
+            },
+            "hindsight": {
+              "type": "string",
+              "description": "What do you know now that you wish you had known at the start of this episode? Concrete, transferable facts about this rig, task, or embodiment (camera mounting and extrinsics, table and base geometry, gripper axis and offsets, controller behavior, metric scale), written as advice to a future agent attempting the same task. Say 'none' if nothing qualifies."
+            }
+          },
+          "required": [
+            "summary",
+            "hindsight"
+          ]
+        },
+        "strict": false
+      },
+      {
+        "type": "function",
+        "name": "give_up",
+        "description": "Stop trying; the task cannot be completed. The trial ends.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "reason": {
+              "type": "string"
+            },
+            "hindsight": {
+              "type": "string",
+              "description": "What do you know now that you wish you had known at the start of this episode? Concrete, transferable facts about this rig, task, or embodiment (camera mounting and extrinsics, table and base geometry, gripper axis and offsets, controller behavior, metric scale), written as advice to a future agent attempting the same task. Say 'none' if nothing qualifies."
+            }
+          },
+          "required": [
+            "reason",
+            "hindsight"
+          ]
+        },
+        "strict": false
+      }
+    ],
+    "tool_choice": "required",
+    "parallel_tool_calls": false,
+    "reasoning": {
+      "effort": "low"
+    }
+  }
+}

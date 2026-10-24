@@ -10,6 +10,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import os
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -166,11 +167,10 @@ REPAIR_FEEDBACK_PREFIX = "\nYour previous response failed validation: "
 REPAIR_FEEDBACK_END = "\nMake one corrected native tool call for this unchanged observation."
 # Requests that failed before any model response exists.
 _NO_RESPONSE_ERRORS = frozenset({"transport", "configuration", "cancelled", "internal"})
-# History semantics of backends that replay the current decision's earlier attempt
-# (its call and rejection) with a format repair even when history_length <= 0.
-_REPAIR_REPLAY_SEMANTICS = frozenset({"window_size"})
-# Recorded backends whose replies came from a script, not from model inference.
-_SCRIPTED_BACKENDS = frozenset({"scripted", "offline_request_preview"})
+# Recorded backend labels whose replies came from a script, not from model inference:
+# every label that starts with "scripted", plus the offline request preview.
+_SCRIPTED_BACKEND_PREFIX = "scripted"
+_SCRIPTED_BACKENDS = frozenset({"offline_request_preview"})
 
 
 def repair_feedback(validation_error):
@@ -194,7 +194,15 @@ def resolve_demonstration_path(path):
     Launcher run/job directories are accepted only when their known evaluation
     layouts contain exactly one trajectory.json; no success-based selection occurs.
     """
-    source = Path(path).expanduser().resolve(strict=True)
+    requested = Path(path).expanduser()
+    try:
+        source = requested.resolve(strict=True)
+    except FileNotFoundError as exc:
+        # Name the configured teacher, not only the first missing directory above it.
+        missing = f"; {exc.filename} does not exist" if exc.filename else ""
+        raise FileNotFoundError(
+            f"Teacher demonstration not found: {os.path.abspath(requested)}{missing}"
+        ) from None
     if source.is_file():
         return source
     if not source.is_dir():
@@ -383,15 +391,12 @@ def _delivered_tool_results(turn, index, history_length, repairing):
 
     Positive history delivers every pending result: the previous decision's
     acceptance receipt and a repair's rejection. With nonpositive history no
-    earlier decision is replayed; only window-history backends replay a format
-    repair's rejected call and its rejection, while memory-toggle backends start a
-    fresh session for every request. ``repairing`` says the request carries repair
+    earlier decision is replayed, but a format repair still replays its rejected
+    call and its rejection. ``repairing`` says the request carries repair
     feedback, i.e. an earlier attempt of its decision produced a rejected
     response; a resend of a first request after a transport or internal failure
     is not a repair. The rejection text always remains in the request's
-    validation feedback. A request whose backend restarted a lost native
-    conversation (conversation_restarted) started a new thread from its request
-    text alone and delivered no tool result.
+    validation feedback.
     """
     results = turn["request"].get("tool_results", [])
     if not isinstance(results, list):
@@ -402,21 +407,20 @@ def _delivered_tool_results(turn, index, history_length, repairing):
         if not isinstance(result.get("call_id"), str) or not result["call_id"]:
             raise ValueError("Teacher tool results require a nonempty call_id")
         projected.append({"call_id": result["call_id"], "output": _json_value(result.get("output"))})
-    backend = turn["model_output"].get("backend")
-    backend = backend if isinstance(backend, Mapping) else {}
-    if backend.get("conversation_restarted") is True:
-        return []
     if not projected or history_length > 0:
         return projected
-    semantics = backend.get("history_length_semantics")
-    return projected if repairing and semantics in _REPAIR_REPLAY_SEMANTICS else []
+    return projected if repairing else []
 
 
 def _reject_scripted(output, index):
     """Reject scripted recordings: no model inference produced them."""
     backend = output.get("backend")
-    if isinstance(backend, Mapping) and (
-        backend.get("backend") in _SCRIPTED_BACKENDS
+    if not isinstance(backend, Mapping):
+        return
+    label = backend.get("backend")
+    if (
+        label in _SCRIPTED_BACKENDS
+        or (isinstance(label, str) and label.startswith(_SCRIPTED_BACKEND_PREFIX))
         or backend.get("scripted_preview_response") is True
     ):
         raise ValueError(

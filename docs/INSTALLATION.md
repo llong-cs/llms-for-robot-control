@@ -7,8 +7,8 @@ Choose the simulator for your benchmark and add a model runtime only for native 
 | Evaluation | Required components |
 | --- | --- |
 | Offline example | Framework |
-| LLM on Ditto Bench / MolmoAct2-ManiSkill | Framework + ManiSkill + robot/YCB assets + API credentials |
-| LLM on LIBERO | Framework + LIBERO + API credentials |
+| LLM on Ditto Bench / MolmoAct2-ManiSkill | Framework + ManiSkill + robot/YCB assets + an exported API key, or a [local server](USAGE.md#local-chat-completions-servers) |
+| LLM on LIBERO | Framework + LIBERO + an exported API key, or a [local server](USAGE.md#local-chat-completions-servers) |
 | Native DROID policy | Framework + ManiSkill + robot/YCB assets + MolmoAct2 or OpenPi + DROID checkpoint |
 | Native LIBERO policy | Framework + LIBERO + MolmoAct2 or OpenPi + LIBERO checkpoint |
 
@@ -21,6 +21,13 @@ python examples/offline.py
 ```
 
 [API key setup](../README.md#api-key).
+
+The offline test suite needs pytest in the framework environment. It runs without a simulator, network access or API keys:
+
+```bash
+uv pip install --python envs/agentic-framework/bin/python "pytest==9.1.1"
+envs/agentic-framework/bin/python -B -m pytest -q
+```
 
 ## Ditto Bench and ManiSkill
 
@@ -72,7 +79,7 @@ envs/agentic-framework-molmoact2/bin/python \
 CUDA_VISIBLE_DEVICES=0 python3 scripts/eval.py examples/molmoact2-libero.json
 ```
 
-If the checkpoint requires Hugging Face authorization, add `HF_TOKEN` to `credentials.env` and append `--env-file credentials.env` to the download command.
+If the checkpoint requires Hugging Face authorization, export `HF_TOKEN` in the shell that runs the download command. The script sets `HF_HOME` to `cache/huggingface` in the project unless it is already set, so a Hugging Face CLI login is found only if it used the same `HF_HOME`.
 
 ### pi05
 

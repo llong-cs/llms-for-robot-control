@@ -9,6 +9,7 @@ import sys
 import time
 from dataclasses import asdict, replace
 from datetime import UTC, datetime
+from pathlib import PurePosixPath
 from statistics import mean
 
 from inspect_robots import eval as robot_eval
@@ -46,26 +47,37 @@ from agentic_framework.models.factory import create_policy
 from agentic_framework.observability.progress import EvaluationProgress
 
 PROJECT = FRAMEWORK_ROOT
+# Local provider modules that are never published; recorded apart from source_sha256.
+PRIVATE_SOURCES = "src/agentic_framework/models/llm/providers/private_*.py"
 
 
 def parse_args(argv=None):
     return parse_configuration(argv, parser_factory=parser, maniskill_suite=ENV_ID)
 
 
-def source_fingerprint():
+def source_fingerprints(project=PROJECT):
+    """Return (source_sha256, private_sources): {relative path: sha256} of each.
+
+    Private provider modules are left out of source_sha256, so a local run and a public
+    clone with the same public code record the same source fingerprint.
+    """
     roots = [
-        PROJECT / "src",
-        PROJECT / "vendor/inspect-robots/src",
-        PROJECT / "scripts",
-        PROJECT / "configs",
+        project / "src",
+        project / "vendor/inspect-robots/src",
+        project / "scripts",
+        project / "configs",
     ]
-    return {
-        str(p.relative_to(PROJECT)): hashlib.sha256(p.read_bytes()).hexdigest()
-        for root in roots
-        for p in sorted(root.rglob("*"))
-        if p.is_file() and p.suffix in {".py", ".json"}
-        if "__pycache__" not in p.parts
-    }
+    public, private = {}, {}
+    for root in roots:
+        for path in sorted(root.rglob("*")):
+            if not path.is_file() or path.suffix not in {".py", ".json"}:
+                continue
+            if "__pycache__" in path.parts:
+                continue
+            relative = path.relative_to(project).as_posix()
+            target = private if PurePosixPath(relative).match(PRIVATE_SOURCES) else public
+            target[relative] = hashlib.sha256(path.read_bytes()).hexdigest()
+    return public, private
 
 
 def unscore_discarded(log):
@@ -312,6 +324,9 @@ def _main(argv, progress_holder):
             for scene in scenes
         }
         config = {k: plain(v) for k, v in args.flat().items() if k != "output_dir"}
+        source_sha256, private_sources = source_fingerprints()
+        route = getattr(args, "llm_route", None)
+        llm_route = None if native_vla or route is None else dict(route)
         config.update(
             h=h,
             k=k,
@@ -322,7 +337,8 @@ def _main(argv, progress_holder):
             },
             # Hold steps after a model done call (0: disabled or a native VLA policy).
             done_verification_steps=configured_verification_steps,
-            source_sha256=source_fingerprint(),
+            source_sha256=source_sha256,
+            private_sources=private_sources,
             simulator=simulator_metadata,
             python=sys.version,
             packages={d.metadata["Name"]: d.version for d in importlib.metadata.distributions()},
@@ -331,6 +347,8 @@ def _main(argv, progress_holder):
             if args.policy_metadata
             else None,
             configuration=group_config(config),
+            # Derived from llm.model; names and labels only (None for a native policy).
+            llm_route=llm_route,
             model_profile_definition=plain(model_profile),
             dependency_source=json.loads((
                 PROJECT / "source-manifest.json"
@@ -374,6 +392,7 @@ def _main(argv, progress_holder):
                         "scene_id": scene.id, "scene": plain(scene),
                         "benchmark": args.benchmark, "policy_family": args.policy_family,
                         "model": args.model if not native_vla else model_profile["id"],
+                        "llm_route": llm_route,
                         "model_profile": plain(model_profile),
                         "schedule": asdict(trial_schedule),
                         # configured_steps equals config.json done_verification_steps;
@@ -749,7 +768,7 @@ def _main(argv, progress_holder):
             print(
                 f"Every trial ({len(discarded_ids)}) was discarded: a decision failed all "
                 "max_attempts attempts in each. Provider rejections (any HTTP status) and "
-                "internal exceptions inside the backend call are resent, so check the recorded "
+                "internal exceptions inside the agent call are resent, so check the recorded "
                 "model errors for a misconfigured provider; this entry point still exits 0",
                 file=sys.stderr,
                 flush=True,

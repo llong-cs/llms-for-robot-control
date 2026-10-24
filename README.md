@@ -93,11 +93,17 @@ source envs/agentic-framework/bin/activate
 python examples/offline.py
 ```
 
-The offline example runs the policy/controller loop with scripted decisions, without a simulator or model call.
+The offline example runs the policy/controller loop with scripted decisions, without a simulator or network request; its report counts the policy's two scripted model calls.
 
 ### API key
 
-Set `OPENAI_API_KEY` to your [OpenAI API key](https://platform.openai.com/api-keys) and `OPENAI_BASE_URL=https://api.openai.com/v1` in `credentials.env` ([template](credentials.env.example)).
+LLM agents read their API key only from the environment of the shell that runs the evaluation. `examples/agent.json` and the LLM experiments in `configs/experiments` use the official OpenAI API, so export your [OpenAI API key](https://platform.openai.com/api-keys) there:
+
+```bash
+export OPENAI_API_KEY=...
+```
+
+`llm.model` selects the provider: `openai/gpt-6-astra`, or its shorthand `gpt-6-astra`, always sends requests to `https://api.openai.com/v1`. If `OPENAI_BASE_URL` is set, it must name that endpoint. Claude models such as `anthropic/claude-opus-5-5` (used by `examples/agent-claude.json`) send requests to `https://api.anthropic.com/v1` with the key in `ANTHROPIC_API_KEY`. `local/<served model name>` (used by `examples/agent-local.json`) sends Chat Completions requests to an OpenAI-compatible server you run yourself, such as vLLM, at `http://127.0.0.1:8000/v1` unless `LOCAL_LLM_BASE_URL` names another; `LOCAL_LLM_API_KEY` is optional. Previews and `--dry-run` need no key. See [model routing and API keys](docs/USAGE.md#model-routing-and-api-keys).
 
 ### Run a configuration
 
@@ -109,6 +115,8 @@ Install the simulator and model dependencies using the [installation guide](docs
 | [offline.py](examples/offline.py)                       | Minimal policy/controller loop                             |
 | [preview.json](examples/preview.json)                   | Inspect all Ditto tasks and difficulties without inference |
 | [agent.json](examples/agent.json)                       | Astra agent on Ditto                                       |
+| [agent-claude.json](examples/agent-claude.json)         | Claude Opus 5.5 agent on Ditto                             |
+| [agent-local.json](examples/agent-local.json)           | Agent on a local OpenAI-compatible server (vLLM) on Ditto  |
 | [molmoact2.json](examples/molmoact2.json)               | Local MolmoAct2-DROID on Ditto                             |
 | [pi05-maniskill.json](examples/pi05-maniskill.json)     | Local pi05-DROID on `DroidPutEverythingInBox-v1`           |
 | [molmoact2-libero.json](examples/molmoact2-libero.json) | Local MolmoAct2-LIBERO on LIBERO                           |

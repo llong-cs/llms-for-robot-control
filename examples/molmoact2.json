@@ -12,7 +12,7 @@
     "seed": 42
   },
   "execution": {
-    "max_steps": 450
+    "max_steps": 225
   },
   "policy": {
     "model_profile": "molmoact2-droid",

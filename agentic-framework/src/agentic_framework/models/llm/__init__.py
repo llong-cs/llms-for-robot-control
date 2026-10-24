@@ -1,1 +1,1 @@
-"""Language-model transports and rollout-scoped conversation backends."""
+"""LLM agents: provider routing, wire protocols and rollout-scoped decision history."""

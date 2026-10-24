@@ -26,43 +26,19 @@ def main(argv=None):
         help="Destination for pinned MolmoAct2-LIBERO resources (default: <project>/models/molmoact2-libero)",
     )
     parser.add_argument(
-        "--env-file",
-        type=Path,
-        default=None,
-        help="Optional dotenv file containing Hugging Face credentials; otherwise use environment or Hugging Face login",
-    )
-    parser.add_argument(
         "--check-access",
         action="store_true",
         help="Check Hugging Face model access without downloading weights",
     )
     args = parser.parse_args(argv)
     root = profile_path(args.output_dir)
-    if args.env_file is not None:
-        args.env_file = profile_path(args.env_file)
     os.umask(0o077)
     configure_project_environment()
-    from dotenv import dotenv_values
     from huggingface_hub import HfApi, get_token, snapshot_download
     from huggingface_hub.errors import GatedRepoError
 
-    credentials = dotenv_values(args.env_file) if args.env_file is not None and args.env_file.is_file() else {}
-    token = (
-        next(
-            (
-                credentials.get(key)
-                for key in (
-                    "HF_TOKEN",
-                    "HUGGING_FACE_HUB_TOKEN",
-                    "HUGGINGFACE_HUB_TOKEN",
-                    "HUGGINGFACE_TOKEN",
-                )
-                if credentials.get(key)
-            ),
-            None,
-        )
-        or get_token()
-    )
+    # Hugging Face reads HF_TOKEN from the environment, else a login stored under HF_HOME.
+    token = get_token()
     api = HfApi(token=token)
     try:
         api.auth_check(repo_id=REPO_ID, repo_type="model")

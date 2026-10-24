@@ -1,4 +1,4 @@
-"""Current observations and fixed demonstrations; backends own live history."""
+"""Current observations and fixed demonstrations; agents own live history."""
 
 from __future__ import annotations
 
