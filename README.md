@@ -17,14 +17,11 @@ The agentic framework draws on [Inspect Robots](https://github.com/robocurve/ins
 Six tasks, each with `easy`, `medium`, `hard` and `xhard` variants, test contact, geometry, precision and tool use. They run in ManiSkill 3 / SAPIEN with the Franka FR3 and Robotiq 2F-85 gripper from MolmoAct2's DROID setup.
 
 
-| ID  | Task                   | Illustration                                                                                               | Goal                                                    |
-| --- | ---------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| 0   | Constrained extraction | ![Blue board inside a tilted gray channel](docs/images/ditto/task-0-slanted_board-hard.jpg)                | Pull the board out of the slot.                         |
-| 1   | Odd-object grasping    | ![Blue pointed object beside a basket](docs/images/ditto/task-1-odd_geometry-hard.jpg)                     | Put the object in the basket.                           |
-| 2   | Precision insertion    | ![Yellow rectangular peg beside a matching slot](docs/images/ditto/task-2-precision_insert-hard.jpg)       | Insert the object fully into its matching slot.         |
-| 3   | Standing stability     | ![Orange object lying on its side with a narrow gray base](docs/images/ditto/task-3-stand_object-hard.jpg) | Stand the object gray base down, without robot contact. |
-| 4   | Tool-assisted drawer   | ![Blue rod beside a drawer beneath an overhang](docs/images/ditto/task-4-tool_drawer-hard.jpg)             | Open the drawer using the tool.                         |
-| 5   | Ring release           | ![Blue open ring around a fixed gray bridge](docs/images/ditto/task-5-unlock_ring-hard.jpg)                | Remove the open ring from the bridge.                   |
+| **ID** | 0 | 1 | 2 | 3 | 4 | 5 |
+| --- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Task** | Constrained extraction | Odd-object grasping | Precision insertion | Standing stability | Tool-assisted drawer | Ring release |
+| **Illustration** | <img src="docs/images/ditto/task-0-slanted_board-hard.jpg" alt="Blue board inside a tilted gray channel" width="160"> | <img src="docs/images/ditto/task-1-odd_geometry-hard.jpg" alt="Blue pointed object beside a basket" width="160"> | <img src="docs/images/ditto/task-2-precision_insert-hard.jpg" alt="Yellow rectangular peg beside a matching slot" width="160"> | <img src="docs/images/ditto/task-3-stand_object-hard.jpg" alt="Orange object lying on its side with a narrow gray base" width="160"> | <img src="docs/images/ditto/task-4-tool_drawer-hard.jpg" alt="Blue rod beside a drawer beneath an overhang" width="160"> | <img src="docs/images/ditto/task-5-unlock_ring-hard.jpg" alt="Blue open ring around a fixed gray bridge" width="160"> |
+| **Goal** | Pull the board out of the slot. | Put the object in the basket. | Insert the object fully into its matching slot. | Stand the object gray base down, without robot contact. | Open the drawer using the tool. | Remove the open ring from the bridge. |
 
 
 [Task definitions](ditto-bench/docs/TASKS.md) · [Gym API](ditto-bench/README.md#direct-gym-example)
